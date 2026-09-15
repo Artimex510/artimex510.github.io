@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.artimex510.twa",
+        "sha256_cert_fingerprints": ["31:C8:C1:DD:71:CA:37:A9:62:B9:D7:03:DE:97:7B:47:08:9C:62:8B:57:EE:B9:14:B3:9A:BB:E1:CB:43:50:F7"]
+      }
+    }]
