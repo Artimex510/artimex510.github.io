@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "io.github.artimex510.twa",
-        "sha256_cert_fingerprints": ["31:C8:C1:DD:71:CA:37:A9:62:B9:D7:03:DE:97:7B:47:08:9C:62:8B:57:EE:B9:14:B3:9A:BB:E1:CB:43:50:F7"]
+        "sha256_cert_fingerprints": ["49:3A:81:BE:90:04:A0:AC:BE:8A:84:44:63:1D:4C:32:3D:3F:43:F4:99:C4:9F:D1:54:7C:6C:DA:3B:A8:CD:C9"]
       }
     }]
