@@ -3423,8 +3423,34 @@
       });
       const [planarDieResult, setPlanarDieResult] = useState(null); // STATO PER IL DADO PLANARE
 
-      const wakeLockRef = React.useRef(null);
+     const wakeLockRef = React.useRef(null);
       const stateRef = React.useRef({ numPlayers, archenemy, activeModal, planechase });
+
+      // --- 🛰️ IL RADAR FIREBASE (Ascolta i cambiamenti in tempo reale) ---
+      useEffect(() => {
+          if (inCloudRoom && roomCode && view === 'game_active') {
+              const unsubscribe = db.collection('matches').doc(roomCode).onSnapshot(doc => {
+                  if (doc.exists) {
+                      const data = doc.data();
+                      if (data.players) setPlayers(data.players);
+                      if (data.archenemy) setArchenemy(prev => ({ ...prev, active: data.archenemy.active, playerId: data.archenemy.playerId, schemes: data.archenemy.schemes, ongoing: data.archenemy.ongoing, currentScheme: data.archenemy.currentScheme }));
+                      if (data.planechase) setPlanechase(prev => ({ ...prev, active: data.planechase.active, planes: data.planechase.planes, currentPlane: data.planechase.currentPlane }));
+                  }
+              });
+              return () => unsubscribe(); // Spegne il radar se esci dalla stanza
+          }
+      }, [inCloudRoom, roomCode, view]);
+
+      // --- 📡 I TRASMETTITORI FIREBASE (Inviano i cambiamenti) ---
+      const syncToRoom = (field, payload) => {
+          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ [field]: payload }).catch(()=>{});
+      };
+      const syncArchenemy = (newState) => {
+          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ archenemy: { active: newState.active, playerId: newState.playerId, schemes: newState.schemes, ongoing: newState.ongoing, currentScheme: newState.currentScheme } }).catch(()=>{});
+      };
+      const syncPlanechase = (newState) => {
+          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ planechase: { active: newState.active, planes: newState.planes, currentPlane: newState.currentPlane } }).catch(()=>{});
+      };
       useEffect(() => { stateRef.current = { numPlayers, archenemy, activeModal }; }, [numPlayers, archenemy, activeModal]);
 
       // SBLOCCO DI SICUREZZA UNIVERSALE (FAIL-SAFE)
@@ -3691,44 +3717,48 @@
           
           const sharedStats = ['life', 'poison', 'energy', 'ticket'];
           const isShared = sharedStats.includes(stat);
+          let newState = [];
           
           if (opponentId && stat === 'cmdDmg') {
              let prevVal = targetPlayer.cmdDmg[opponentId] || 0;
              let newVal = Math.max(0, prevVal + amount);
              let diff = newVal - prevVal;
-             return prev.map(p => {
-                if (p.id === playerId) {
-                   return { ...p, cmdDmg: { ...p.cmdDmg, [opponentId]: newVal }, life: Math.max(0, p.life - diff) };
-                }
-                // Sincronizza VITA E DANNO COMANDANTE per il compagno di squadra
-                if (p.teamId === targetPlayer.teamId && p.id !== playerId) { 
-                   return { ...p, cmdDmg: { ...p.cmdDmg, [opponentId]: newVal }, life: Math.max(0, p.life - diff) }; 
-                }
+             newState = prev.map(p => {
+                if (p.id === playerId) return { ...p, cmdDmg: { ...p.cmdDmg, [opponentId]: newVal }, life: Math.max(0, p.life - diff) };
+                if (p.teamId === targetPlayer.teamId && p.id !== playerId) return { ...p, cmdDmg: { ...p.cmdDmg, [opponentId]: newVal }, life: Math.max(0, p.life - diff) }; 
                 return p;
              });
+          } else {
+             newState = prev.map(p => {
+                 if (isShared && p.teamId === targetPlayer.teamId) return { ...p, [stat]: Math.max(0, p[stat] + amount) }; 
+                 else if (!isShared && p.id === playerId) return { ...p, [stat]: Math.max(0, p[stat] + amount) }; 
+                 return p;
+             });
           }
-
-          return prev.map(p => {
-             if (isShared && p.teamId === targetPlayer.teamId) {
-                return { ...p, [stat]: Math.max(0, p[stat] + amount) }; // Applica a tutti i membri del team
-             } else if (!isShared && p.id === playerId) {
-                return { ...p, [stat]: Math.max(0, p[stat] + amount) }; // Applica solo a te
-             }
-             return p;
-          });
+          syncToRoom('players', newState); 
+          return newState;
         });
       };
 
       const updateMana = (playerId, color, amount) => {
-        setPlayers(prev => prev.map(p => {
-           if(p.id !== playerId) return p;
-           let newMana = {...p.mana}; newMana[color] = Math.max(0, newMana[color] + amount);
-           return {...p, mana: newMana};
-        }));
-      }
+        setPlayers(prev => {
+            const newState = prev.map(p => {
+               if(p.id !== playerId) return p;
+               let newMana = {...p.mana}; newMana[color] = Math.max(0, newMana[color] + amount);
+               return {...p, mana: newMana};
+            });
+            syncToRoom('players', newState); 
+            return newState;
+        });
+      };
 
-      const updatePlayerConfig = (id, key, val) => { setPlayers(prev => prev.map(p => p.id === id ? { ...p, [key]: val } : p)); };
-      const toggleImmunity = (playerId) => { setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, immune: !p.immune } : p)); };
+      const updatePlayerConfig = (id, key, val) => { 
+          setPlayers(prev => { const n = prev.map(p => p.id === id ? { ...p, [key]: val } : p); syncToRoom('players', n); return n; }); 
+      };
+      
+      const toggleImmunity = (playerId) => { 
+          setPlayers(prev => { const n = prev.map(p => p.id === playerId ? { ...p, immune: !p.immune } : p); syncToRoom('players', n); return n; }); 
+      };
 
       if (view === 'game') return (
         <div className="max-w-md mx-auto bg-gray-800/90 p-6 rounded-xl shadow-lg border border-gray-600 mt-4 backdrop-blur-sm animate-fade">
@@ -3840,7 +3870,7 @@
                 </div>
 
                 {myPlayerId && (
-                   <button onClick={() => alert("Perfetto! Il collegamento al DB è andato a buon fine. Procediamo alla Fase 3: la Tua Plancia!")} className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all animate-pulse">
+                   <button onClick={() => setView('game_active')} className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all animate-pulse">
                       VAI ALLA TUA PLANCIA!
                    </button>
                 )}
@@ -3849,95 +3879,130 @@
         </div>
       );
 
-      // --- LOGICA GRIGLIE ---
+      // --- LOGICA GRIGLIE LOCALI E CLOUD ---
       let gridClass = '';
       if (players.length <= 2) gridClass = 'grid-cols-1 grid-rows-[1fr_55px_1fr]';
-      else if (players.length === 3) gridClass = 'grid-cols-[1fr_55px_1fr] grid-rows-2';
-      else if (players.length === 4) gridClass = 'grid-cols-[1fr_55px_1fr] grid-rows-2';
+      else if (players.length === 3 || players.length === 4) gridClass = 'grid-cols-[1fr_55px_1fr] grid-rows-2';
       else if (players.length === 5) gridClass = 'grid-cols-[1fr_1fr_55px_1.2fr] grid-rows-2';
       else if (players.length === 6) gridClass = 'grid-cols-[1.2fr_1fr_55px_1fr_1.2fr] grid-rows-2';
 
       let currentArchenemyName = "Sconosciuto";
-      if (archenemy.playerId) {
-          const archPlayer = players.find(p => p.id === archenemy.playerId);
-          if (archPlayer) currentArchenemyName = archPlayer.name;
-      }
+      if (archenemy.playerId) { const archPlayer = players.find(p => p.id === archenemy.playerId); if (archPlayer) currentArchenemyName = archPlayer.name; }
+
+      const isCloudMode = inCloudRoom && myPlayerId;
+      const myPlayer = isCloudMode ? players.find(p => p.id === myPlayerId) : null;
+      const isHostOrArch = isHost || (archenemy.playerId === myPlayerId);
 
       return (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col h-[100dvh] w-[100dvw]">
-          <div className={`flex-1 grid ${gridClass} gap-1 h-full w-full p-1`}>
-             
-             {/* RENDER GIOCATORI */}
-             {players.map((p, index) => {
-                 let wrapperClass = "relative overflow-hidden rounded-xl border border-gray-600 bg-gray-900 shadow-xl"; 
-                 let rotDeg = 0; let rowStart = ""; let colStart = ""; let rowSpan = "";
-                 
-                 // POSIZIONAMENTO LOGICO
-                 if (players.length <= 2) {
-                     if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
-                     if (index === 1) { rowStart = "row-start-3"; colStart = "col-start-1"; rotDeg = 0; }
-                 } else if (players.length === 3) {
-                     if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
-                     if (index === 1) { rowStart = "row-start-2"; colStart = "col-start-1"; rotDeg = 0; }
-                     if (index === 2) { rowStart = "row-start-1"; colStart = "col-start-3"; rowSpan = "row-span-2"; rotDeg = -90; }
-                 } else if (players.length === 4) {
-                     if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
-                     if (index === 1) { rowStart = "row-start-1"; colStart = "col-start-3"; rotDeg = 180; }
-                     if (index === 2) { rowStart = "row-start-2"; colStart = "col-start-1"; rotDeg = 0; }
-                     if (index === 3) { rowStart = "row-start-2"; colStart = "col-start-3"; rotDeg = 0; }
-                 } else if (players.length === 5) {
-                     if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
-                     if (index === 1) { rowStart = "row-start-1"; colStart = "col-start-2"; rotDeg = 180; }
-                     if (index === 2) { rowStart = "row-start-2"; colStart = "col-start-1"; rotDeg = 0; }
-                     if (index === 3) { rowStart = "row-start-2"; colStart = "col-start-2"; rotDeg = 0; }
-                     if (index === 4) { rowStart = "row-start-1"; colStart = "col-start-4"; rowSpan = "row-span-2"; rotDeg = -90; }
-                 } else if (players.length === 6) {
-                     if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rowSpan = "row-span-2"; rotDeg = 90; }
-                     if (index === 1) { rowStart = "row-start-1"; colStart = "col-start-2"; rotDeg = 180; }
-                     if (index === 2) { rowStart = "row-start-1"; colStart = "col-start-4"; rotDeg = 180; }
-                     if (index === 3) { rowStart = "row-start-2"; colStart = "col-start-2"; rotDeg = 0; }
-                     if (index === 4) { rowStart = "row-start-2"; colStart = "col-start-4"; rotDeg = 0; }
-                     if (index === 5) { rowStart = "row-start-1"; colStart = "col-start-5"; rowSpan = "row-span-2"; rotDeg = -90; }
-                 }
+           {isCloudMode && myPlayer ? (
+               // --- PLANCIA PERSONALE CLOUD ---
+               <React.Fragment>
+                  <div className="flex-1 w-full relative overflow-hidden bg-gray-900 shadow-xl">
+                      <PlayerCard player={myPlayer} updateStat={updateStat} updatePlayerConfig={updatePlayerConfig} rotation={0} isArchenemy={archenemy.playerId === myPlayer.id} onOpenModal={(type) => setActiveModal({type, playerId: myPlayer.id, rotation: 0})} opponents={players.filter(p => p.id !== myPlayerId)} />
+                  </div>
+                  
+                  <div className="h-[75px] bg-gray-950 border-t border-gray-700 flex flex-row items-center justify-around shadow-2xl z-[120] py-2 px-4 w-full shrink-0">
+                      <button onClick={exitGame} className="flex flex-col items-center gap-1 text-red-500 font-bold hover:text-red-400 transition-colors" title="Esci dalla Partita">
+                          <span className="text-2xl">✖</span> <span className="text-[10px] uppercase">Esci</span>
+                      </button>
+                      <div className="w-px h-8 bg-gray-700"></div>
+                      <button onClick={() => setShowDice(true)} className="flex items-center justify-center bg-gray-800 hover:bg-gray-700 w-14 h-14 rounded-xl shadow-lg border border-gray-600 transform transition-transform active:scale-90" title="Lancia Dadi">
+                          <span className="text-3xl drop-shadow-md">🎲</span>
+                      </button>
+                      {isHostOrArch && (
+                          <button onClick={() => setArchenemy(prev => { const n = {...prev, showModal: true}; return n; })} className={`flex items-center justify-center w-14 h-14 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${archenemy.active ? 'bg-red-800 border-red-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Archenemy">
+                              <span className="text-3xl drop-shadow-md">👿</span>
+                          </button>
+                      )}
+                      {isHost && (
+                          <button onClick={() => setPlanechase(prev => { const n = {...prev, showModal: true}; return n; })} className={`flex items-center justify-center w-14 h-14 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${planechase.active ? 'bg-indigo-800 border-indigo-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Planechase">
+                              <span className="text-3xl drop-shadow-md">🌌</span>
+                          </button>
+                      )}
+                      {isHost && (
+                          <React.Fragment>
+                              <div className="w-px h-8 bg-gray-700"></div>
+                              <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
+                                  <span className="text-2xl">🔄</span> <span className="text-[10px] uppercase">Reset</span>
+                              </button>
+                          </React.Fragment>
+                      )}
+                  </div>
+               </React.Fragment>
+           ) : (
+               // --- PLANCIA LOCALE TRADIZIONALE ---
+               <div className={`flex-1 grid ${gridClass} gap-1 h-full w-full p-1`}>
+                 {players.map((p, index) => {
+                     let wrapperClass = "relative overflow-hidden rounded-xl border border-gray-600 bg-gray-900 shadow-xl"; 
+                     let rotDeg = 0; let rowStart = ""; let colStart = ""; let rowSpan = "";
+                     
+                     if (players.length <= 2) {
+                         if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
+                         if (index === 1) { rowStart = "row-start-3"; colStart = "col-start-1"; rotDeg = 0; }
+                     } else if (players.length === 3) {
+                         if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
+                         if (index === 1) { rowStart = "row-start-2"; colStart = "col-start-1"; rotDeg = 0; }
+                         if (index === 2) { rowStart = "row-start-1"; colStart = "col-start-3"; rowSpan = "row-span-2"; rotDeg = -90; }
+                     } else if (players.length === 4) {
+                         if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
+                         if (index === 1) { rowStart = "row-start-1"; colStart = "col-start-3"; rotDeg = 180; }
+                         if (index === 2) { rowStart = "row-start-2"; colStart = "col-start-1"; rotDeg = 0; }
+                         if (index === 3) { rowStart = "row-start-2"; colStart = "col-start-3"; rotDeg = 0; }
+                     } else if (players.length === 5) {
+                         if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rotDeg = 180; }
+                         if (index === 1) { rowStart = "row-start-1"; colStart = "col-start-2"; rotDeg = 180; }
+                         if (index === 2) { rowStart = "row-start-2"; colStart = "col-start-1"; rotDeg = 0; }
+                         if (index === 3) { rowStart = "row-start-2"; colStart = "col-start-2"; rotDeg = 0; }
+                         if (index === 4) { rowStart = "row-start-1"; colStart = "col-start-4"; rowSpan = "row-span-2"; rotDeg = -90; }
+                     } else if (players.length === 6) {
+                         if (index === 0) { rowStart = "row-start-1"; colStart = "col-start-1"; rowSpan = "row-span-2"; rotDeg = 90; }
+                         if (index === 1) { rowStart = "row-start-1"; colStart = "col-start-2"; rotDeg = 180; }
+                         if (index === 2) { rowStart = "row-start-1"; colStart = "col-start-4"; rotDeg = 180; }
+                         if (index === 3) { rowStart = "row-start-2"; colStart = "col-start-2"; rotDeg = 0; }
+                         if (index === 4) { rowStart = "row-start-2"; colStart = "col-start-4"; rotDeg = 0; }
+                         if (index === 5) { rowStart = "row-start-1"; colStart = "col-start-5"; rowSpan = "row-span-2"; rotDeg = -90; }
+                     }
 
-                 const isSideways = rotDeg === 90 || rotDeg === -90;
-                 return (
-                     <div key={p.id} className={`${wrapperClass} ${rowStart} ${colStart} ${rowSpan}`} style={{ containerType: 'size' }}>
-                         <div className={`absolute flex flex-col bg-gray-900 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] ${isSideways ? 'top-1/2 left-1/2' : 'inset-0'}`} 
-                              style={{ width: isSideways ? '100cqh' : '100cqw', height: isSideways ? '100cqw' : '100cqh', transform: isSideways ? `translate(-50%, -50%) rotate(${rotDeg}deg)` : `rotate(${rotDeg}deg)` }}>
-                             <PlayerCard player={p} updateStat={updateStat} updatePlayerConfig={updatePlayerConfig} rotation={rotDeg} isArchenemy={archenemy.playerId === p.id} onOpenModal={(type) => setActiveModal({type, playerId: p.id, rotation: rotDeg})} />
+                     const isSideways = rotDeg === 90 || rotDeg === -90;
+                     return (
+                         <div key={p.id} className={`${wrapperClass} ${rowStart} ${colStart} ${rowSpan}`} style={{ containerType: 'size' }}>
+                             <div className={`absolute flex flex-col bg-gray-900 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] ${isSideways ? 'top-1/2 left-1/2' : 'inset-0'}`} 
+                                  style={{ width: isSideways ? '100cqh' : '100cqw', height: isSideways ? '100cqw' : '100cqh', transform: isSideways ? `translate(-50%, -50%) rotate(${rotDeg}deg)` : `rotate(${rotDeg}deg)` }}>
+                                 <PlayerCard player={p} updateStat={updateStat} updatePlayerConfig={updatePlayerConfig} rotation={rotDeg} isArchenemy={archenemy.playerId === p.id} opponents={players.filter(op => op.id !== p.id)} onOpenModal={(type) => setActiveModal({type, playerId: p.id, rotation: rotDeg})} />
+                             </div>
                          </div>
-                     </div>
-                 );
-             })}
+                     );
+                 })}
 
-             {/* LA BARRA CENTRALE */}
-             <div className={
-                 players.length <= 2 
-                 ? "row-start-2 col-start-1 col-span-full bg-gray-950 border-y border-gray-700 flex flex-row items-center justify-around shadow-2xl z-[120] py-1 px-4"
-                 : `row-start-1 row-span-full ${players.length===3 || players.length===4 ? 'col-start-2' : 'col-start-3'} bg-gray-950 border-x border-gray-700 flex flex-col items-center justify-around shadow-2xl z-[120] py-4 px-1`
-             }>
-                <button onClick={exitGame} className="flex flex-col items-center gap-1 text-red-500 font-bold hover:text-red-400 transition-colors" title="Esci dalla Partita">
-                    <span className="text-xl">✖</span> <span className="text-[10px] uppercase">Esci</span>
-                </button>
-                <div className={players.length <= 2 ? "w-px h-6 bg-gray-700" : "w-6 h-px bg-gray-700"}></div>
-                <button onClick={() => setShowDice(true)} className="flex items-center justify-center bg-gray-800 hover:bg-gray-700 w-12 h-12 rounded-xl shadow-lg border border-gray-600 transform transition-transform active:scale-90" title="Lancia Dadi">
-                    <span className="text-2xl drop-shadow-md">🎲</span>
-                </button>
-                <button onClick={() => setArchenemy(prev => ({...prev, showModal: true}))} className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${archenemy.active ? 'bg-red-800 border-red-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Archenemy">
-                    <span className="text-2xl drop-shadow-md">👿</span>
-                </button>
-                <button onClick={() => setPlanechase(prev => ({...prev, showModal: true}))} className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${planechase.active ? 'bg-indigo-800 border-indigo-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Planechase">
-                    <span className="text-2xl drop-shadow-md">🌌</span>
-                </button>
-                <div className={players.length <= 2 ? "w-px h-6 bg-gray-700" : "w-6 h-px bg-gray-700"}></div>
-                <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
-                    <span className="text-xl">🔄</span> <span className="text-[10px] uppercase">Reset</span>
-                </button>
-             </div>
-          </div>
+                 {/* BARRA CENTRALE LOCALE */}
+                 <div className={
+                     players.length <= 2 
+                     ? "row-start-2 col-start-1 col-span-full bg-gray-950 border-y border-gray-700 flex flex-row items-center justify-around shadow-2xl z-[120] py-1 px-4"
+                     : `row-start-1 row-span-full ${players.length===3 || players.length===4 ? 'col-start-2' : 'col-start-3'} bg-gray-950 border-x border-gray-700 flex flex-col items-center justify-around shadow-2xl z-[120] py-4 px-1`
+                 }>
+                    <button onClick={exitGame} className="flex flex-col items-center gap-1 text-red-500 font-bold hover:text-red-400 transition-colors" title="Esci dalla Partita">
+                        <span className="text-xl">✖</span> <span className="text-[10px] uppercase">Esci</span>
+                    </button>
+                    <div className={players.length <= 2 ? "w-px h-6 bg-gray-700" : "w-6 h-px bg-gray-700"}></div>
+                    <button onClick={() => setShowDice(true)} className="flex items-center justify-center bg-gray-800 hover:bg-gray-700 w-12 h-12 rounded-xl shadow-lg border border-gray-600 transform transition-transform active:scale-90" title="Lancia Dadi">
+                        <span className="text-2xl drop-shadow-md">🎲</span>
+                    </button>
+                    <button onClick={() => setArchenemy(prev => ({...prev, showModal: true}))} className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${archenemy.active ? 'bg-red-800 border-red-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Archenemy">
+                        <span className="text-2xl drop-shadow-md">👿</span>
+                    </button>
+                    <button onClick={() => setPlanechase(prev => ({...prev, showModal: true}))} className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${planechase.active ? 'bg-indigo-800 border-indigo-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Planechase">
+                        <span className="text-2xl drop-shadow-md">🌌</span>
+                    </button>
+                    <div className={players.length <= 2 ? "w-px h-6 bg-gray-700" : "w-6 h-px bg-gray-700"}></div>
+                    <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
+                        <span className="text-xl">🔄</span> <span className="text-[10px] uppercase">Reset</span>
+                    </button>
+                 </div>
+               </div>
+           )}
 
-          {/* RENDER MODALI GLOBALI IN PORTAL */}
+          {/* RENDER MODALI GLOBALI (In comune per Local e Cloud) */}
           {activeModal && ReactDOM.createPortal(
               <PlayerModals type={activeModal.type} player={players.find(p => p.id === activeModal.playerId)} opponents={players.filter(p => p.id !== activeModal.playerId)} onClose={() => setActiveModal(null)} updateStat={updateStat} updateMana={updateMana} toggleImmunity={toggleImmunity} updatePlayerConfig={updatePlayerConfig} rotation={activeModal.rotation} />
           , document.body)}
@@ -3952,7 +4017,7 @@
                 
                 <div className="flex items-center justify-between bg-gray-800 p-4 rounded-xl border border-gray-600 shadow mb-4 shrink-0">
                    <span className="text-gray-300 font-bold">Stato Archenemy:</span>
-                   <button onClick={() => setArchenemy(prev => ({...prev, active: !prev.active}))} className={`px-6 py-2 font-black rounded-lg transition-colors ${archenemy.active ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400'}`}>
+                   <button onClick={() => setArchenemy(prev => { const n = {...prev, active: !prev.active}; syncArchenemy(n); return n; })} className={`px-6 py-2 font-black rounded-lg transition-colors ${archenemy.active ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400'}`}>
                       {archenemy.active ? 'ACCESO (ON)' : 'SPENTO (OFF)'}
                    </button>
                 </div>
@@ -3964,14 +4029,14 @@
                             <h4 className="text-white font-bold mb-3 text-center">Chi è l'Archenemy?</h4>
                             <div className="grid grid-cols-2 gap-2">
                                {players.map(p => (
-                                  <button key={p.id} onClick={() => { setArchenemy(prev => ({...prev, playerId: p.id})); nextScheme(); }} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg border border-gray-500 shadow">{p.name}</button>
+                                  <button key={p.id} onClick={() => { setArchenemy(prev => { const n = {...prev, playerId: p.id}; syncArchenemy(n); return n; }); nextScheme(); }} className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg border border-gray-500 shadow">{p.name}</button>
                                ))}
                             </div>
                          </div>
                       ) : (
                          <div className="flex-1 flex flex-col min-h-0">
                             <p className="text-center text-red-400 font-black mb-2 bg-red-900/30 p-2 rounded border border-red-800 uppercase tracking-widest shrink-0">
-                               🔥 {currentArchenemyName} È IL NEMICO 🔥
+                                🔥 {currentArchenemyName} È IL NEMICO 🔥
                             </p>
                             
                             {archenemy.ongoing.length > 0 && (
@@ -3996,9 +4061,11 @@
                                )}
                             </div>
 
-                            <button onClick={nextScheme} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl text-xl shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all mt-auto shrink-0 mb-2">
-                               🃏 PROSSIMO SCHEMA
-                            </button>
+                            {(isHost || archenemy.playerId === myPlayerId || !isCloudMode) && (
+                                <button onClick={nextScheme} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl text-xl shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all mt-auto shrink-0 mb-2">
+                                    🃏 PROSSIMO SCHEMA
+                                </button>
+                            )}
                          </div>
                       )}
                    </div>
@@ -4023,7 +4090,7 @@
                 
                 <div className="flex items-center justify-between bg-gray-800 p-4 rounded-xl border border-gray-600 shadow mb-4 shrink-0">
                    <span className="text-gray-300 font-bold">Stato Planechase:</span>
-                   <button onClick={() => { setPlanechase(prev => ({...prev, active: !prev.active})); if(!planechase.currentPlane) nextPlane(); }} className={`px-6 py-2 font-black rounded-lg transition-colors ${planechase.active ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}`}>
+                   <button onClick={() => { setPlanechase(prev => { const n = {...prev, active: !prev.active}; syncPlanechase(n); return n; }); if(!planechase.currentPlane) nextPlane(); }} className={`px-6 py-2 font-black rounded-lg transition-colors ${planechase.active ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400'}`}>
                       {planechase.active ? 'ACCESO (ON)' : 'SPENTO (OFF)'}
                    </button>
                 </div>
@@ -4041,14 +4108,16 @@
                             )}
                          </div>
 
-                         <div className="flex gap-2 shrink-0 mb-2">
-                             <button onClick={rollPlanarDie} className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-black py-4 rounded-xl text-lg shadow-[0_0_15px_rgba(202,138,4,0.5)] transition-all flex flex-col items-center">
-                                 <span className="text-2xl">🎲</span> DADO PLANARE
-                             </button>
-                             <button onClick={nextPlane} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl text-lg shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all flex flex-col items-center">
-                                 <span className="text-2xl">🌌</span> FORZA VIAGGIO
-                             </button>
-                         </div>
+                         {(isHost || !isCloudMode) && (
+                             <div className="flex gap-2 shrink-0 mb-2">
+                                 <button onClick={rollPlanarDie} className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white font-black py-4 rounded-xl text-lg shadow-[0_0_15px_rgba(202,138,4,0.5)] transition-all flex flex-col items-center">
+                                     <span className="text-2xl">🎲</span> DADO PLANARE
+                                 </button>
+                                 <button onClick={nextPlane} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl text-lg shadow-[0_0_15px_rgba(79,70,229,0.5)] transition-all flex flex-col items-center">
+                                     <span className="text-2xl">🌌</span> FORZA VIAGGIO
+                                 </button>
+                             </div>
+                         )}
                    </div>
                 )}
              </div>
@@ -4084,7 +4153,6 @@
              </div>
           , document.body)}
 
-          {/* RENDER DADO PLANARE */}
           {planarDieResult && ReactDOM.createPortal(
              <div className="fixed inset-0 z-[10000] flex items-center justify-center pointer-events-none animate-fade bg-black/80">
                 <div className="bg-gray-900 border-4 border-indigo-500 rounded-xl p-6 shadow-[0_0_60px_rgba(79,70,229,0.9)] flex flex-col items-center justify-center transform scale-110 animate-bounce max-w-sm text-center">
