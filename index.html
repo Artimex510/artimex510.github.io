@@ -433,6 +433,33 @@
 
         useEffect(() => { setAlbumPage(0); }, [searchQ, activeFolder, colorFilter, typeFilter, rarityFilter, expFilter, viewMode]);
 
+        // --- FUNZIONI DI BACKUP ---
+        const exportCollection = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collection));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "mtg_collection_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        };
+
+        const importCollection = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (Array.isArray(imported)) {
+                        setCollection(imported);
+                        alert("✅ Collezione importata con successo!");
+                    } else { alert("❌ File non valido."); }
+                } catch (err) { alert("❌ Errore nella lettura del file."); }
+            };
+            reader.readAsText(file);
+        };
+
         const totalValue = processedCollection.reduce((acc, c) => acc + ((c.price || 0) * (c.qty || 1)), 0);
         const totalCards = processedCollection.reduce((acc, c) => acc + (c.qty || 1), 0);
 
@@ -452,7 +479,7 @@
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="bg-gray-900 p-3 rounded-xl border border-gray-700 text-center shadow-inner">
                             <p className="text-gray-400 text-xs font-bold uppercase mb-1">Carte Visibili</p>
                             <p className="text-2xl font-black text-white">{totalCards}</p>
@@ -461,6 +488,20 @@
                             <p className="text-emerald-400 text-xs font-bold uppercase mb-1">Valore Stimato</p>
                             <p className="text-2xl font-black text-white">€ {totalValue.toFixed(2)}</p>
                         </div>
+                    </div>
+
+                    {/* BARRA AZIONI: AGGIUNGI E BACKUP */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                        <button onClick={() => navigate('cardsearch')} className="flex-1 min-w-[200px] bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl shadow-lg border border-emerald-400 flex items-center justify-center gap-2 text-lg active:scale-95 transition-all">
+                            ➕ Aggiungi Carte
+                        </button>
+                        <button onClick={exportCollection} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow border border-indigo-400 flex items-center gap-2 active:scale-95 transition-all" title="Scarica Backup">
+                            💾
+                        </button>
+                        <label className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-xl shadow border border-gray-500 flex items-center gap-2 cursor-pointer active:scale-95 transition-all" title="Importa Backup">
+                            📂
+                            <input type="file" accept=".json" onChange={importCollection} className="hidden" />
+                        </label>
                     </div>
 
                     <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 mb-6 shadow-md space-y-4">
