@@ -2805,7 +2805,7 @@
          };
 
         // RENDER MODALE FISSO SENZA UNMOUNT (Previene il reset dello scorrimento fastidioso)
-        const effectiveRotation = (type === 'search' || type === 'editName') ? 0 : rotation;
+        const effectiveRotation = (type === 'search' || type === 'editName' || type === 'tokens') ? 0 : rotation;
         const isSideways = effectiveRotation === 90 || effectiveRotation === -90;
         const modalStyle = { width: isSideways ? '100vh' : '100vw', height: isSideways ? '100vw' : '100vh', transform: `rotate(${effectiveRotation}deg)` };
         
