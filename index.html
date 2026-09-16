@@ -3496,73 +3496,70 @@
           } catch (err) { console.log("Wake Lock non supportato."); }
       };
 
+      // GESTIONE ORIENTAMENTO E BLOCCO SCHERMO INTELLIGENTE
       useEffect(() => {
           if (view === 'game_active') {
-              // 1. Capiamo se chi ha aperto il modale è un giocatore "ai lati" (ruotato di 90 o -90)
-              const isSidePlayer = activeModal && (activeModal.rotation === 90 || activeModal.rotation === -90);
-              
-              // 2. Se è un giocatore laterale, NON forziamo il telefono in verticale, altrimenti la sua grafica sballa!
-              const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName') && !isSidePlayer);
               const isTokensOpen = activeModal && activeModal.type === 'tokens';
-
-              // Solo ed esclusivamente per le pedine forziamo l'orizzontale scavalcando applyScreenLock
-              if (isTokensOpen) {
-                  if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                      window.screen.orientation.lock('landscape').catch(function(){});
-                  }
-              } else {
-                  applyScreenLock(isVerticalMode, numPlayers);
-              }
+              const isVerticalModalOpen = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
+              const isCloudMode = inCloudRoom && myPlayerId;
               
+              const applyDynamicLock = async () => {
+                  try {
+                      if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen();
+                      if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+                          if (isTokensOpen) {
+                              await window.screen.orientation.lock('landscape'); // Plancia Pedine SEMPRE orizzontale
+                          } else if (isVerticalModalOpen) {
+                              await window.screen.orientation.lock('portrait'); // Ricerca, Nome, Archenemy e Planechase SEMPRE verticali
+                          } else {
+                              // Schermata di gioco base
+                              if (isCloudMode) await window.screen.orientation.lock('landscape');
+                              else if (numPlayers <= 2) await window.screen.orientation.lock('portrait');
+                              else await window.screen.orientation.lock('landscape');
+                          }
+                      }
+                  } catch(e){}
+              };
+              applyDynamicLock();
               requestWakeLock();
               
-              const handleVisibilityChange = () => {
-                  if (document.visibilityState === 'visible' && view === 'game_active') {
-                      requestWakeLock();
-                      if (isTokensOpen) {
-                          if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                              window.screen.orientation.lock('landscape').catch(function(){});
-                          }
-                      } else {
-                          applyScreenLock(isVerticalMode, numPlayers);
-                      }
-                  }
-              };
+              const handleVisibilityChange = () => { if (document.visibilityState === 'visible' && view === 'game_active') { requestWakeLock(); applyDynamicLock(); } };
               document.addEventListener('visibilitychange', handleVisibilityChange);
               return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
           }
-      }, [view, numPlayers, archenemy.showModal, planechase.showModal, activeModal]);
+      }, [view, numPlayers, archenemy.showModal, planechase.showModal, activeModal, inCloudRoom, myPlayerId]);
 
       useEffect(() => {
           if (view === 'game_active') {
               const handlePopState = async (e) => {
                   e.preventDefault();
-                  if (window.confirm("Sei sicuro di voler uscire dalla partita e tornare al Menu?")) {
-                      setView('game');
-                  } else {
+                  if (window.confirm("Sei sicuro di voler uscire dalla partita e tornare alla Lobby?")) setView('game');
+                  else {
                       window.history.pushState(null, "", window.location.href);
                       const curr = stateRef.current;
                       
-                      // Protezione di sicurezza senza usare ?. per il vecchio Babel
                       const isPlanechaseOpen = curr.planechase ? curr.planechase.showModal : false;
-                      const isSidePlayer = curr.activeModal && (curr.activeModal.rotation === 90 || curr.activeModal.rotation === -90);
-                      const isVertical = curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName') && !isSidePlayer);
                       const isTokensOpen = curr.activeModal && curr.activeModal.type === 'tokens';
+                      const isVerticalModalOpen = curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName'));
+                      const isCloud = inCloudRoom && myPlayerId;
                       
-                      if (isTokensOpen) {
+                      try {
+                          if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen();
                           if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                              window.screen.orientation.lock('landscape').catch(function(){});
+                              if (isTokensOpen) await window.screen.orientation.lock('landscape');
+                              else if (isVerticalModalOpen) await window.screen.orientation.lock('portrait');
+                              else if (isCloud) await window.screen.orientation.lock('landscape');
+                              else if (curr.numPlayers <= 2) await window.screen.orientation.lock('portrait');
+                              else await window.screen.orientation.lock('landscape');
                           }
-                      } else {
-                          applyScreenLock(isVertical, curr.numPlayers);
-                      }
+                      } catch(err){}
                   }
               };
               window.history.pushState(null, "", window.location.href);
               window.addEventListener('popstate', handlePopState);
               return () => window.removeEventListener('popstate', handlePopState);
           }
-      }, [view, setView]);
+      }, [view, setView, inCloudRoom, myPlayerId]);
 
       useEffect(() => {
           // Scarica Schemi Archenemy
