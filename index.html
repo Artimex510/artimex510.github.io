@@ -3498,7 +3498,11 @@
 
       useEffect(() => {
           if (view === 'game_active') {
-              const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
+              // 1. Capiamo se chi ha aperto il modale è un giocatore "ai lati" (ruotato di 90 o -90)
+              const isSidePlayer = activeModal && (activeModal.rotation === 90 || activeModal.rotation === -90);
+              
+              // 2. Se è un giocatore laterale, NON forziamo il telefono in verticale, altrimenti la sua grafica sballa!
+              const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName') && !isSidePlayer);
               const isTokensOpen = activeModal && activeModal.type === 'tokens';
 
               // Solo ed esclusivamente per le pedine forziamo l'orizzontale scavalcando applyScreenLock
@@ -3538,9 +3542,11 @@
                   } else {
                       window.history.pushState(null, "", window.location.href);
                       const curr = stateRef.current;
+                      
                       // Protezione di sicurezza senza usare ?. per il vecchio Babel
                       const isPlanechaseOpen = curr.planechase ? curr.planechase.showModal : false;
-                      const isVertical = curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName'));
+                      const isSidePlayer = curr.activeModal && (curr.activeModal.rotation === 90 || curr.activeModal.rotation === -90);
+                      const isVertical = curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName') && !isSidePlayer);
                       const isTokensOpen = curr.activeModal && curr.activeModal.type === 'tokens';
                       
                       if (isTokensOpen) {
