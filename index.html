@@ -3402,6 +3402,10 @@
       const [startLife, setStartLife] = useState(40);
       const [teamMode, setTeamMode] = useState(false); // NUOVO STATO SQUADRE
       const [players, setPlayers] = useState([]);
+
+      // --- STATI LOBBY MULTIPLAYER ---
+      const [lobbyMode, setLobbyMode] = useState('local'); // 'local' o 'cloud'
+      const [joinCode, setJoinCode] = useState("");
       
       const [showDice, setShowDice] = useState(false);
       const [diceResult, setDiceResult] = useState(null);
@@ -3670,30 +3674,88 @@
       if (view === 'game') return (
         <div className="max-w-md mx-auto bg-gray-800/90 p-6 rounded-xl shadow-lg border border-gray-600 mt-4 backdrop-blur-sm animate-fade">
           <h2 className="text-3xl font-black mb-6 text-center text-red-500 drop-shadow-md">Setup Partita</h2>
-          <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mb-6 shadow-inner text-center">
-             <p className="text-blue-200 text-sm font-bold uppercase tracking-wider mb-2">Posizione del Telefono:</p>
-             <p className="text-white text-xs font-semibold">2 Giocatori ➡️ Tieni in Verticale<br/>3 - 6 Giocatori ➡️ Tieni in Orizzontale al centro</p>
+          
+          {/* TABS LOBBY */}
+          <div className="flex gap-2 mb-6 bg-gray-900 p-1 rounded-lg border border-gray-700">
+             <button onClick={()=>setLobbyMode('local')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='local'?'bg-red-600 text-white shadow':'text-gray-400 hover:text-white'}`}>Tavolo Locale</button>
+             <button onClick={()=>setLobbyMode('cloud')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='cloud'?'bg-blue-600 text-white shadow':'text-gray-400 hover:text-white'}`}>☁️ Rete Cloud</button>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-300 font-bold mb-2">Numero Giocatori (1-6)</label>
-            <input type="number" min="1" max="6" value={numPlayers} onChange={e => setNumPlayers(parseInt(e.target.value))} className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white text-center text-xl font-bold outline-none" />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-300 font-bold mb-2">Punti Vita Iniziali</label>
-            <select value={startLife} onChange={e => setStartLife(parseInt(e.target.value))} className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white text-center text-xl font-bold outline-none">
-              <option value={60}>60 (Commander Two-Headed Giant)</option>
-              <option value={40}>40 (Commander Base)</option>
-              <option value={30}>30 (Standard Two-Headed Giant)</option>
-              <option value={20}>20 (Standard Base)</option>
-            </select>
-          </div>
-          <div className="mb-6">
-             <label className="flex items-center gap-3 text-white font-bold bg-blue-900/40 p-3 rounded-lg border border-blue-500 cursor-pointer shadow-inner">
-               <input type="checkbox" checked={teamMode} onChange={e=>setTeamMode(e.target.checked)} className="w-6 h-6 accent-blue-500" />
-               <span className="text-sm">Abilita Squadre (2HG) <br/><span className="text-[10px] text-blue-300 font-normal">Sincronizza Vita, Veleno, Energia e Ticket a coppie.</span></span>
-             </label>
-          </div>
-          <button onClick={startGame} className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all">INIZIA PARTITA</button>
+
+          {/* ========================================== */}
+          {/* TAB LOCALE (Il tuo codice originale intatto) */}
+          {/* ========================================== */}
+          {lobbyMode === 'local' && (
+             <div className="animate-fade">
+                <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mb-6 shadow-inner text-center">
+                   <p className="text-blue-200 text-sm font-bold uppercase tracking-wider mb-2">Posizione del Telefono:</p>
+                   <p className="text-white text-xs font-semibold">2 Giocatori ➡️ Tieni in Verticale<br/>3 - 6 Giocatori ➡️ Tieni in Orizzontale al centro</p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-300 font-bold mb-2">Numero Giocatori (1-6)</label>
+                  <input type="number" min="1" max="6" value={numPlayers} onChange={e => setNumPlayers(parseInt(e.target.value))} className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white text-center text-xl font-bold outline-none" />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-300 font-bold mb-2">Punti Vita Iniziali</label>
+                  <select value={startLife} onChange={e => setStartLife(parseInt(e.target.value))} className="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white text-center text-xl font-bold outline-none">
+                    <option value={60}>60 (Commander Two-Headed Giant)</option>
+                    <option value={40}>40 (Commander Base)</option>
+                    <option value={30}>30 (Standard Two-Headed Giant)</option>
+                    <option value={20}>20 (Standard Base)</option>
+                  </select>
+                </div>
+                <div className="mb-6">
+                   <label className="flex items-center gap-3 text-white font-bold bg-blue-900/40 p-3 rounded-lg border border-blue-500 cursor-pointer shadow-inner">
+                     <input type="checkbox" checked={teamMode} onChange={e=>setTeamMode(e.target.checked)} className="w-6 h-6 accent-blue-500" />
+                     <span className="text-sm">Abilita Squadre (2HG) <br/><span className="text-[10px] text-blue-300 font-normal">Sincronizza Vita, Veleno, Energia e Ticket a coppie.</span></span>
+                   </label>
+                </div>
+                <button onClick={startGame} className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all">INIZIA PARTITA</button>
+             </div>
+          )}
+
+          {/* ========================================== */}
+          {/* TAB CLOUD (Predisposto per il Multiplayer) */}
+          {/* ========================================== */}
+          {lobbyMode === 'cloud' && (
+             <div className="space-y-4 animate-fade">
+                <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3 mb-4 shadow-inner text-center">
+                   <p className="text-blue-300 text-xs font-bold">Collega gli smartphone! Ognuno avrà la sua plancia a tutto schermo sul proprio dispositivo.</p>
+                </div>
+                
+                <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
+                   <h3 className="text-white font-black mb-2 text-lg">Sei l'Host?</h3>
+                   <p className="text-gray-400 text-xs mb-3 font-bold">Imposta le regole, crea la stanza e fai collegare i tuoi amici.</p>
+                   
+                   <div className="flex gap-2 mb-3">
+                      <select value={numPlayers} onChange={e => setNumPlayers(parseInt(e.target.value))} className="flex-1 bg-gray-800 border border-gray-600 rounded p-2 text-white font-bold outline-none text-sm">
+                          <option value={2}>2 Giocatori</option><option value={3}>3 Giocatori</option><option value={4}>4 Giocatori</option><option value={5}>5 Giocatori</option><option value={6}>6 Giocatori</option>
+                      </select>
+                      <select value={startLife} onChange={e => setStartLife(parseInt(e.target.value))} className="flex-1 bg-gray-800 border border-gray-600 rounded p-2 text-white font-bold outline-none text-sm">
+                          <option value={60}>60 PV</option><option value={40}>40 PV</option><option value={30}>30 PV</option><option value={20}>20 PV</option>
+                      </select>
+                   </div>
+                   
+                   <div className="mb-3">
+                       <label className="flex items-center gap-2 text-white font-bold bg-blue-900/40 p-2 rounded border border-blue-500 cursor-pointer">
+                         <input type="checkbox" checked={teamMode} onChange={e=>setTeamMode(e.target.checked)} className="w-5 h-5 accent-blue-500" />
+                         <span className="text-xs">Usa Regole Two-Headed Giant</span>
+                       </label>
+                   </div>
+
+                   <button onClick={() => alert("Perfetto! Tutto pronto per cablare la connessione a Firebase.")} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-lg shadow transition-all flex items-center justify-center gap-2">☁️ CREA STANZA ONLINE</button>
+                </div>
+
+                <div className="flex items-center gap-2 my-2">
+                   <div className="h-px bg-gray-700 flex-1"></div><span className="text-gray-500 text-xs font-black">OPPURE</span><div className="h-px bg-gray-700 flex-1"></div>
+                </div>
+
+                <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
+                   <h3 className="text-white font-black mb-2 text-lg">Unisciti al Tavolo</h3>
+                   <input type="text" placeholder="Codice Stanza (es. MTG5X)" value={joinCode} onChange={e=>setJoinCode(e.target.value.toUpperCase())} className="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 text-white text-center text-xl font-black outline-none focus:border-green-500 mb-3 tracking-widest uppercase" />
+                   <button onClick={() => alert("Perfetto! Tutto pronto per cablare l'ingresso nella stanza.")} disabled={!joinCode} className="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-black py-3 rounded-lg shadow transition-all">ENTRA NEL TAVOLO</button>
+                </div>
+             </div>
+          )}
         </div>
       );
 
