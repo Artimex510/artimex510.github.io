@@ -3499,13 +3499,29 @@
       useEffect(() => {
           if (view === 'game_active') {
               const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
-              applyScreenLock(isVerticalMode, numPlayers);
+              const isTokensOpen = activeModal && activeModal.type === 'tokens';
+
+              // Solo ed esclusivamente per le pedine forziamo l'orizzontale scavalcando applyScreenLock
+              if (isTokensOpen) {
+                  if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+                      window.screen.orientation.lock('landscape').catch(function(){});
+                  }
+              } else {
+                  applyScreenLock(isVerticalMode, numPlayers);
+              }
+              
               requestWakeLock();
               
               const handleVisibilityChange = () => {
                   if (document.visibilityState === 'visible' && view === 'game_active') {
                       requestWakeLock();
-                      applyScreenLock(isVerticalMode, numPlayers);
+                      if (isTokensOpen) {
+                          if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+                              window.screen.orientation.lock('landscape').catch(function(){});
+                          }
+                      } else {
+                          applyScreenLock(isVerticalMode, numPlayers);
+                      }
                   }
               };
               document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -3525,7 +3541,15 @@
                       // Protezione di sicurezza senza usare ?. per il vecchio Babel
                       const isPlanechaseOpen = curr.planechase ? curr.planechase.showModal : false;
                       const isVertical = curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName'));
-                      applyScreenLock(isVertical, curr.numPlayers);
+                      const isTokensOpen = curr.activeModal && curr.activeModal.type === 'tokens';
+                      
+                      if (isTokensOpen) {
+                          if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+                              window.screen.orientation.lock('landscape').catch(function(){});
+                          }
+                      } else {
+                          applyScreenLock(isVertical, curr.numPlayers);
+                      }
                   }
               };
               window.history.pushState(null, "", window.location.href);
