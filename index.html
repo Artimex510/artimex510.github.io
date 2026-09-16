@@ -3597,7 +3597,7 @@
               setInCloudRoom(true);
           } catch (err) {
               console.error(err);
-              alert("Errore di connessione a Firebase. Controlla la tua connessione.");
+              alert("⚠️ ERRORE FIREBASE (Creazione):\n" + err.message);
           }
       };
 
@@ -3617,7 +3617,7 @@
               setInCloudRoom(true);
           } catch (err) {
               console.error(err);
-              alert("Errore di connessione a Firebase.");
+              alert("⚠️ ERRORE FIREBASE (Accesso):\n" + err.message);
           }
       };
       // --- FINE MOTORE FIREBASE ---
