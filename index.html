@@ -2758,7 +2758,6 @@
     );
 
     // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
-    // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
     const PlayerModals = ({ type, player, opponents, onClose, updateStat, updateMana, toggleImmunity, updatePlayerConfig, rotation }) => {
         const [cmdQuery, setCmdQuery] = useState("");
         const [cmdResults, setCmdResults] = useState([]);
@@ -2805,13 +2804,23 @@
                }).catch(e => { console.error(e); setIsSearching(false); });
         };
 
-        // RENDER MODALE: Gestione Mirata delle Rotazioni
+        // --- RENDER MODALE: Gestione Mirata delle Rotazioni ---
         let effectiveRotation = rotation;
+        const numPlay = opponents.length + 1;
+
         if (type === 'search' || type === 'editName') {
-            effectiveRotation = 0; // SEMPRE verticale (portrait)
+            effectiveRotation = 0; // SEMPRE verticale a 0 gradi
         } else if (type === 'tokens') {
-            // Plancia pedine: mantiene la rotazione, tranne per i lati (90 e -90) che tornano a 0
-            effectiveRotation = (rotation === 90 || rotation === -90) ? 0 : rotation;
+            if (numPlay <= 2) {
+                effectiveRotation = 90; // Plancia pedine fissa in orizzontale per 2 giocatori
+            } else {
+                // Per 3-6 giocatori, mantiene la logica originale
+                if (rotation === 90 || rotation === -90) {
+                    effectiveRotation = 0;
+                } else {
+                    effectiveRotation = rotation;
+                }
+            }
         }
         
         const isSideways = effectiveRotation === 90 || effectiveRotation === -90;
@@ -2932,8 +2941,7 @@
                 </React.Fragment>
             );
         }
-        
-        if (type === 'tokens') {
+      if (type === 'tokens') {
             const SfondiPedine = ['plains_sfondo.jpg', 'island_sfondo.jpg', 'swamp_sfondo.jpg', 'mountain_sfondo.jpg', 'forest_sfondo.jpg', 'eldrazi_sfondo.jpg', 'yokai_sfondo.jpg', 'yokai2_sfondo.jpg', 'yokai3_sfondo.jpg'];
             
             const [showSearchModal, setShowSearchModal] = useState(false);
@@ -3001,7 +3009,7 @@
             // 1. RICERCA PEDINE UFFICIALI SCRYFALL
             const searchOfficialToken = () => {
                 if(!tokenQuery.trim() && !tokenOracle.trim() && !tokenPT.trim()) {
-                    alert("Inser অন্তত un parametro di ricerca.");
+                    alert("Inserisci almeno un parametro di ricerca.");
                     return;
                 }
                 setIsSearching(true);
@@ -3077,10 +3085,11 @@
                 }
                 setIsGeneratingToken(false);
             };
-          return (
+
+            return (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none bg-black/80 backdrop-blur-md overflow-hidden">
                     
-                    {/* --- 1. CONTENITORE PLANCIA PEDINE (RUOTA IN BASE AL GIOCATORE) --- */}
+                    {/* --- 1. PLANCIA PEDINE PRINCIPALE (Ruota in base al giocatore) --- */}
                     <div className="bg-gray-900 border-2 border-gray-600 shadow-2xl flex flex-col p-1 sm:p-2 pointer-events-auto relative" style={modalStyle}>
                         
                         {/* INTESTAZIONE MINIMALE */}
@@ -3214,7 +3223,7 @@
                                 )}
                             </div>
 
-                            {/* MODALE DI SPLIT MANTENUTO NELLA PLANCIA (così segue la rotazione) */}
+                            {/* MODALE DI SPLIT MANTENUTO NELLA PLANCIA (Così ruota insieme al giocatore) */}
                             {splittingTokenId && (
                                 <div className="absolute inset-0 z-40 bg-black/90 backdrop-blur-sm p-4 flex flex-col items-center justify-center animate-fade">
                                     <div className="bg-gray-800 border-2 border-amber-500 rounded-xl p-4 w-full max-w-xs shadow-2xl text-center space-y-3">
@@ -3245,13 +3254,8 @@
                             </button>
                         </div>
                     </div>
-                    {/* --- FINE CONTENITORE PLANCIA PEDINE --- */}
 
-
-                    {/* ============================================================== */}
-                    {/* --- 2. SOTTO-MODALI FUORI DALLA PLANCIA (SEMPRE A 0 GRADI) --- */}
-                    {/* Questi div non sono soggetti alla rotazione del "modalStyle"  */}
-                    {/* ============================================================== */}
+                    {/* --- 2. SOTTO-MODALI FUORI DALLA ROTAZIONE (FISSI A 0 GRADI PER TUTTI) --- */}
 
                     {/* Menu Sfondi - Fisso in verticale dritto */}
                     {showBgMenu && (
