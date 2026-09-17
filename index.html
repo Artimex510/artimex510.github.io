@@ -2957,18 +2957,7 @@
                 } catch(e) {}
             }, [showSearchModal]);
 
-            // Effetto 2: Solo alla chiusura TOTALE della plancia pedine, ripristina la partita
-            useEffect(() => {
-                return () => {
-                    const isMulti = opponents.length + 1 > 2;
-                    try {
-                        if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                            window.screen.orientation.lock(isMulti ? 'landscape' : 'portrait').catch(function(){});
-                        }
-                    } catch(e) {}
-                };
-            }, [opponents.length]);
-
+            
             const openSearch = () => { setShowSearchModal(true); };
             const closeSearch = () => {
                 setShowSearchModal(false);
@@ -3442,7 +3431,7 @@
       const wakeLockRef = React.useRef(null);
       const stateRef = React.useRef({ numPlayers, archenemy, activeModal, planechase });
 
-      // --- 🛰️ IL RADAR FIREBASE (Attivo anche nella Lobby per vedere i posti occupati) ---
+      // --- 🛰️ IL RADAR FIREBASE ---
       useEffect(() => {
           if (inCloudRoom && roomCode) {
               const unsubscribe = db.collection('matches').doc(roomCode).onSnapshot(doc => {
@@ -3459,13 +3448,13 @@
 
       // --- 📡 I TRASMETTITORI FIREBASE ---
       const syncToRoom = (field, payload) => {
-          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ [field]: payload }).catch(()=>{});
+          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ [field]: payload }).catch(function(){});
       };
       const syncArchenemy = (newState) => {
-          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ archenemy: { active: newState.active, playerId: newState.playerId, schemes: newState.schemes, ongoing: newState.ongoing, currentScheme: newState.currentScheme } }).catch(()=>{});
+          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ archenemy: { active: newState.active, playerId: newState.playerId, schemes: newState.schemes, ongoing: newState.ongoing, currentScheme: newState.currentScheme } }).catch(function(){});
       };
       const syncPlanechase = (newState) => {
-          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ planechase: { active: newState.active, planes: newState.planes, currentPlane: newState.currentPlane } }).catch(()=>{});
+          if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ planechase: { active: newState.active, planes: newState.planes, currentPlane: newState.currentPlane } }).catch(function(){});
       };
       useEffect(() => { stateRef.current = { numPlayers, archenemy, activeModal, planechase }; }, [numPlayers, archenemy, activeModal, planechase]);
 
@@ -3474,36 +3463,36 @@
           if (view !== 'game_active') {
               try {
                   if (document.fullscreenElement && document.exitFullscreen) {
-                      document.exitFullscreen().catch(()=>{});
+                      document.exitFullscreen().catch(function(){});
                   }
                   if (window.screen && window.screen.orientation && window.screen.orientation.unlock) {
                       window.screen.orientation.unlock();
                   }
                   if (wakeLockRef.current) {
-                      wakeLockRef.current.release().catch(()=>{});
+                      wakeLockRef.current.release().catch(function(){});
                       wakeLockRef.current = null;
                   }
               } catch(e) {}
           }
       }, [view]);
 
-      // --- GESTIONE ORIENTAMENTO FIXATA (Risolve il conflitto a 2 giocatori) ---
+      // --- GESTIONE ORIENTAMENTO FIXATA ---
       const applyScreenLock = async (mode = 'auto', playersCount = numPlayers) => {
           try {
               if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-                  await document.documentElement.requestFullscreen();
+                  document.documentElement.requestFullscreen().catch(function(){});
               }
+          } catch (e) {}
+
+          try {
               if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                  if (mode === 'portrait') {
-                      await window.screen.orientation.lock('portrait');
-                  } else if (mode === 'landscape') {
-                      await window.screen.orientation.lock('landscape');
-                  } else {
-                      if (playersCount <= 2) await window.screen.orientation.lock('portrait');
-                      else await window.screen.orientation.lock('landscape');
+                  let finalMode = mode;
+                  if (mode === 'auto') {
+                      finalMode = playersCount <= 2 ? 'portrait' : 'landscape';
                   }
+                  window.screen.orientation.lock(finalMode).catch(function(){});
               }
-          } catch (e) { console.log("Fullscreen o Blocco non supportati", e); }
+          } catch (e) {}
       };
 
       const requestWakeLock = async () => {
@@ -3511,7 +3500,7 @@
               if ('wakeLock' in navigator) {
                   wakeLockRef.current = await navigator.wakeLock.request('screen');
               }
-          } catch (err) { console.log("Wake Lock non supportato."); }
+          } catch (err) {}
       };
 
       useEffect(() => {
@@ -3520,7 +3509,7 @@
               if (archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'))) {
                   lockMode = 'portrait';
               } else if (activeModal && activeModal.type === 'tokens') {
-                  lockMode = 'landscape'; // Forza fisicamente il landscape per le pedine (Fix 2 Giocatori)
+                  lockMode = 'landscape';
               }
               applyScreenLock(lockMode, numPlayers);
               requestWakeLock();
@@ -3618,7 +3607,7 @@
          setTimeout(() => setDiceResult(null), 2500);
       };
 
-      // --- LOGICA MULTIPLAYER (CREAZIONE, ACCESSO E LOCK POSTAZIONE) ---
+      // --- LOGICA MULTIPLAYER (CREAZIONE E LOCK POSTAZIONE) ---
       const createCloudRoom = async () => {
           const code = Math.random().toString(36).substring(2, 7).toUpperCase(); 
           
@@ -3636,7 +3625,7 @@
               });
               setRoomCode(code); setPlayers(initialPlayers); setIsHost(true); setInCloudRoom(true);
           } catch (err) {
-              alert("⚠️ ERRORE FIREBASE (Creazione):\n" + err.message);
+              alert("⚠️ ERRORE FIREBASE:\n" + err.message);
           }
       };
 
@@ -3649,9 +3638,7 @@
               const data = docRef.data();
               setRoomCode(joinCode); setNumPlayers(data.numPlayers); setStartLife(data.startLife); setTeamMode(data.teamMode || false);
               setPlayers(data.players); setIsHost(false); setInCloudRoom(true);
-          } catch (err) {
-              alert("⚠️ ERRORE FIREBASE (Accesso):\n" + err.message);
-          }
+          } catch (err) {}
       };
 
       const selectPlayerSlot = (pId) => {
@@ -3671,12 +3658,11 @@
       };
 
       const fallbackToLocal = () => {
-          if (window.confirm("Vuoi disconnetterti dal Cloud e continuare la partita in Locale su questo dispositivo?\n\n(Tutti i giocatori passeranno su questo schermo, ideale se a qualcuno si è scaricato il telefono)")) {
+          if (window.confirm("Vuoi sganciarti dal Cloud e continuare in Locale su questo telefono?\n\nLa partita non andrà persa: tutti i giocatori (con i loro punti vita e pedine) passeranno su questo schermo.")) {
               setLobbyMode('local');
               setInCloudRoom(false);
               setMyPlayerId(null);
               setRoomCode("");
-              // La partita continua in locale mantenendo i setPlayers attuali!
           }
       };
       
@@ -3746,7 +3732,6 @@
               return { ...prev, currentScheme: next, schemes: newSchemes, ongoing: newOngoing };
           });
       };
-
       const updateStat = (playerId, stat, amount, opponentId = null) => {
         setPlayers(prev => {
           const targetPlayer = prev.find(p => p.id === playerId);
@@ -3796,6 +3781,7 @@
       const toggleImmunity = (playerId) => { 
           setPlayers(prev => { const n = prev.map(p => p.id === playerId ? { ...p, immune: !p.immune } : p); syncToRoom('players', n); return n; }); 
       };
+
       if (view === 'game') return (
         <div className="max-w-md mx-auto bg-gray-800/90 p-6 rounded-xl shadow-lg border border-gray-600 mt-4 backdrop-blur-sm animate-fade">
           <h2 className="text-3xl font-black mb-6 text-center text-red-500 drop-shadow-md">Setup Partita</h2>
@@ -3837,7 +3823,7 @@
           {lobbyMode === 'cloud' && !inCloudRoom && (
              <div className="space-y-4 animate-fade">
                 <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3 mb-4 shadow-inner text-center">
-                   <p className="text-blue-300 text-xs font-bold">Collega gli smartphone! Ognuno avrà la sua plancia a tutto schermo sul proprio dispositivo.</p>
+                   <p className="text-blue-300 text-xs font-bold">Collega gli smartphone! Ognuno avrà la plancia a tutto schermo sul proprio dispositivo.</p>
                 </div>
                 
                 <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
@@ -3943,12 +3929,13 @@
                       <button onClick={exitGame} className="flex flex-col items-center gap-1 text-red-500 font-bold hover:text-red-400 transition-colors" title="Esci dalla Partita">
                           <span className="text-2xl">✖</span> <span className="text-[10px] uppercase">Esci</span>
                       </button>
+                      
                       <div className="w-px h-8 bg-gray-700"></div>
                       
-                      {/* TASTO SWITCH CLOUD -> LOCALE */}
-                      <button onClick={fallbackToLocal} className="flex flex-col items-center gap-1 text-yellow-500 font-bold hover:text-yellow-400 transition-colors" title="Passa in Modalità Locale (Porta tutto su questo schermo)">
+                      <button onClick={fallbackToLocal} className="flex flex-col items-center gap-1 text-yellow-500 font-bold hover:text-yellow-400 transition-colors" title="Passa in Modalità Locale">
                           <span className="text-2xl">📱</span> <span className="text-[10px] uppercase">Locale</span>
                       </button>
+                      
                       <div className="w-px h-8 bg-gray-700"></div>
 
                       <button onClick={() => setShowDice(true)} className="flex items-center justify-center bg-gray-800 hover:bg-gray-700 w-12 h-12 rounded-xl shadow-lg border border-gray-600 transform transition-transform active:scale-90" title="Lancia Dadi">
