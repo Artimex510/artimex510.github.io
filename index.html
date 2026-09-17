@@ -2805,7 +2805,7 @@
          };
 
         // RENDER MODALE FISSO SENZA UNMOUNT (Previene il reset dello scorrimento fastidioso)
-        const effectiveRotation = (type === 'tokens' && (rotation === 90 || rotation === -90)) ? 0 : rotation;
+        const effectiveRotation = (type === 'search' || type === 'editName') ? 0 : rotation;
         const isSideways = effectiveRotation === 90 || effectiveRotation === -90;
         const modalStyle = { width: isSideways ? '100vh' : '100vw', height: isSideways ? '100vw' : '100vh', transform: `rotate(${effectiveRotation}deg)` };
         
@@ -3252,9 +3252,9 @@
                                 </div>
                             )}
 
-                            {/* Menu Sfondi (Con i tuoi nuovi sfondi inclusi!) */}
-                            {showBgMenu && (
-                                <div className="absolute inset-0 z-30 bg-black/95 p-4 flex flex-col gap-4 animate-fade">
+                            {/* Menu Sfondi */}
+                            {showBgMenu && ReactDOM.createPortal(
+                                <div className="fixed inset-0 z-[10000] bg-black/95 p-4 flex flex-col gap-4 animate-fade">
                                     <h4 className="text-white font-black text-xl mb-2 border-b border-gray-700 pb-2">Sfondo Battaglia</h4>
                                     <div className="grid grid-cols-2 gap-4 overflow-y-auto content-start flex-1">
                                         <div className="h-28 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold border-2 border-dashed border-gray-600 cursor-pointer text-center p-2" onClick={() => { updatePlayerConfig(player.id, 'tokenBg', null); setShowBgMenu(false); }}>Sfondo Vuoto</div>
@@ -3267,8 +3267,7 @@
                                     </div>
                                     <button onClick={() => setShowBgMenu(false)} className="mt-auto bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-bold transition-colors">Chiudi Menu</button>
                                 </div>
-                            )}
-                        </div>
+                            , document.body)}
 
                         {/* BARRA INFERIORE */}
                         <div className="flex gap-2 mt-1 px-1 pb-0.5 shrink-0 z-20 items-center justify-between">
@@ -3278,9 +3277,9 @@
                             </button>
                         </div>
 
-                        {/* SUB-MODALE VERTICALE DI RICERCA */}
-                        {showSearchModal && (
-                            <div className="absolute inset-0 z-50 bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto">
+                       {/* SUB-MODALE VERTICALE DI RICERCA */}
+                        {showSearchModal && ReactDOM.createPortal(
+                            <div className="fixed inset-0 z-[10000] bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto">
                                 <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                                     <h4 className="text-emerald-400 font-black text-lg">🔍 Aggiungi Pedina al Campo</h4>
                                     <button onClick={closeSearch} className="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs">Chiudi</button>
@@ -3329,15 +3328,8 @@
                                     </div>
                                 )}
                             </div>
-                        )}
-
-                    </div>
-                </div>
-            );
-        }
-        return null;
-    };
-
+                        , document.body)}
+                          
     // --- CARTELLA GIOCATORE ---
     const PlayerCard = ({ player, updateStat, onOpenModal, updatePlayerConfig, isArchenemy }) => {
       let isDead = false;
