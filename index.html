@@ -3398,12 +3398,24 @@
                         <div key={opp.id} className="bg-black/60 p-2 rounded-lg border border-gray-700 flex justify-between items-center shadow-inner">
                             <span className="text-white font-bold text-xs truncate max-w-[35%] pr-1">{opp.name}</span>
                             <div className="flex gap-2 text-xs font-black">
-                                <span className="bg-red-900/50 text-red-300 px-1.5 py-0.5 rounded border border-red-800">❤️ {opp.life}</span>
+                                <span className="bg-red-900/50 text-red-300 px-1.5 py-0.5 rounded border border-red-800" title="Punti Vita attuali">❤️ {opp.life}</span>
+                                
                                 {opp.poison > 0 && (
-                                    <span className="bg-green-900/50 text-green-300 px-1.5 py-0.5 rounded border border-green-800">💧 {opp.poison}</span>
+                                    <span className="bg-green-900/50 text-green-300 px-1.5 py-0.5 rounded border border-green-800" title="Segnalini Veleno">💧 {opp.poison}</span>
                                 )}
+                                
+                                {/* Danni Comandante SUBITI (Arancione/Rosso) */}
                                 {player.cmdDmg && player.cmdDmg[opp.id] > 0 && (
-                                    <span className="bg-orange-900/50 text-orange-300 px-1.5 py-0.5 rounded border border-orange-800" title={`Danni Comandante presi da ${opp.name}`}>⚔️ {player.cmdDmg[opp.id]}</span>
+                                    <span className="bg-orange-900/50 text-orange-300 px-1.5 py-0.5 rounded border border-orange-800" title={`Danni Comandante che HAI SUBÌTO da ${opp.name}`}>
+                                        🩸⚔️ {player.cmdDmg[opp.id]}
+                                    </span>
+                                )}
+
+                                {/* Danni Comandante INFLITTI (Verde Smeraldo) */}
+                                {opp.cmdDmg && opp.cmdDmg[player.id] > 0 && (
+                                    <span className="bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500" title={`Danni Comandante che HAI INFLITTO a ${opp.name}`}>
+                                        🎯⚔️ {opp.cmdDmg[player.id]}
+                                    </span>
                                 )}
                             </div>
                         </div>
