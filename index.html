@@ -2812,9 +2812,9 @@
             effectiveRotation = 0; // SEMPRE DRITTI A 0 GRADI (VERTICALE)
         } else if (type === 'tokens') {
             if (numPlay <= 2) {
-                effectiveRotation = 90; // Plancia pedine fissa in orizzontale per 2 giocatori
+                effectiveRotation = 0; // CSS DRITTO A 0. L'hardware ruoterà fisicamente in landscape a tutto schermo!
             } else {
-                effectiveRotation = (rotation === 90 || rotation === -90) ? 0 : rotation; // LOGICA BASE per 3-6 giocatori
+                effectiveRotation = (rotation === 90 || rotation === -90) ? 0 : rotation; // LOGICA BASE 3-6
             }
         }
         
@@ -2943,21 +2943,31 @@
             const [splittingTokenId, setSplittingTokenId] = useState(null);
             const [splitQty, setSplitQty] = useState(1);
 
-            // GESTIONE ORIENTAMENTO PLANCIA PEDINE E SOTTO-MODALE RICERCA
+            // GESTIONE HARDWARE ORIENTAMENTO PLANCIA PEDINE E SOTTO-MODALE RICERCA
+            // Effetto 1: Gestisce i cambi interni (Apertura ricerca pedine = Portrait, Plancia = Landscape)
             useEffect(() => {
-                const isMulti = opponents.length + 1 > 2;
                 try {
                     if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
                         if (showSearchModal) {
-                            // Cerca Pedine: Forza fisicamente lo schermo verticale per tutti (tastiera comoda)
                             window.screen.orientation.lock('portrait').catch(function(){});
                         } else {
-                            // Ritorna all'orientamento originale della partita
-                            window.screen.orientation.lock(isMulti ? 'landscape' : 'portrait').catch(function(){});
+                            window.screen.orientation.lock('landscape').catch(function(){});
                         }
                     }
                 } catch(e) {}
-            }, [showSearchModal, opponents.length]);
+            }, [showSearchModal]);
+
+            // Effetto 2: Solo alla chiusura TOTALE della plancia pedine, ripristina la partita
+            useEffect(() => {
+                return () => {
+                    const isMulti = opponents.length + 1 > 2;
+                    try {
+                        if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+                            window.screen.orientation.lock(isMulti ? 'landscape' : 'portrait').catch(function(){});
+                        }
+                    } catch(e) {}
+                };
+            }, [opponents.length]);
 
             const openSearch = () => { setShowSearchModal(true); };
             const closeSearch = () => {
@@ -3111,6 +3121,7 @@
 
                         {/* CAMPO DI BATTAGGIA MASSIMIZZATO E LUMINOSO */}
                         <div className="flex-1 relative bg-black overflow-hidden rounded-xl border border-gray-600 mt-1 flex flex-col">
+                            {/* SFONDO LUMINOSO (75%) */}
                             {player.tokenBg && <img src={player.tokenBg} className="absolute inset-0 w-full h-full object-cover opacity-75 z-0 pointer-events-none" />}
                             
                             <div className="flex-1 overflow-y-auto p-2 sm:p-4 flex flex-wrap gap-4 sm:gap-6 content-start z-10 relative items-start">
@@ -3233,7 +3244,7 @@
                                 )}
                             </div>
 
-                            {/* MODALE DI SPLIT MANTENUTO NELLA PLANCIA (così ruota in base al giocatore come gli sfondi) */}
+                            {/* MODALE DI SPLIT MANTENUTO DENTRO (così ruota in base al giocatore come gli sfondi) */}
                             {splittingTokenId && (
                                 <div className="absolute inset-0 z-40 bg-black/90 backdrop-blur-sm p-4 flex flex-col items-center justify-center animate-fade">
                                     <div className="bg-gray-800 border-2 border-amber-500 rounded-xl p-4 w-full max-w-xs shadow-2xl text-center space-y-3">
@@ -3254,7 +3265,7 @@
                                 </div>
                             )}
 
-                            {/* MENU SFONDI DENTRO LA PLANCIA */}
+                            {/* MENU SFONDI MANTENUTO DENTRO (ruota con il giocatore che lo apre) */}
                             {showBgMenu && (
                                 <div className="absolute inset-0 z-30 bg-black/95 p-4 flex flex-col gap-4 animate-fade">
                                     <h4 className="text-white font-black text-xl mb-2 border-b border-gray-700 pb-2">Sfondo Battaglia</h4>
@@ -3282,9 +3293,9 @@
                         </div>
                     </div>
 
-                    {/* --- 2. RICERCA PEDINE: FUORI DALLA PLANCIA (SEMPRE A 0 GRADI PER TUTTI, COME COMANDANTE) --- */}
+                    {/* --- 2. RICERCA PEDINE (ESTRATTO DALLA PLANCIA: FISSO DRITTO A 0 GRADI PER TUTTI IN VERTICALE) --- */}
                     {showSearchModal && (
-                        <div className="absolute inset-0 z-[10000] pointer-events-auto bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto">
+                        <div className="absolute inset-0 z-[10000] pointer-events-auto bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto" style={{transform: 'rotate(0deg)'}}>
                             <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                                 <h4 className="text-emerald-400 font-black text-lg">🔍 Aggiungi Pedina al Campo</h4>
                                 <button onClick={closeSearch} className="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs">Chiudi</button>
@@ -3339,7 +3350,7 @@
         }
         return null;
     };
-
+    
     // --- CARTELLA GIOCATORE ---
     const PlayerCard = ({ player, updateStat, onOpenModal, updatePlayerConfig, isArchenemy }) => {
       let isDead = false;
