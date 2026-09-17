@@ -3413,11 +3413,11 @@
       const [setup, setSetup] = useState(true);
       const [numPlayers, setNumPlayers] = useState(4);
       const [startLife, setStartLife] = useState(40);
-      const [teamMode, setTeamMode] = useState(false); // NUOVO STATO SQUADRE
+      const [teamMode, setTeamMode] = useState(false);
       const [players, setPlayers] = useState([]);
 
       // --- STATI LOBBY MULTIPLAYER ---
-      const [lobbyMode, setLobbyMode] = useState('local'); // 'local' o 'cloud'
+      const [lobbyMode, setLobbyMode] = useState('local');
       const [joinCode, setJoinCode] = useState("");
       const [inCloudRoom, setInCloudRoom] = useState(false);
       const [roomCode, setRoomCode] = useState("");
@@ -3434,14 +3434,17 @@
       const [planechase, setPlanechase] = useState({
           active: false, planes: [], currentPlane: null, showModal: false, enlargedImage: null
       });
-      const [planarDieResult, setPlanarDieResult] = useState(null); // STATO PER IL DADO PLANARE
+      const [planarDieResult, setPlanarDieResult] = useState(null);
 
-     const wakeLockRef = React.useRef(null);
+      // IDENTIFICATORE LOCALE PER IL BLOCCO POSTAZIONE CLOUD
+      const localClientId = React.useRef(Math.random().toString(36).substring(2)).current;
+
+      const wakeLockRef = React.useRef(null);
       const stateRef = React.useRef({ numPlayers, archenemy, activeModal, planechase });
 
-      // --- 🛰️ IL RADAR FIREBASE (Ascolta i cambiamenti in tempo reale) ---
+      // --- 🛰️ IL RADAR FIREBASE (Attivo anche nella Lobby per vedere i posti occupati) ---
       useEffect(() => {
-          if (inCloudRoom && roomCode && view === 'game_active') {
+          if (inCloudRoom && roomCode) {
               const unsubscribe = db.collection('matches').doc(roomCode).onSnapshot(doc => {
                   if (doc.exists) {
                       const data = doc.data();
@@ -3450,11 +3453,11 @@
                       if (data.planechase) setPlanechase(prev => ({ ...prev, active: data.planechase.active, planes: data.planechase.planes, currentPlane: data.planechase.currentPlane }));
                   }
               });
-              return () => unsubscribe(); // Spegne il radar se esci dalla stanza
+              return () => unsubscribe();
           }
-      }, [inCloudRoom, roomCode, view]);
+      }, [inCloudRoom, roomCode]);
 
-      // --- 📡 I TRASMETTITORI FIREBASE (Inviano i cambiamenti) ---
+      // --- 📡 I TRASMETTITORI FIREBASE ---
       const syncToRoom = (field, payload) => {
           if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ [field]: payload }).catch(()=>{});
       };
@@ -3464,10 +3467,9 @@
       const syncPlanechase = (newState) => {
           if (inCloudRoom && roomCode) db.collection('matches').doc(roomCode).update({ planechase: { active: newState.active, planes: newState.planes, currentPlane: newState.currentPlane } }).catch(()=>{});
       };
-      useEffect(() => { stateRef.current = { numPlayers, archenemy, activeModal }; }, [numPlayers, archenemy, activeModal]);
+      useEffect(() => { stateRef.current = { numPlayers, archenemy, activeModal, planechase }; }, [numPlayers, archenemy, activeModal, planechase]);
 
-      // SBLOCCO DI SICUREZZA UNIVERSALE (FAIL-SAFE)
-      // Se usciamo dalla partita (in qualsiasi modo), sblocca forzatamente rotazione e fullscreen
+      // SBLOCCO DI SICUREZZA UNIVERSALE
       useEffect(() => {
           if (view !== 'game_active') {
               try {
@@ -3485,14 +3487,17 @@
           }
       }, [view]);
 
-      const applyScreenLock = async (forcePortrait = false, playersCount = numPlayers) => {
+      // --- GESTIONE ORIENTAMENTO FIXATA (Risolve il conflitto a 2 giocatori) ---
+      const applyScreenLock = async (mode = 'auto', playersCount = numPlayers) => {
           try {
               if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
                   await document.documentElement.requestFullscreen();
               }
               if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                  if (forcePortrait) {
+                  if (mode === 'portrait') {
                       await window.screen.orientation.lock('portrait');
+                  } else if (mode === 'landscape') {
+                      await window.screen.orientation.lock('landscape');
                   } else {
                       if (playersCount <= 2) await window.screen.orientation.lock('portrait');
                       else await window.screen.orientation.lock('landscape');
@@ -3511,14 +3516,19 @@
 
       useEffect(() => {
           if (view === 'game_active') {
-              const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
-              applyScreenLock(isVerticalMode, numPlayers);
+              let lockMode = 'auto';
+              if (archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'))) {
+                  lockMode = 'portrait';
+              } else if (activeModal && activeModal.type === 'tokens') {
+                  lockMode = 'landscape'; // Forza fisicamente il landscape per le pedine (Fix 2 Giocatori)
+              }
+              applyScreenLock(lockMode, numPlayers);
               requestWakeLock();
               
               const handleVisibilityChange = () => {
                   if (document.visibilityState === 'visible' && view === 'game_active') {
                       requestWakeLock();
-                      applyScreenLock(isVerticalMode, numPlayers);
+                      applyScreenLock(lockMode, numPlayers);
                   }
               };
               document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -3535,10 +3545,14 @@
                   } else {
                       window.history.pushState(null, "", window.location.href);
                       const curr = stateRef.current;
-                      // Protezione di sicurezza senza usare ?. per il vecchio Babel
                       const isPlanechaseOpen = curr.planechase ? curr.planechase.showModal : false;
-                      const isVertical = curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName'));
-                      applyScreenLock(isVertical, curr.numPlayers);
+                      let fallbackMode = 'auto';
+                      if (curr.archenemy.showModal || isPlanechaseOpen || (curr.activeModal && (curr.activeModal.type === 'search' || curr.activeModal.type === 'editName'))) {
+                          fallbackMode = 'portrait';
+                      } else if (curr.activeModal && curr.activeModal.type === 'tokens') {
+                          fallbackMode = 'landscape';
+                      }
+                      applyScreenLock(fallbackMode, curr.numPlayers);
                   }
               };
               window.history.pushState(null, "", window.location.href);
@@ -3548,7 +3562,6 @@
       }, [view, setView]);
 
       useEffect(() => {
-          // Scarica Schemi Archenemy
           fetch('https://api.scryfall.com/cards/search?q=t:scheme').then(res => res.json()).then(data => {
                   if (data && data.data) {
                       let fetched = data.data.map(c => {
@@ -3562,7 +3575,6 @@
                   }
               }).catch(e => console.log("Errore Archenemy"));
               
-          // Scarica Piani Planechase
           fetch('https://api.scryfall.com/cards/search?q=t:plane+OR+t:phenomenon').then(res => res.json()).then(data => {
                   if (data && data.data) {
                       let fetchedPlanes = data.data.map(c => {
@@ -3576,7 +3588,6 @@
               }).catch(e => console.log("Errore Planechase"));
       }, []);
 
-      // Funzioni Logica Dado Planare
       const nextPlane = () => {
           setPlanechase(prev => {
               if (prev.planes.length === 0) return prev;
@@ -3599,6 +3610,7 @@
               setTimeout(() => setPlanarDieResult(null), 1500); 
           }
       };
+      
       const rollDice = (max) => {
          const res = Math.floor(Math.random() * max) + 1;
          setDiceResult({ max, val: res });
@@ -3606,36 +3618,24 @@
          setTimeout(() => setDiceResult(null), 2500);
       };
 
-      // --- MOTORE FIREBASE MULTIPLAYER ---
+      // --- LOGICA MULTIPLAYER (CREAZIONE, ACCESSO E LOCK POSTAZIONE) ---
       const createCloudRoom = async () => {
-          // Genera un codice casuale di 5 lettere maiuscole per la stanza
           const code = Math.random().toString(36).substring(2, 7).toUpperCase(); 
           
-          // Prepara i giocatori base
           const initialPlayers = Array.from({ length: numPlayers }).map((_, i) => ({
               id: `P${i + 1}`, teamId: teamMode ? Math.ceil((i + 1)/2) : (i + 1), name: `Player ${i + 1}`, 
               life: startLife, poison: 0, cmdCasts: 0, emblems: 0, rad: 0, energy: 0, exp: 0, ticket: 0,
               cmdDmg: {}, monarch: false, initiative: false, blessing: false, dayNight: 'none', immune: false,
-              mana: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 }, tokens: [], tokenBg: null, bgUrl: null
+              mana: { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 }, tokens: [], tokenBg: null, bgUrl: null,
+              claimed: false, claimedBy: null
           }));
 
           try {
-              // Crea la Stanza sul Database!
               await db.collection('matches').doc(code).set({
-                  roomCode: code,
-                  numPlayers: numPlayers,
-                  startLife: startLife,
-                  teamMode: teamMode,
-                  players: initialPlayers,
-                  createdAt: new Date().toISOString()
+                  roomCode: code, numPlayers: numPlayers, startLife: startLife, teamMode: teamMode, players: initialPlayers, createdAt: new Date().toISOString()
               });
-              
-              setRoomCode(code);
-              setPlayers(initialPlayers);
-              setIsHost(true);
-              setInCloudRoom(true);
+              setRoomCode(code); setPlayers(initialPlayers); setIsHost(true); setInCloudRoom(true);
           } catch (err) {
-              console.error(err);
               alert("⚠️ ERRORE FIREBASE (Creazione):\n" + err.message);
           }
       };
@@ -3647,19 +3647,38 @@
               if (!docRef.exists) return alert("Stanza non trovata! Controlla il codice.");
               
               const data = docRef.data();
-              setRoomCode(joinCode);
-              setNumPlayers(data.numPlayers);
-              setStartLife(data.startLife);
-              setTeamMode(data.teamMode || false);
-              setPlayers(data.players); 
-              setIsHost(false);
-              setInCloudRoom(true);
+              setRoomCode(joinCode); setNumPlayers(data.numPlayers); setStartLife(data.startLife); setTeamMode(data.teamMode || false);
+              setPlayers(data.players); setIsHost(false); setInCloudRoom(true);
           } catch (err) {
-              console.error(err);
               alert("⚠️ ERRORE FIREBASE (Accesso):\n" + err.message);
           }
       };
-      // --- FINE MOTORE FIREBASE ---
+
+      const selectPlayerSlot = (pId) => {
+          const target = players.find(p => p.id === pId);
+          if (target && target.claimed && target.claimedBy !== localClientId) {
+              alert("Postazione già occupata da un altro giocatore!");
+              return;
+          }
+          const newPlayers = players.map(p => {
+              if (p.id === pId) return { ...p, claimed: true, claimedBy: localClientId };
+              if (p.claimedBy === localClientId) return { ...p, claimed: false, claimedBy: null };
+              return p;
+          });
+          setPlayers(newPlayers);
+          setMyPlayerId(pId);
+          syncToRoom('players', newPlayers);
+      };
+
+      const fallbackToLocal = () => {
+          if (window.confirm("Vuoi disconnetterti dal Cloud e continuare la partita in Locale su questo dispositivo?\n\n(Tutti i giocatori passeranno su questo schermo, ideale se a qualcuno si è scaricato il telefono)")) {
+              setLobbyMode('local');
+              setInCloudRoom(false);
+              setMyPlayerId(null);
+              setRoomCode("");
+              // La partita continua in locale mantenendo i setPlayers attuali!
+          }
+      };
       
       const startGame = () => {
         let newPlayers = [];
@@ -3667,15 +3686,14 @@
         for(let i=1; i<=numPlayers; i++) {
           let cmdDmg = {}; for(let j=1; j<=numPlayers; j++) { if(i!==j) cmdDmg[`P${j}`] = 0; }
           
-          // Logica Squadre Avanzata (Ottimizzata per la disposizione a schermo)
           let tId = i;
           if (teamMode) {
               if (numPlayers === 6) {
-                  if (i === 1 || i === 2) tId = 1;      // Sinistra & Alto-Sinistra
-                  else if (i === 3 || i === 6) tId = 2; // Alto-Destra & Destra
-                  else if (i === 4 || i === 5) tId = 3; // Basso-Sinistra & Basso-Destra
+                  if (i === 1 || i === 2) tId = 1;      
+                  else if (i === 3 || i === 6) tId = 2; 
+                  else if (i === 4 || i === 5) tId = 3; 
               } else {
-                  tId = Math.ceil(i/2); // Standard (1+2, 3+4)
+                  tId = Math.ceil(i/2);
               }
           }
 
@@ -3690,25 +3708,31 @@
       };
 
       const resetGame = () => {
-          const isConfirmed = window.confirm("Vuoi davvero resettare la partita? Punti vita e segnalini torneranno ai valori iniziali (gli Sfondi verranno mantenuti).");
+          const isConfirmed = window.confirm("Vuoi davvero resettare la partita? Punti vita e segnalini torneranno ai valori iniziali.");
           if (isConfirmed) {
               setArchenemy(prev => ({...prev, active: false, playerId: null, ongoing: [], currentScheme: null}));
-              setPlanechase(prev => ({...prev, active: false, currentPlane: null})); // Resetta Piano
+              setPlanechase(prev => ({...prev, active: false, currentPlane: null}));
               setPlayers(prev => prev.map(p => {
                   let resetDmg = {}; prev.forEach(op => { if(op.id !== p.id) resetDmg[`${op.id}`] = 0; });
                   return { ...p, life: startLife, poison: 0, cmdCasts: 0, emblems: 0, rad: 0, energy: 0, exp: 0, ticket: 0, cmdDmg: resetDmg, monarch: false, initiative: false, blessing: false, dayNight: 'none', immune: false, mana: {W:0, U:0, B:0, R:0, G:0, C:0}, tokens: [] };
               }));
           }
-          
-          const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
-          applyScreenLock(isVerticalMode, numPlayers);
+          let lockMode = 'auto';
+          if (activeModal && activeModal.type === 'tokens') lockMode = 'landscape';
+          applyScreenLock(lockMode, numPlayers);
       };
-     const exitGame = () => {
+
+      const exitGame = () => {
           if (window.confirm("Sei sicuro di voler uscire e tornare al Menu?")) { 
               setView('game'); 
           } else {
-              const isVerticalMode = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
-              applyScreenLock(isVerticalMode, numPlayers);
+              let lockMode = 'auto';
+              if (archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'))) {
+                  lockMode = 'portrait';
+              } else if (activeModal && activeModal.type === 'tokens') {
+                  lockMode = 'landscape';
+              }
+              applyScreenLock(lockMode, numPlayers);
           }
       };
 
@@ -3772,20 +3796,15 @@
       const toggleImmunity = (playerId) => { 
           setPlayers(prev => { const n = prev.map(p => p.id === playerId ? { ...p, immune: !p.immune } : p); syncToRoom('players', n); return n; }); 
       };
-
       if (view === 'game') return (
         <div className="max-w-md mx-auto bg-gray-800/90 p-6 rounded-xl shadow-lg border border-gray-600 mt-4 backdrop-blur-sm animate-fade">
           <h2 className="text-3xl font-black mb-6 text-center text-red-500 drop-shadow-md">Setup Partita</h2>
           
-          {/* TABS LOBBY */}
           <div className="flex gap-2 mb-6 bg-gray-900 p-1 rounded-lg border border-gray-700">
              <button onClick={()=>setLobbyMode('local')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='local'?'bg-red-600 text-white shadow':'text-gray-400 hover:text-white'}`}>Tavolo Locale</button>
              <button onClick={()=>setLobbyMode('cloud')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='cloud'?'bg-blue-600 text-white shadow':'text-gray-400 hover:text-white'}`}>☁️ Rete Cloud</button>
           </div>
 
-          {/* ========================================== */}
-          {/* TAB LOCALE (Il tuo codice originale intatto) */}
-          {/* ========================================== */}
           {lobbyMode === 'local' && (
              <div className="animate-fade">
                 <div className="bg-blue-900/50 border border-blue-500 rounded-lg p-4 mb-6 shadow-inner text-center">
@@ -3815,9 +3834,6 @@
              </div>
           )}
 
-          {/* ========================================== */}
-          {/* TAB CLOUD (Predisposto per il Multiplayer) */}
-          {/* ========================================== */}
           {lobbyMode === 'cloud' && !inCloudRoom && (
              <div className="space-y-4 animate-fade">
                 <div className="bg-blue-900/30 border border-blue-500/50 rounded-lg p-3 mb-4 shadow-inner text-center">
@@ -3859,7 +3875,6 @@
              </div>
           )}
 
-          {/* LA SALA D'ATTESA: DOPO AVER CREATO O INSERITO IL CODICE */}
           {lobbyMode === 'cloud' && inCloudRoom && (
              <div className="animate-fade">
                 <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-4 mb-6 shadow-inner text-center">
@@ -3871,15 +3886,25 @@
                 <h3 className="text-white font-black text-center mb-4 text-xl">Scegli la tua postazione:</h3>
                 
                 <div className="grid grid-cols-2 gap-3 mb-6">
-                   {players.map((p, index) => (
-                      <button 
-                         key={p.id} 
-                         onClick={() => setMyPlayerId(p.id)}
-                         className={`py-4 rounded-xl font-black shadow-lg transition-all border-2 ${myPlayerId === p.id ? 'bg-emerald-600 border-emerald-400 text-white scale-105' : 'bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-400'}`}
-                      >
-                         {teamMode ? `Team ${p.teamId} (G. ${index+1})` : `Giocatore ${index+1}`}
-                      </button>
-                   ))}
+                    {players.map((p, index) => {
+                        const isMine = myPlayerId === p.id;
+                        const isTaken = p.claimed && p.claimedBy !== localClientId;
+                        let btnClass = 'bg-gray-800 border-gray-600 text-gray-400 hover:border-gray-400';
+                        if (isMine) btnClass = 'bg-emerald-600 border-emerald-400 text-white scale-105';
+                        else if (isTaken) btnClass = 'bg-red-900 border-red-700 text-red-300 opacity-50 cursor-not-allowed';
+                        
+                        return (
+                            <button 
+                                key={p.id} 
+                                onClick={() => !isTaken && selectPlayerSlot(p.id)}
+                                disabled={isTaken}
+                                className={`py-4 rounded-xl font-black shadow-lg transition-all border-2 flex flex-col items-center justify-center gap-1 ${btnClass}`}
+                            >
+                                <span>{teamMode ? `Team ${p.teamId} (G. ${index+1})` : `Giocatore ${index+1}`}</span>
+                                {isTaken && <span className="bg-red-600 text-white text-[9px] px-2 py-0.5 rounded shadow">OCCUPATO</span>}
+                            </button>
+                        )
+                    })}
                 </div>
 
                 {myPlayerId && (
@@ -3892,7 +3917,6 @@
         </div>
       );
 
-      // --- LOGICA GRIGLIE LOCALI E CLOUD ---
       let gridClass = '';
       if (players.length <= 2) gridClass = 'grid-cols-1 grid-rows-[1fr_55px_1fr]';
       else if (players.length === 3 || players.length === 4) gridClass = 'grid-cols-[1fr_55px_1fr] grid-rows-2';
@@ -3920,26 +3944,25 @@
                           <span className="text-2xl">✖</span> <span className="text-[10px] uppercase">Esci</span>
                       </button>
                       <div className="w-px h-8 bg-gray-700"></div>
-                      <button onClick={() => setShowDice(true)} className="flex items-center justify-center bg-gray-800 hover:bg-gray-700 w-14 h-14 rounded-xl shadow-lg border border-gray-600 transform transition-transform active:scale-90" title="Lancia Dadi">
-                          <span className="text-3xl drop-shadow-md">🎲</span>
+                      
+                      {/* TASTO SWITCH CLOUD -> LOCALE */}
+                      <button onClick={fallbackToLocal} className="flex flex-col items-center gap-1 text-yellow-500 font-bold hover:text-yellow-400 transition-colors" title="Passa in Modalità Locale (Porta tutto su questo schermo)">
+                          <span className="text-2xl">📱</span> <span className="text-[10px] uppercase">Locale</span>
+                      </button>
+                      <div className="w-px h-8 bg-gray-700"></div>
+
+                      <button onClick={() => setShowDice(true)} className="flex items-center justify-center bg-gray-800 hover:bg-gray-700 w-12 h-12 rounded-xl shadow-lg border border-gray-600 transform transition-transform active:scale-90" title="Lancia Dadi">
+                          <span className="text-2xl drop-shadow-md">🎲</span>
                       </button>
                       {isHostOrArch && (
-                          <button onClick={() => setArchenemy(prev => { const n = {...prev, showModal: true}; return n; })} className={`flex items-center justify-center w-14 h-14 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${archenemy.active ? 'bg-red-800 border-red-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Archenemy">
-                              <span className="text-3xl drop-shadow-md">👿</span>
+                          <button onClick={() => setArchenemy(prev => { const n = {...prev, showModal: true}; return n; })} className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${archenemy.active ? 'bg-red-800 border-red-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Archenemy">
+                              <span className="text-2xl drop-shadow-md">👿</span>
                           </button>
                       )}
                       {isHost && (
-                          <button onClick={() => setPlanechase(prev => { const n = {...prev, showModal: true}; return n; })} className={`flex items-center justify-center w-14 h-14 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${planechase.active ? 'bg-indigo-800 border-indigo-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Planechase">
-                              <span className="text-3xl drop-shadow-md">🌌</span>
+                          <button onClick={() => setPlanechase(prev => { const n = {...prev, showModal: true}; return n; })} className={`flex items-center justify-center w-12 h-12 rounded-xl shadow-lg border transform transition-transform active:scale-90 ${planechase.active ? 'bg-indigo-800 border-indigo-500 animate-pulse' : 'bg-gray-800 border-gray-600 hover:bg-gray-700'}`} title="Planechase">
+                              <span className="text-2xl drop-shadow-md">🌌</span>
                           </button>
-                      )}
-                      {isHost && (
-                          <React.Fragment>
-                              <div className="w-px h-8 bg-gray-700"></div>
-                              <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
-                                  <span className="text-2xl">🔄</span> <span className="text-[10px] uppercase">Reset</span>
-                              </button>
-                          </React.Fragment>
                       )}
                   </div>
                </React.Fragment>
