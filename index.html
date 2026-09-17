@@ -2757,7 +2757,7 @@
       </div>
     );
 
-    // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
+   // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
     const PlayerModals = ({ type, player, opponents, onClose, updateStat, updateMana, toggleImmunity, updatePlayerConfig, rotation }) => {
         const [cmdQuery, setCmdQuery] = useState("");
         const [cmdResults, setCmdResults] = useState([]);
@@ -2791,21 +2791,30 @@
             fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(cmdQuery.trim() + " (is:commander OR t:legendary)")}&unique=art`)
                .then(res => res.json())
                .then(data => {
-                  if(data.data) {
-                     const results = data.data.map(c => {
+                 if(data.data) {
+                    const results = data.data.map(c => {
                         let imgUrl = "";
                         if (c.image_uris && c.image_uris.art_crop) imgUrl = c.image_uris.art_crop;
                         else if (c.card_faces && c.card_faces.length > 0 && c.card_faces[0].image_uris && c.card_faces[0].image_uris.art_crop) imgUrl = c.card_faces[0].image_uris.art_crop;
                         return { id: c.id, name: c.name, img: imgUrl };
-                     }).filter(c => c.img);
-                     setCmdResults(results);
-                  } else { alert("Nessun comandante trovato."); }
-                  setIsSearching(false);
+                    }).filter(c => c.img);
+                    setCmdResults(results);
+                 } else { alert("Nessun comandante trovato."); }
+                 setIsSearching(false);
                }).catch(e => { console.error(e); setIsSearching(false); });
-         };
+        };
 
         // RENDER MODALE FISSO SENZA UNMOUNT (Previene il reset dello scorrimento fastidioso)
-        const effectiveRotation = (type === 'tokens' && (rotation === 90 || rotation === -90)) ? 0 : rotation;
+        let effectiveRotation = rotation;
+        if (type === 'search' || type === 'editName') {
+            effectiveRotation = 0; // Sempre verticale (portrait)
+        } else if (type === 'tokens') {
+            // Fissa in orizzontale; se 2 giocatori o lati (-90 / 90), forza a 0
+            if (opponents.length === 1 || rotation === 90 || rotation === -90) {
+                effectiveRotation = 0;
+            }
+        }
+        
         const isSideways = effectiveRotation === 90 || effectiveRotation === -90;
         const modalStyle = { width: isSideways ? '100vh' : '100vw', height: isSideways ? '100vw' : '100vh', transform: `rotate(${effectiveRotation}deg)` };
         
@@ -2900,30 +2909,28 @@
         }
 
         if (type === 'search') {
-            return (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none bg-black/80 backdrop-blur-md overflow-hidden">
-                    <div className="bg-gray-900 border-2 border-gray-600 shadow-2xl flex flex-col p-4 sm:p-6 pointer-events-auto" style={modalStyle}>
-                        <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3 mt-2 shrink-0">
-                            <h3 className="text-white font-black text-xl sm:text-2xl truncate pr-2">🔍 Sfondo: {player.name}</h3>
-                            <button onClick={onClose} className="bg-red-600 px-4 py-2 rounded-lg text-white font-bold shadow-lg shrink-0">Chiudi</button>
-                        </div>
-                        <div className="flex gap-2 mb-4 shrink-0">
-                            <input autoFocus type="text" placeholder="Scrivi nome es. Urza" value={cmdQuery} onChange={e=>setCmdQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&eseguiRicercaCmd()} className="flex-1 bg-gray-800 border border-gray-500 text-white rounded-xl p-3 outline-none font-bold text-lg focus:border-blue-500" />
-                            <button onClick={eseguiRicercaCmd} className="bg-blue-600 px-6 rounded-xl text-white font-black shadow-lg text-lg active:scale-95 transition-transform">{isSearching ? '...' : 'Cerca'}</button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto min-h-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start pb-10 pr-2">
-                            {cmdResults.map(c => (
-                                <div key={c.id} className="relative rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-blue-500 shadow-xl active:scale-95 transition-all bg-black h-28 sm:h-36 md:h-40" onClick={() => { updatePlayerConfig(player.id, 'bgUrl', c.img); onClose(); }}>
-                                    <img src={c.img} className="absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100" />
-                                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 pt-6 text-center flex flex-col justify-end h-full">
-                                        <span className="text-white text-[10px] md:text-xs font-bold drop-shadow-md leading-tight">{c.name}</span>
-                                    </div>
-                                </div>
-                            ))}
-                            {cmdResults.length === 0 && !isSearching && <p className="col-span-full text-center text-gray-400 font-bold mt-10 text-xl">Cerca un Comandante per impostare lo sfondo.</p>}
-                        </div>
+            return renderModal(
+                <React.Fragment>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3 mt-2 shrink-0">
+                        <h3 className="text-white font-black text-xl sm:text-2xl truncate pr-2">🔍 Sfondo: {player.name}</h3>
+                        <button onClick={onClose} className="bg-red-600 px-4 py-2 rounded-lg text-white font-bold shadow-lg shrink-0">Chiudi</button>
                     </div>
-                </div>
+                    <div className="flex gap-2 mb-4 shrink-0">
+                        <input autoFocus type="text" placeholder="Scrivi nome es. Urza" value={cmdQuery} onChange={e=>setCmdQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&eseguiRicercaCmd()} className="flex-1 bg-gray-800 border border-gray-500 text-white rounded-xl p-3 outline-none font-bold text-lg focus:border-blue-500" />
+                        <button onClick={eseguiRicercaCmd} className="bg-blue-600 px-6 rounded-xl text-white font-black shadow-lg text-lg active:scale-95 transition-transform">{isSearching ? '...' : 'Cerca'}</button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto min-h-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 content-start pb-10 pr-2">
+                        {cmdResults.map(c => (
+                            <div key={c.id} className="relative rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-blue-500 shadow-xl active:scale-95 transition-all bg-black h-28 sm:h-36 md:h-40" onClick={() => { updatePlayerConfig(player.id, 'bgUrl', c.img); onClose(); }}>
+                                <img src={c.img} className="absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100" />
+                                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2 pt-6 text-center flex flex-col justify-end h-full">
+                                    <span className="text-white text-[10px] md:text-xs font-bold drop-shadow-md leading-tight">{c.name}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {cmdResults.length === 0 && !isSearching && <p className="col-span-full text-center text-gray-400 font-bold mt-10 text-xl">Cerca un Comandante per impostare lo sfondo.</p>}
+                    </div>
+                </React.Fragment>
             );
         }
         
@@ -2933,28 +2940,6 @@
             const [showSearchModal, setShowSearchModal] = useState(false);
             const [splittingTokenId, setSplittingTokenId] = useState(null);
             const [splitQty, setSplitQty] = useState(1);
-
-            // GESTIONE ORIENTAMENTO FLUIDA
-            useEffect(() => {
-                try {
-                    if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                        if (showSearchModal || showBgMenu || splittingTokenId) {
-                            window.screen.orientation.lock('portrait').catch(function(){});
-                        } else {
-                            window.screen.orientation.lock('landscape').catch(function(){});
-                        }
-                    }
-                } catch(e) {}
-
-                return function() {
-                    try {
-                        if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                            const isMulti = opponents.length + 1 > 2;
-                            window.screen.orientation.lock(isMulti ? 'landscape' : 'portrait').catch(function(){});
-                        }
-                    } catch(e) {}
-                };
-            }, [showSearchModal, showBgMenu, splittingTokenId]);
 
             const openSearch = () => { setShowSearchModal(true); };
             const closeSearch = () => {
@@ -2989,16 +2974,14 @@
                     return;
                 }
 
-                // Crea il nuovo mazzetto splittato
                 const newToken = {
                     ...t,
                     id: 'tok-' + Date.now(),
                     qty: amount,
                     tappedQty: Math.min(t.tappedQty || 0, amount),
-                    counters: 0 // Il nuovo mazzetto parte senza segnalini
+                    counters: 0
                 };
 
-                // Aggiorna il mazzetto originale sottraendo la quantità
                 const remainingQty = t.qty - amount;
                 const updated = (player.tokens || []).map(item => {
                     if (item.id === t.id) {
@@ -3108,7 +3091,6 @@
 
                         {/* CAMPO DI BATTAGGIA MASSIMIZZATO E LUMINOSO */}
                         <div className="flex-1 relative bg-black overflow-hidden rounded-xl border border-gray-600 mt-1 flex flex-col">
-                            {/* SFONDO LUMINOSO (75%) */}
                             {player.tokenBg && <img src={player.tokenBg} className="absolute inset-0 w-full h-full object-cover opacity-75 z-0 pointer-events-none" />}
                             
                             <div className="flex-1 overflow-y-auto p-2 sm:p-4 flex flex-wrap gap-4 sm:gap-6 content-start z-10 relative items-start">
@@ -3252,9 +3234,9 @@
                                 </div>
                             )}
 
-                            {/* Menu Sfondi (Con i tuoi nuovi sfondi inclusi!) */}
+                            {/* Menu Sfondi (IN VERTICALE / PORTRAIT) */}
                             {showBgMenu && (
-                                <div className="absolute inset-0 z-30 bg-black/95 p-4 flex flex-col gap-4 animate-fade">
+                                <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 bg-black/95 p-4 flex flex-col gap-4 animate-fade shadow-2xl border-x border-gray-600 overflow-y-auto">
                                     <h4 className="text-white font-black text-xl mb-2 border-b border-gray-700 pb-2">Sfondo Battaglia</h4>
                                     <div className="grid grid-cols-2 gap-4 overflow-y-auto content-start flex-1">
                                         <div className="h-28 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold border-2 border-dashed border-gray-600 cursor-pointer text-center p-2" onClick={() => { updatePlayerConfig(player.id, 'tokenBg', null); setShowBgMenu(false); }}>Sfondo Vuoto</div>
@@ -3278,9 +3260,9 @@
                             </button>
                         </div>
 
-                        {/* SUB-MODALE VERTICALE DI RICERCA */}
+                        {/* SUB-MODALE VERTICALE DI RICERCA (IN VERTICALE / PORTRAIT) */}
                         {showSearchModal && (
-                            <div className="absolute inset-0 z-50 bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto">
+                            <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-50 bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto shadow-2xl border-x border-gray-600">
                                 <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                                     <h4 className="text-emerald-400 font-black text-lg">🔍 Aggiungi Pedina al Campo</h4>
                                     <button onClick={closeSearch} className="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs">Chiudi</button>
