@@ -2757,7 +2757,8 @@
       </div>
     );
 
-   // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
+    // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
+    // --- COMPONENTE MODALI A TUTTO SCHERMO (RUOTATI VERSO IL GIOCATORE, NO TAGLI) ---
     const PlayerModals = ({ type, player, opponents, onClose, updateStat, updateMana, toggleImmunity, updatePlayerConfig, rotation }) => {
         const [cmdQuery, setCmdQuery] = useState("");
         const [cmdResults, setCmdResults] = useState([]);
@@ -2804,15 +2805,13 @@
                }).catch(e => { console.error(e); setIsSearching(false); });
         };
 
-        // RENDER MODALE FISSO SENZA UNMOUNT (Previene il reset dello scorrimento fastidioso)
+        // RENDER MODALE: Gestione Mirata delle Rotazioni
         let effectiveRotation = rotation;
         if (type === 'search' || type === 'editName') {
-            effectiveRotation = 0; // Sempre verticale (portrait)
+            effectiveRotation = 0; // SEMPRE verticale (portrait)
         } else if (type === 'tokens') {
-            // Fissa in orizzontale; se 2 giocatori o lati (-90 / 90), forza a 0
-            if (opponents.length === 1 || rotation === 90 || rotation === -90) {
-                effectiveRotation = 0;
-            }
+            // Plancia pedine: mantiene la rotazione, tranne per i lati (90 e -90) che tornano a 0
+            effectiveRotation = (rotation === 90 || rotation === -90) ? 0 : rotation;
         }
         
         const isSideways = effectiveRotation === 90 || effectiveRotation === -90;
@@ -3002,7 +3001,7 @@
             // 1. RICERCA PEDINE UFFICIALI SCRYFALL
             const searchOfficialToken = () => {
                 if(!tokenQuery.trim() && !tokenOracle.trim() && !tokenPT.trim()) {
-                    alert("Inserisci almeno un parametro di ricerca.");
+                    alert("Inser অন্তত un parametro di ricerca.");
                     return;
                 }
                 setIsSearching(true);
@@ -3078,9 +3077,10 @@
                 }
                 setIsGeneratingToken(false);
             };
-
-            return (
+          return (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none bg-black/80 backdrop-blur-md overflow-hidden">
+                    
+                    {/* --- 1. CONTENITORE PLANCIA PEDINE (RUOTA IN BASE AL GIOCATORE) --- */}
                     <div className="bg-gray-900 border-2 border-gray-600 shadow-2xl flex flex-col p-1 sm:p-2 pointer-events-auto relative" style={modalStyle}>
                         
                         {/* INTESTAZIONE MINIMALE */}
@@ -3091,6 +3091,7 @@
 
                         {/* CAMPO DI BATTAGGIA MASSIMIZZATO E LUMINOSO */}
                         <div className="flex-1 relative bg-black overflow-hidden rounded-xl border border-gray-600 mt-1 flex flex-col">
+                            {/* SFONDO LUMINOSO (75%) */}
                             {player.tokenBg && <img src={player.tokenBg} className="absolute inset-0 w-full h-full object-cover opacity-75 z-0 pointer-events-none" />}
                             
                             <div className="flex-1 overflow-y-auto p-2 sm:p-4 flex flex-wrap gap-4 sm:gap-6 content-start z-10 relative items-start">
@@ -3213,7 +3214,7 @@
                                 )}
                             </div>
 
-                            {/* MODALE DI SPLIT (DIVISIONE MAZZETTO) */}
+                            {/* MODALE DI SPLIT MANTENUTO NELLA PLANCIA (così segue la rotazione) */}
                             {splittingTokenId && (
                                 <div className="absolute inset-0 z-40 bg-black/90 backdrop-blur-sm p-4 flex flex-col items-center justify-center animate-fade">
                                     <div className="bg-gray-800 border-2 border-amber-500 rounded-xl p-4 w-full max-w-xs shadow-2xl text-center space-y-3">
@@ -3234,86 +3235,94 @@
                                 </div>
                             )}
 
-                            {/* Menu Sfondi (IN VERTICALE / PORTRAIT) */}
-                            {showBgMenu && (
-                                <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30 bg-black/95 p-4 flex flex-col gap-4 animate-fade shadow-2xl border-x border-gray-600 overflow-y-auto">
-                                    <h4 className="text-white font-black text-xl mb-2 border-b border-gray-700 pb-2">Sfondo Battaglia</h4>
-                                    <div className="grid grid-cols-2 gap-4 overflow-y-auto content-start flex-1">
-                                        <div className="h-28 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold border-2 border-dashed border-gray-600 cursor-pointer text-center p-2" onClick={() => { updatePlayerConfig(player.id, 'tokenBg', null); setShowBgMenu(false); }}>Sfondo Vuoto</div>
-                                        {SfondiPedine.map(bg => (
-                                            <div key={bg} className="h-28 rounded-xl border-2 border-transparent hover:border-blue-500 cursor-pointer overflow-hidden relative shadow-lg" onClick={() => { updatePlayerConfig(player.id, 'tokenBg', bg); setShowBgMenu(false); }}>
-                                                <img src={bg} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
-                                                <span className="absolute bottom-0 w-full bg-black/80 text-white text-[10px] font-bold text-center py-1 truncate px-1">{bg}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <button onClick={() => setShowBgMenu(false)} className="mt-auto bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-bold transition-colors">Chiudi Menu</button>
-                                </div>
-                            )}
                         </div>
 
-                        {/* BARRA INFERIORE */}
+                        {/* BARRA INFERIORE DELLA PLANCIA */}
                         <div className="flex gap-2 mt-1 px-1 pb-0.5 shrink-0 z-20 items-center justify-between">
                             <button onClick={() => setShowBgMenu(true)} className="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg text-white text-base shadow border border-gray-500" title="Sfondo Battaglia">🖼️</button>
                             <button onClick={openSearch} className="flex-1 bg-emerald-600 hover:bg-emerald-500 py-1.5 px-4 rounded-lg text-white font-black shadow-lg text-xs sm:text-sm active:scale-95 transition-transform border border-emerald-400 flex items-center justify-center gap-1">
                                 🔍 CERCA / AGGIUNGI PEDINA
                             </button>
                         </div>
-
-                        {/* SUB-MODALE VERTICALE DI RICERCA (IN VERTICALE / PORTRAIT) */}
-                        {showSearchModal && (
-                            <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-50 bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto shadow-2xl border-x border-gray-600">
-                                <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
-                                    <h4 className="text-emerald-400 font-black text-lg">🔍 Aggiungi Pedina al Campo</h4>
-                                    <button onClick={closeSearch} className="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs">Chiudi</button>
-                                </div>
-
-                                <div className="space-y-3 mb-4">
-                                    <div>
-                                        <label className="text-gray-400 text-xs font-bold block mb-1">Nome della Pedina:</label>
-                                        <input type="text" placeholder="es. Goblin, Treasure, Zombie..." value={tokenQuery} onChange={e=>setTokenQuery(e.target.value)} className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-3 outline-none font-bold text-sm focus:border-emerald-500 shadow-inner" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-gray-400 text-xs font-bold block mb-1">Testo Abilità:</label>
-                                            <input type="text" placeholder="es. haste, flying" value={tokenOracle} onChange={e=>setTokenOracle(e.target.value)} className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-3 outline-none font-bold text-sm focus:border-emerald-500 shadow-inner" />
-                                        </div>
-                                        <div>
-                                            <label className="text-gray-400 text-xs font-bold block mb-1">Forza / Costituzione:</label>
-                                            <input type="text" placeholder="es. 1/1, 2/2" value={tokenPT} onChange={e=>setTokenPT(e.target.value)} className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-3 outline-none font-bold text-sm text-center focus:border-emerald-500 shadow-inner" />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 pt-2">
-                                        <button onClick={searchOfficialToken} disabled={isSearching} className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 py-3 rounded-lg text-white font-black shadow text-xs active:scale-95 transition-transform border border-emerald-400">
-                                            {isSearching ? '⏳ CERCO...' : '🔎 CERCA UFFICIALE'}
-                                        </button>
-                                        <button onClick={generateToken} disabled={isGeneratingToken} className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 py-3 rounded-lg text-white font-black shadow text-xs active:scale-95 transition-transform border border-purple-400" title="Crea Token Personalizzato con IA">
-                                            {isGeneratingToken ? '⏳ CREO...' : '✨ CREA CUSTOM (IA)'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* RISULTATI DELLA RICERCA */}
-                                {cmdResults.length > 0 && (
-                                    <div className="flex-1 bg-black/60 p-3 rounded-xl border border-gray-700 overflow-y-auto">
-                                        <p className="text-gray-300 text-xs font-bold mb-2">Risultati Trovati (Tocca per posizionare):</p>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {cmdResults.map(res => (
-                                                <div key={res.id} onClick={() => addOfficialToken(res)} className="cursor-pointer rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-500 shadow-lg active:scale-95 transition-transform bg-gray-800">
-                                                    <img src={res.img} className="w-full h-40 object-cover" />
-                                                    <div className="p-1.5 bg-black/80 text-center">
-                                                        <span className="text-xs text-white font-bold truncate block">{res.name}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
                     </div>
+                    {/* --- FINE CONTENITORE PLANCIA PEDINE --- */}
+
+
+                    {/* ============================================================== */}
+                    {/* --- 2. SOTTO-MODALI FUORI DALLA PLANCIA (SEMPRE A 0 GRADI) --- */}
+                    {/* Questi div non sono soggetti alla rotazione del "modalStyle"  */}
+                    {/* ============================================================== */}
+
+                    {/* Menu Sfondi - Fisso in verticale dritto */}
+                    {showBgMenu && (
+                        <div className="absolute inset-0 z-[10000] pointer-events-auto bg-black/95 p-4 flex flex-col gap-4 animate-fade">
+                            <h4 className="text-white font-black text-xl mb-2 border-b border-gray-700 pb-2">Sfondo Battaglia</h4>
+                            <div className="grid grid-cols-2 gap-4 overflow-y-auto content-start flex-1">
+                                <div className="h-28 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 font-bold border-2 border-dashed border-gray-600 cursor-pointer text-center p-2" onClick={() => { updatePlayerConfig(player.id, 'tokenBg', null); setShowBgMenu(false); }}>Sfondo Vuoto</div>
+                                {SfondiPedine.map(bg => (
+                                    <div key={bg} className="h-28 rounded-xl border-2 border-transparent hover:border-blue-500 cursor-pointer overflow-hidden relative shadow-lg" onClick={() => { updatePlayerConfig(player.id, 'tokenBg', bg); setShowBgMenu(false); }}>
+                                        <img src={bg} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
+                                        <span className="absolute bottom-0 w-full bg-black/80 text-white text-[10px] font-bold text-center py-1 truncate px-1">{bg}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={() => setShowBgMenu(false)} className="mt-auto bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-bold transition-colors">Chiudi Menu</button>
+                        </div>
+                    )}
+
+                    {/* Ricerca Pedine - Fissa in verticale dritto */}
+                    {showSearchModal && (
+                        <div className="absolute inset-0 z-[10000] pointer-events-auto bg-gray-900/98 backdrop-blur-md p-4 flex flex-col animate-fade overflow-y-auto">
+                            <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                                <h4 className="text-emerald-400 font-black text-lg">🔍 Aggiungi Pedina al Campo</h4>
+                                <button onClick={closeSearch} className="bg-red-600 text-white px-3 py-1 rounded font-bold text-xs">Chiudi</button>
+                            </div>
+
+                            <div className="space-y-3 mb-4">
+                                <div>
+                                    <label className="text-gray-400 text-xs font-bold block mb-1">Nome della Pedina:</label>
+                                    <input type="text" placeholder="es. Goblin, Treasure, Zombie..." value={tokenQuery} onChange={e=>setTokenQuery(e.target.value)} className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-3 outline-none font-bold text-sm focus:border-emerald-500 shadow-inner" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="text-gray-400 text-xs font-bold block mb-1">Testo Abilità:</label>
+                                        <input type="text" placeholder="es. haste, flying" value={tokenOracle} onChange={e=>setTokenOracle(e.target.value)} className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-3 outline-none font-bold text-sm focus:border-emerald-500 shadow-inner" />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-400 text-xs font-bold block mb-1">Forza / Costituzione:</label>
+                                        <input type="text" placeholder="es. 1/1, 2/2" value={tokenPT} onChange={e=>setTokenPT(e.target.value)} className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg p-3 outline-none font-bold text-sm text-center focus:border-emerald-500 shadow-inner" />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 pt-2">
+                                    <button onClick={searchOfficialToken} disabled={isSearching} className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 py-3 rounded-lg text-white font-black shadow text-xs active:scale-95 transition-transform border border-emerald-400">
+                                        {isSearching ? '⏳ CERCO...' : '🔎 CERCA UFFICIALE'}
+                                    </button>
+                                    <button onClick={generateToken} disabled={isGeneratingToken} className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 py-3 rounded-lg text-white font-black shadow text-xs active:scale-95 transition-transform border border-purple-400" title="Crea Token Personalizzato con IA">
+                                        {isGeneratingToken ? '⏳ CREO...' : '✨ CREA CUSTOM (IA)'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* RISULTATI DELLA RICERCA */}
+                            {cmdResults.length > 0 && (
+                                <div className="flex-1 bg-black/60 p-3 rounded-xl border border-gray-700 overflow-y-auto">
+                                    <p className="text-gray-300 text-xs font-bold mb-2">Risultati Trovati (Tocca per posizionare):</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {cmdResults.map(res => (
+                                            <div key={res.id} onClick={() => addOfficialToken(res)} className="cursor-pointer rounded-lg overflow-hidden border-2 border-transparent hover:border-emerald-500 shadow-lg active:scale-95 transition-transform bg-gray-800">
+                                                <img src={res.img} className="w-full h-40 object-cover" />
+                                                <div className="p-1.5 bg-black/80 text-center">
+                                                    <span className="text-xs text-white font-bold truncate block">{res.name}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                 </div>
             );
         }
