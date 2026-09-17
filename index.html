@@ -3499,7 +3499,7 @@
       // GESTIONE ORIENTAMENTO E BLOCCO SCHERMO INTELLIGENTE
       useEffect(() => {
           if (view === 'game_active') {
-              const isTokensOpen = activeModal && activeModal.type === 'tokens';
+              // Blocco fisso in verticale solo per queste specifiche funzioni
               const isVerticalModalOpen = archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'));
               const isCloudMode = inCloudRoom && myPlayerId;
               
@@ -3507,12 +3507,10 @@
                   try {
                       if (document.documentElement.requestFullscreen && !document.fullscreenElement) await document.documentElement.requestFullscreen();
                       if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
-                          if (isTokensOpen) {
-                              await window.screen.orientation.lock('landscape'); // Plancia Pedine SEMPRE orizzontale
-                          } else if (isVerticalModalOpen) {
-                              await window.screen.orientation.lock('portrait'); // Ricerca, Nome, Archenemy e Planechase SEMPRE verticali
+                          if (isVerticalModalOpen) {
+                              await window.screen.orientation.lock('portrait'); // Fissa in verticale per Archenemy, Planechase, Ricerca Cmd e Nome
                           } else {
-                              // Schermata di gioco base
+                              // Schermata di gioco base e Plancia Pedine (che gestisce i suoi sottomenu in autonomia)
                               if (isCloudMode) await window.screen.orientation.lock('landscape');
                               else if (numPlayers <= 2) await window.screen.orientation.lock('portrait');
                               else await window.screen.orientation.lock('landscape');
