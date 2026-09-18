@@ -4215,9 +4215,21 @@
                         <span className="text-2xl drop-shadow-md">🌌</span>
                     </button>
                     <div className={players.length <= 2 ? "w-px h-6 bg-gray-700" : "w-6 h-px bg-gray-700"}></div>
-                    <div className="flex gap-2">
+                    {/* BLOCCO VITTORIA E RESET OTTIMIZZATO */}
+                    <div className={players.length <= 2 ? "flex flex-row items-center gap-3" : "flex flex-col items-center gap-3"}>
                         <button onClick={() => {
                             const winnerName = window.prompt("Chi ha vinto? Inserisci il nome del giocatore:");
+                            if(winnerName) declareWinner({ id: 'manual', name: winnerName });
+                        }} className="flex flex-col items-center gap-1 text-yellow-500 font-bold hover:text-yellow-400 transition-colors" title="Dichiara Vincitore">
+                            <span className="text-lg leading-none">🏆</span> <span className="text-[8px] uppercase leading-none">Vittoria</span>
+                        </button>
+                        
+                        <div className={players.length <= 2 ? "w-px h-5 bg-gray-700" : "w-5 h-px bg-gray-700"}></div>
+                        
+                        <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
+                            <span className="text-lg leading-none">🔄</span> <span className="text-[8px] uppercase leading-none">Reset</span>
+                        </button>
+                    </div>
                             if(winnerName) declareWinner({ id: 'manual', name: winnerName });
                         }} className="flex flex-col items-center gap-1 text-yellow-500 font-bold hover:text-yellow-400 transition-colors" title="Dichiara Vincitore">
                             <span className="text-xl">🏆</span> <span className="text-[10px] uppercase">Vittoria</span>
