@@ -605,6 +605,133 @@
         );
     };
 
+    // --- COMPONENTE TAB REGOLE E LEGALITA' ---
+    const CardDetailsTabs = ({ card }) => {
+        const [activeTab, setActiveTab] = useState('legalita');
+        const [rulings, setRulings] = useState([]);
+        const [loading, setLoading] = useState(false);
+
+        const formatsToShow = ['standard', 'pioneer', 'modern', 'legacy', 'vintage', 'commander', 'pauper', 'historic', 'brawl', 'penny'];
+
+        useEffect(() => {
+            if (activeTab === 'regolamento' && rulings.length === 0 && card && card.id) {
+                setLoading(true);
+                fetch(`https://api.scryfall.com/cards/${card.id}/rulings`)
+                    .then(res => res.json())
+                    .then(data => setRulings(data.data || []))
+                    .catch(() => setRulings([]))
+                    .finally(() => setLoading(false));
+            }
+        }, [activeTab, card]);
+
+        if (!card) return null;
+
+        return (
+            <div className="w-full max-w-sm mt-4 bg-gray-900 rounded-xl border border-gray-700 overflow-hidden shadow-inner">
+                <div className="flex bg-gray-950 p-1 rounded-t-xl">
+                    <button onClick={() => setActiveTab('legalita')} className={`flex-1 py-2 text-sm font-black rounded-lg transition-all ${activeTab === 'legalita' ? 'bg-orange-500 text-black shadow-md' : 'text-gray-400 hover:text-white'}`}>Versioni / Legalità</button>
+                    <button onClick={() => setActiveTab('regolamento')} className={`flex-1 py-2 text-sm font-black rounded-lg transition-all ${activeTab === 'regolamento' ? 'bg-orange-500 text-black shadow-md' : 'text-gray-400 hover:text-white'}`}>Regolamento</button>
+                </div>
+                
+                {activeTab === 'legalita' && (
+                    <div className="p-4 grid grid-cols-2 gap-3 max-h-[35vh] overflow-y-auto">
+                        {formatsToShow.map(fmt => {
+                            const status = card.legalities ? card.legalities[fmt] : 'not_legal';
+                            const isLegal = status === 'legal' || status === 'restricted';
+                            return (
+                                <div key={fmt} className="flex items-center gap-2 text-xs sm:text-sm">
+                                    {isLegal ? (
+                                        <span className="bg-green-500 text-black rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-black shrink-0">✓</span>
+                                    ) : (
+                                        <span className="text-gray-500 font-black w-4 text-center shrink-0">-</span>
+                                    )}
+                                    <span className="text-gray-300 capitalize truncate">{fmt}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {activeTab === 'regolamento' && (
+                    <div className="p-4 max-h-[35vh] overflow-y-auto space-y-4">
+                        {loading ? ( <p className="text-center text-yellow-500 font-bold py-4">Ricerca regole su Scryfall...</p> ) : rulings.length > 0 ? (
+                            rulings.map((r, i) => (
+                                <div key={i} className="text-xs sm:text-sm border-b border-gray-800 pb-2">
+                                    <p className="text-gray-200 mb-1 leading-relaxed">{r.comment}</p>
+                                    <p className="text-gray-500 text-[10px] font-bold">{r.published_at}</p>
+                                </div>
+                            ))
+                        ) : ( <p className="text-center text-gray-500 font-bold py-4">Nessuna regola speciale per questa carta.</p> )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // --- COMPONENTE STATISTICHE PARTITE ---
+    const MatchStatistics = ({ navigate }) => {
+        const [history, setHistory] = useState([]);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+            db.collection('match_history').orderBy('date', 'desc').get()
+                .then(snap => {
+                    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setHistory(data);
+                    setLoading(false);
+                }).catch(() => setLoading(false));
+        }, []);
+
+        const totalMatches = history.length;
+        const winsByPlayer = {};
+        const winsByCmdr = {};
+
+        history.forEach(m => {
+            winsByPlayer[m.winnerName] = (winsByPlayer[m.winnerName] || 0) + 1;
+            if (m.winnerCommander) winsByCmdr[m.winnerCommander] = (winsByCmdr[m.winnerCommander] || 0) + 1;
+        });
+
+        return (
+            <div className="max-w-2xl mx-auto space-y-4 p-4 animate-fade">
+                <button onClick={() => navigate('game')} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-bold mb-2 shadow transition-colors">⬅ Torna al Tavolo</button>
+                <div className="bg-gray-800/90 p-6 rounded-xl border border-gray-600 shadow-xl backdrop-blur-sm">
+                    <h2 className="text-3xl font-black text-center text-purple-400 drop-shadow-md mb-6">📊 Hall of Fame</h2>
+                    
+                    {loading ? <p className="text-center text-white">Caricamento statistiche...</p> : totalMatches === 0 ? <p className="text-center text-gray-400">Nessuna partita registrata. Gioca e dichiara un vincitore!</p> : (
+                        <div className="space-y-6">
+                            <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 text-center shadow-inner">
+                                <p className="text-gray-400 text-sm font-bold uppercase">Partite Totali Giocate</p>
+                                <p className="text-4xl font-black text-white">{totalMatches}</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
+                                    <h3 className="text-emerald-400 font-black mb-3 border-b border-gray-700 pb-2">🏆 Vittorie per Giocatore</h3>
+                                    {Object.entries(winsByPlayer).sort((a,b)=>b[1]-a[1]).map(([name, wins]) => (
+                                        <div key={name} className="flex justify-between items-center mb-2">
+                                            <span className="text-white font-bold">{name}</span>
+                                            <span className="bg-emerald-800 text-emerald-200 px-2 py-1 rounded text-xs font-black">{wins} Vittorie ({((wins/totalMatches)*100).toFixed(0)}%)</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="bg-gray-900 p-4 rounded-xl border border-gray-700 shadow-inner">
+                                    <h3 className="text-orange-400 font-black mb-3 border-b border-gray-700 pb-2">👑 Comandanti più Letali</h3>
+                                    {Object.entries(winsByCmdr).filter(([name])=>name!=="Sconosciuto").sort((a,b)=>b[1]-a[1]).map(([cmdr, wins]) => (
+                                        <div key={cmdr} className="flex justify-between items-center mb-2">
+                                            <span className="text-white font-bold text-sm truncate pr-2">{cmdr}</span>
+                                            <span className="bg-orange-800 text-orange-200 px-2 py-1 rounded text-xs font-black">{wins} Vittorie</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+    
     function App() {
       const [introState, setIntroState] = useState('initial');
       const [currentUser, setCurrentUser] = useState(null);
@@ -843,6 +970,7 @@
                 {view === 'myproxies' && <MyProxies navigate={navigate} printQueue={printQueue} setPrintQueue={setPrintQueue} />}
                 {view === 'viewdeck' && <DeckViewer deck={activeDeck} navigate={navigate} />}
                 {view === 'analysis' && <DeckAnalysis deck={activeDeck} navigate={navigate} />}
+                {view === 'statistics' && <MatchStatistics navigate={navigate} />}
                 {view === 'proxycreator' && <ProxyEditor isStandalone={true} />}
                 {view === 'printview' && <PrintView deck={activeDeck} navigate={navigate} />}
                 {view === 'backup' && <BackupView navigate={navigate} />}
@@ -3708,6 +3836,31 @@
               setRoomCode("");
           }
       };
+
+      // FUNZIONE SALVATAGGIO VITTORIA
+      const declareWinner = async (winnerPlayer) => {
+          if (!window.confirm(`Dichiarare ${winnerPlayer.name} VINCITORE della partita e salvare le statistiche?`)) return;
+          try {
+              let winnerCommander = "Sconosciuto";
+              if (winnerPlayer.tokens && winnerPlayer.tokens.length > 0) {
+                  // Cerca un comandante tra i token/sfondi se presente, o lascia sconosciuto
+                  winnerCommander = winnerPlayer.name; 
+              }
+              await db.collection('match_history').add({
+                  date: new Date().toISOString(),
+                  playerCount: players.length,
+                  winnerId: winnerPlayer.id,
+                  winnerName: winnerPlayer.name,
+                  winnerCommander: winnerCommander,
+                  teamMode: teamMode
+              });
+              alert("🏆 Vittoria registrata nelle statistiche!");
+              resetGame();
+          } catch (err) { alert("Errore nel salvataggio: " + err.message); }
+      };
+
+      const startGame = () => {
+        let newPlayers = [];
       
       const startGame = () => {
         let newPlayers = [];
@@ -3827,7 +3980,11 @@
 
       if (view === 'game') return (
         <div className="max-w-md mx-auto bg-gray-800/90 p-6 rounded-xl shadow-lg border border-gray-600 mt-4 backdrop-blur-sm animate-fade">
-          <h2 className="text-3xl font-black mb-6 text-center text-red-500 drop-shadow-md">Setup Partita</h2>
+          <h2 className="text-3xl font-black mb-4 text-center text-red-500 drop-shadow-md">Setup Partita</h2>
+          
+          <button onClick={() => setView('statistics')} className="w-full mb-6 bg-purple-700 hover:bg-purple-600 text-white font-black py-3 rounded-lg shadow-lg border border-purple-500 flex items-center justify-center gap-2 transition-all">
+              📊 VEDI STATISTICHE PARTITE
+          </button>
         
           <div className="flex gap-2 mb-6 bg-gray-900 p-1 rounded-lg border border-gray-700">
              <button onClick={()=>setLobbyMode('local')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='local'?'bg-red-600 text-white shadow':'text-gray-400 hover:text-white'}`}>Tavolo Locale</button>
@@ -4061,9 +4218,18 @@
                         <span className="text-2xl drop-shadow-md">🌌</span>
                     </button>
                     <div className={players.length <= 2 ? "w-px h-6 bg-gray-700" : "w-6 h-px bg-gray-700"}></div>
-                    <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
-                        <span className="text-xl">🔄</span> <span className="text-[10px] uppercase">Reset</span>
-                    </button>
+                    <div className="flex gap-2">
+                        <button onClick={() => {
+                            const winnerName = window.prompt("Chi ha vinto? Inserisci il nome del giocatore:");
+                            if(winnerName) declareWinner({ id: 'manual', name: winnerName });
+                        }} className="flex flex-col items-center gap-1 text-yellow-500 font-bold hover:text-yellow-400 transition-colors" title="Dichiara Vincitore">
+                            <span className="text-xl">🏆</span> <span className="text-[10px] uppercase">Vittoria</span>
+                        </button>
+                        <div className={players.length <= 2 ? "w-px h-6 bg-gray-700 mx-1" : "w-6 h-px bg-gray-700 my-1"}></div>
+                        <button onClick={resetGame} className="flex flex-col items-center gap-1 text-gray-400 font-bold hover:text-white transition-colors" title="Azzera e Ricomincia">
+                            <span className="text-xl">🔄</span> <span className="text-[10px] uppercase">Reset</span>
+                        </button>
+                    </div>
                  </div>
                </div>
            )}
