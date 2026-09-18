@@ -3858,10 +3858,7 @@
               resetGame();
           } catch (err) { alert("Errore nel salvataggio: " + err.message); }
       };
-
-      const startGame = () => {
-        let newPlayers = [];
-      
+ 
       const startGame = () => {
         let newPlayers = [];
         let maxPoison = (startLife === 30 || (startLife === 60 && teamMode)) ? 15 : 10; 
