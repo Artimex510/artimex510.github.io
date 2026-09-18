@@ -3677,11 +3677,12 @@
       useEffect(() => {
           if (view === 'game_active') {
               let lockMode = 'auto';
-              if (archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName'))) {
+              if (archenemy.showModal || planechase.showModal || (activeModal && (activeModal.type === 'search' || activeModal.type === 'editName' || activeModal.type === 'cmdrSelect'))) {
                   lockMode = 'portrait';
               } else if (activeModal && activeModal.type === 'tokens') {
                   lockMode = 'landscape';
               }
+              
               applyScreenLock(lockMode, numPlayers);
               requestWakeLock();
               
@@ -3694,8 +3695,8 @@
               document.addEventListener('visibilitychange', handleVisibilityChange);
               return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
           }
-      }, [view, numPlayers, archenemy.showModal, planechase.showModal, activeModal]);
-
+      }, [view, numPlayers, archenemy.showModal, planechase.showModal, activeModal, lobbyMode, inCloudRoom]);
+      
       useEffect(() => {
           if (view === 'game_active') {
               const handlePopState = async (e) => {
