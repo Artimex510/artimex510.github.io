@@ -2922,9 +2922,13 @@
                  if(data.data) {
                     const results = data.data.map(c => {
                         let imgUrl = "";
+                        let mCost = c.mana_cost || "";
                         if (c.image_uris && c.image_uris.art_crop) imgUrl = c.image_uris.art_crop;
-                        else if (c.card_faces && c.card_faces.length > 0 && c.card_faces[0].image_uris && c.card_faces[0].image_uris.art_crop) imgUrl = c.card_faces[0].image_uris.art_crop;
-                        return { id: c.id, name: c.name, img: imgUrl };
+                        else if (c.card_faces && c.card_faces.length > 0) {
+                            if (c.card_faces[0].image_uris && c.card_faces[0].image_uris.art_crop) imgUrl = c.card_faces[0].image_uris.art_crop;
+                            if (!mCost) mCost = c.card_faces[0].mana_cost || "";
+                        }
+                        return { id: c.id, name: c.name, img: imgUrl, mana_cost: mCost, cmc: c.cmc || 0 };
                     }).filter(c => c.img);
                     setCmdResults(results);
                  } else { alert("Nessun comandante trovato."); }
@@ -2936,7 +2940,7 @@
         let effectiveRotation = rotation;
         const numPlay = opponents.length + 1;
 
-        if (type === 'search' || type === 'editName') {
+        if (type === 'search' || type === 'editName' || type === 'cmdrSelect') {
             effectiveRotation = 0; // SEMPRE DRITTI A 0 GRADI (VERTICALE)
         } else if (type === 'tokens') {
             if (numPlay <= 2) {
@@ -3064,6 +3068,78 @@
                 </React.Fragment>
             );
         }
+
+      if (type === 'cmdrSelect') {
+            const hasCmdr = !!player.cmdrCard;
+            const currentCasts = player.cmdCasts || 0;
+            const tax = currentCasts * 2;
+            const totalCmc = hasCmdr ? (player.cmdrCard.cmc || 0) + tax : 0;
+            const showDashboard = hasCmdr && cmdResults.length === 0 && cmdQuery === "";
+
+            return renderModal(
+                <React.Fragment>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-3 mt-2 shrink-0">
+                        <h3 className="text-white font-black text-xl sm:text-2xl truncate pr-2">👑 {showDashboard ? "Centro di Comando" : "Comandante"}</h3>
+                        <button onClick={onClose} className="bg-red-600 px-4 py-2 rounded-lg text-white font-bold shadow-lg shrink-0">Chiudi</button>
+                    </div>
+
+                    {showDashboard ? (
+                        <div className="flex flex-col items-center animate-fade w-full max-w-sm mx-auto overflow-y-auto pb-6 px-2">
+                            <img src={player.cmdrCard.img} className="w-full max-w-[200px] h-32 object-cover rounded-xl shadow-2xl border-2 border-yellow-500 mb-4" />
+                            
+                            <div className="w-full bg-gray-800 rounded-xl p-4 border border-gray-600 shadow-inner mb-4">
+                                <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+                                    <span className="text-gray-400 font-bold text-sm">Costo Base:</span>
+                                    <span className="text-white font-black text-lg">{player.cmdrCard.mana_cost || "N/D"}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+                                    <span className="text-gray-400 font-bold text-sm">Tassa (Lanci: {currentCasts}):</span>
+                                    <span className="text-red-400 font-black text-lg">+{tax} Mana</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-yellow-400 font-black uppercase text-sm">Costo Totale:</span>
+                                    <span className="text-yellow-400 font-black text-3xl">{totalCmc}</span>
+                                </div>
+                            </div>
+
+                            <button onClick={() => updateStat(player.id, 'cmdCasts', 1)} className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-black py-4 rounded-xl shadow-[0_0_15px_rgba(202,138,4,0.5)] transition-all text-lg mb-4 active:scale-95">
+                                ⚔️ LANCIA COMANDANTE
+                            </button>
+                            
+                            <button onClick={() => setCmdQuery(" ")} className="text-gray-400 text-sm font-bold underline hover:text-white transition-colors">
+                                Cambia Carta Comandante
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="animate-fade flex-1 flex flex-col min-h-0">
+                            <p className="text-yellow-400 text-xs font-bold mb-3 text-center">Cerca e imposta il tuo Comandante per calcolarne la tassa.</p>
+                            <div className="flex gap-2 mb-4 shrink-0">
+                                <input autoFocus type="text" placeholder="Nome (es. Urza)" value={cmdQuery} onChange={e=>setCmdQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&eseguiRicercaCmd()} className="flex-1 bg-gray-800 border border-yellow-500 text-white rounded-xl p-3 outline-none font-bold text-lg focus:border-yellow-400 shadow-inner" />
+                                <button onClick={eseguiRicercaCmd} className="bg-yellow-600 px-6 rounded-xl text-black font-black shadow-lg text-lg active:scale-95 transition-transform">{isSearching ? '...' : 'Cerca'}</button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto min-h-0 grid grid-cols-2 gap-4 content-start pb-10 pr-2">
+                                {cmdResults.map(c => (
+                                    <div key={c.id} className="relative rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-yellow-500 shadow-xl active:scale-95 transition-all bg-black h-36" 
+                                         onClick={() => { updatePlayerConfig(player.id, 'cmdrCard', { name: c.name, img: c.img, mana_cost: c.mana_cost, cmc: c.cmc }); setCmdQuery(""); setCmdResults([]); }}>
+                                        <img src={c.img} className="absolute inset-0 w-full h-full object-cover opacity-90 hover:opacity-100" />
+                                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/90 to-transparent p-2 pt-6 text-center flex flex-col justify-end h-full">
+                                            <span className="text-white text-[10px] md:text-xs font-bold drop-shadow-md leading-tight">{c.name}</span>
+                                            <span className="text-yellow-400 text-[10px] font-black drop-shadow-md">{c.mana_cost}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {hasCmdr && (
+                                <button onClick={() => { setCmdQuery(""); setCmdResults([]); }} className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg shadow-lg shrink-0">
+                                    Annulla Ricerca
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </React.Fragment>
+            );
+        }
+      
       if (type === 'tokens') {
             const SfondiPedine = ['plains_sfondo.jpg', 'island_sfondo.jpg', 'swamp_sfondo.jpg', 'mountain_sfondo.jpg', 'forest_sfondo.jpg', 'eldrazi_sfondo.jpg', 'yokai_sfondo.jpg', 'yokai2_sfondo.jpg', 'yokai3_sfondo.jpg'];
             
@@ -3510,6 +3586,7 @@
             </div>
             
             <div className={`flex ${isCloud ? 'flex-row gap-2' : 'flex-col gap-1'} z-30 shrink-0`}>
+               <button onClick={() => onOpenModal('cmdrSelect')} className={`rounded shadow-lg font-bold bg-yellow-700 text-white hover:bg-yellow-600 transition-colors ${isCloud ? 'px-5 py-3 text-sm border border-yellow-500' : 'px-2 py-1 text-[10px]'}`}>Cmdr</button>
                <button onClick={() => onOpenModal('mana')} className={`rounded shadow-lg font-bold bg-emerald-700 text-white hover:bg-emerald-600 transition-colors ${isCloud ? 'px-5 py-3 text-sm border border-emerald-500' : 'px-2 py-1 text-[10px]'}`}>Mana</button>
                <button onClick={() => onOpenModal('stats')} className={`rounded shadow-lg font-bold bg-gray-700 text-white hover:bg-gray-600 transition-colors ${isCloud ? 'px-5 py-3 text-sm border border-gray-500' : 'px-2 py-1 text-[10px]'}`}>Stats</button>
             </div>
