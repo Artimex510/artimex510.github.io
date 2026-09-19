@@ -1869,26 +1869,30 @@
                        </div>
                     </div>
                  )}
-                 <div className="bg-gray-800 rounded-xl w-full max-w-sm p-4 flex flex-col gap-4 shadow-xl border border-gray-600">
+                 
+                 {/* INIEZIONE TAB LEGALITÀ E REGOLE */}
+                 {!targetCard.isCustom && <CardDetailsTabs card="{targetCard}"/>}
+
+                 <div className="bg-gray-800 rounded-xl w-full max-w-sm p-4 flex flex-col gap-4 shadow-xl border border-gray-600 mt-2">
                     <div className="flex justify-between items-center bg-gray-900 rounded-lg p-3 border border-gray-700">
-                       <span className="text-gray-400 font-bold px-2">{actionLabel === "Aggiungi" ? "Aggiungi Copie:" : "Copie Totali:"}</span>
-                       <div className="flex items-center gap-3">
-                          <button onClick={()=>setQtyVal(Math.max(actionLabel==="Aggiungi"?1:0, Number(qtyVal)-1))} className="w-12 h-12 bg-red-600 hover:bg-red-500 rounded-lg font-bold text-2xl text-white shadow transition-colors">-</button>
-                           <input 
-                             key={`qty-input-${qtyVal}`}
-                             type="number" 
-                             inputMode="numeric" 
-                             min={actionLabel==="Aggiungi"?"1":"0"} 
-                             max="999" 
-                             defaultValue={qtyVal} 
-                             onBlur={e => {
-                                 let val = parseInt(e.target.value);
-                                 if (isNaN(val) || val < 0) val = actionLabel==="Aggiungi" ? 1 : 0;
-                                 if (val !== qtyVal) setQtyVal(val);
-                             }}
-                             onKeyDown={e => e.key === 'Enter' && e.target.blur()}
-                             className="w-16 h-12 bg-gray-900 border border-gray-600 rounded-lg text-white text-center text-2xl font-black outline-none focus:border-blue-500 transition-colors" 
-                           />
+                        <span className="text-gray-400 font-bold px-2">{actionLabel === "Aggiungi" ? "Aggiungi Copie:" : "Copie Totali:"}</span>
+                        <div className="flex items-center gap-3">
+                           <button onClick={()=>setQtyVal(Math.max(actionLabel==="Aggiungi"?1:0, Number(qtyVal)-1))} className="w-12 h-12 bg-red-600 hover:bg-red-500 rounded-lg font-bold text-2xl text-white shadow transition-colors">-</button>
+                            <input 
+                              key={`qty-input-${qtyVal}`}
+                              type="number" 
+                              inputMode="numeric" 
+                              min={actionLabel==="Aggiungi"?"1":"0"} 
+                              max="999" 
+                              defaultValue={qtyVal} 
+                              onBlur={e => {
+                                  let val = parseInt(e.target.value);
+                                  if (isNaN(val) || val < 0) val = actionLabel==="Aggiungi" ? 1 : 0;
+                                  if (val !== qtyVal) setQtyVal(val);
+                              }}
+                              onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+                              className="w-16 h-12 bg-gray-900 border border-gray-600 rounded-lg text-white text-center text-2xl font-black outline-none focus:border-blue-500 transition-colors" 
+                            />
                            <button onClick={()=>setQtyVal(Number(qtyVal)+1)} className="w-12 h-12 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-2xl text-white shadow transition-colors">+</button>
                         </div>
                      </div>
@@ -1903,14 +1907,13 @@
                         }}
                         onClick={actionFunc} 
                         className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-lg py-4 rounded-xl shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all">
-                       {actionLabel === "Aggiungi" ? "+ AGGIUNGI AL MAZZO" : "CONFERMA MODIFICHE"}
+                        {actionLabel === "Aggiungi" ? "+ AGGIUNGI AL MAZZO" : "CONFERMA MODIFICHE"}
                      </button>
                  </div>
               </div>
             </div>
          );
       };
-
       return (
         <div className="max-w-2xl mx-auto relative z-10 w-full">
           {selectedCard && <RenderModaleCarta targetCard={selectedCard} setterState={setSelectedCard} qtyVal={addQty} setQtyVal={setAddQty} actionLabel="Aggiungi" actionFunc={addToDeckMulti} closeFunc={setSelectedCard} />}
@@ -2235,6 +2238,10 @@
                         </div>
                     </div>
                  )}
+                 
+                 {/* INIEZIONE TAB LEGALITÀ E REGOLE NEL VIEWER MAZZI */}
+                 {!viewingCard.isCustom && <CardDetailsTabs card={viewingCard}/>}
+
                </div>
              </div>
            )}
@@ -5485,18 +5492,24 @@
 
                  {printsList.length > 0 && (
                     <div className="w-full max-w-sm mt-4 bg-gray-800 p-2 rounded-xl border border-gray-600 shadow-md animate-fade">
-                       <p className="text-xs text-gray-300 font-bold mb-2">Tocca un'art per vederla in grande:</p>
+                       <p className="text-xs text-gray-300 font-bold mb-2">Questa è la modalità lettura. La stampa non verrà salvata nel mazzo.</p>
                        <div className="flex overflow-x-auto gap-2 pb-2">
-                          {printsList.map(p => (
-                             <img key={p.id} src={p.image} className="w-20 rounded cursor-pointer border-2 border-transparent hover:border-blue-500 shadow-sm shrink-0" 
-                                  onClick={() => { setViewingCard({...viewingCard, id: p.id, image: p.image, imageBack: p.imageBack, rarity: p.rarity, setCode: p.setCode, setName: p.setName, prices: p.prices}); setPrintsList([]); setShowIta(false); }} />
-                          ))}
-                       </div>
+                           {printsList.map(p => (
+                              <img key={p.id} src={p.image} className="w-20 rounded cursor-pointer border-2 border-transparent hover:border-blue-500 shadow-sm shrink-0" 
+                                  onClick={() => { setViewingCard({...viewingCard, id: p.id, image: p.image, imageBack: p.imageBack, rarity: p.rarity, setCode: p.setCode, setName: p.setName, prices: p.prices}); setPrintsList([]); setShowIta(false); }} />  
+                           ))}
+                        </div>
                     </div>
                  )}
+                 
+                 {/* INIEZIONE TAB LEGALITÀ E REGOLE NEL VIEWER MAZZI */}
+                 {!viewingCard.isCustom && <CardDetailsTabs card="{viewingCard}"/>}
+                 
                </div>
              </div>
-          )}
+           )}
+
+           <div className={viewingCard ? "hidden" : "space-y-4"}>
 
           <div className={viewingCard ? "hidden" : "space-y-4"}>
              <div className="bg-gray-800/90 p-4 rounded-xl border border-gray-600 shadow-xl backdrop-blur-sm mt-4">
