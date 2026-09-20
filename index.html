@@ -1269,6 +1269,7 @@
       return (
         <div className="max-w-2xl mx-auto relative z-10 w-full">
           {selectedCard && <RenderModaleCarta actionFunc="{addToDeckMulti}" actionLabel="Aggiungi" closeFunc="{setSelectedCard}" qtyVal="{addQty}" setQtyVal="{setAddQty}" setterState="{setSelectedCard}" targetCard="{selectedCard}"/>}
+          
           {managingCard && <RenderModaleCarta actionFunc="{applyManageQty}" actionLabel="Gestisci" closeFunc="{setManagingCard}" qtyVal="{manageQty}" setQtyVal="{setManageQty}" setterState="{setManagingCard}" targetCard="{managingCard}"/>}
           
           {editingProxyCard && (
@@ -1498,7 +1499,7 @@
       );
     };
 
-    // --- VISUALIZZATORE MAZZI (SOLO LETTURA E TRADUZIONE) ---
+    // --- VISUALIZZATORE MAZZI ---
     const DeckViewer = ({deck, navigate}) => {
       const [viewingCard, setViewingCard] = useState(null);
       const [itaImg, setItaImg] = useState(null);
@@ -1674,7 +1675,6 @@
                     </div>
                  )}
                  
-                 {/* INIEZIONE TAB LEGALITÀ E REGOLE NEL VIEWER MAZZI */}
                  {!viewingCard.isCustom && <CardDetailsTabs card="{viewingCard}"/>}
 
                </div>
