@@ -7437,6 +7437,9 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
             }
         ];
 
+        // Definisce l'ordine in cui passare da una collezione all'altra
+        const collectionOrder = ['storia_principale', 'planeswalker', 'personaggi'];
+      
         // Autoplay Musica Sottofondo all'avvio
         useEffect(() => {
             if (bgmRef.current) {
@@ -7467,14 +7470,19 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
             }
         }, [currentChapter, selectedVolume, isAutoTransitioning]);
 
-        // LOGICA DI TRANSIZIONE (5 SECONDI)
+        // LOGICA DI TRANSIZIONE AVANZATA
         const handleChapterEnd = () => {
             handleVoicePause();
+            
+            // 1. C'è un altro capitolo nello stesso volume?
             if (currentChapter < selectedVolume.chapters) {
-                setCurrentChapter(prev => prev + 1); // Capitolo successivo
-            } else {
+                setCurrentChapter(prev => prev + 1); 
+            } 
+            else {
                 // Fine del Volume: cerco il volume successivo nella Raccolta
                 const volIndex = selectedCollection.volumes.findIndex(v => v.id === selectedVolume.id);
+                
+                // 2. C'è un altro volume in QUESTA raccolta?
                 if (volIndex < selectedCollection.volumes.length - 1) {
                     const nextVol = selectedCollection.volumes[volIndex + 1];
                     setIsAutoTransitioning(true);
@@ -7485,6 +7493,34 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
                         setCurrentChapter(1);
                         setIsAutoTransitioning(false);
                     }, 5000);
+                } 
+                // 3. FINE DELLA RACCOLTA: Passiamo alla raccolta successiva?
+                else {
+                    const currentOrderIndex = collectionOrder.indexOf(selectedCollection.id);
+                    
+                    // Se esiste una raccolta successiva nell'array
+                    if (currentOrderIndex !== -1 && currentOrderIndex < collectionOrder.length - 1) {
+                        const nextCollectionId = collectionOrder[currentOrderIndex + 1];
+                        const nextCollection = libraryCollections.find(c => c.id === nextCollectionId);
+                        
+                        if (nextCollection && nextCollection.volumes.length > 0) {
+                            setIsAutoTransitioning(true);
+                            // Puoi usare un messaggio visivo personalizzato se vuoi modificando il div nell'HTML
+                            
+                            // Attendi 10 secondi e passa alla prossima Raccolta
+                            autoPlayTimer.current = setTimeout(() => {
+                                setSelectedCollection(nextCollection);
+                                setSelectedVolume(nextCollection.volumes[0]); // Seleziona il Volume 1
+                                setCurrentChapter(1);
+                                setIsAutoTransitioning(false);
+                            }, 10000); // 10 secondi
+                        } else {
+                            closePlayer(); // Prossima raccolta vuota, chiudi.
+                        }
+                    } else {
+                        // Abbiamo finito tutte le raccolte dell'App!
+                        closePlayer();
+                    }
                 }
             }
         };
@@ -7603,8 +7639,14 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
                                 <div className="bg-gray-900 p-4 rounded-xl border-t-4 border-yellow-500 min-h-[120px] flex flex-col justify-center">
                                     {isAutoTransitioning ? (
                                         <div className="text-center animate-fade">
-                                            <p className="text-emerald-400 font-black text-lg mb-1">✅ Volume Completato!</p>
-                                            <p className="text-white font-semibold text-sm">Passaggio automatico al prossimo volume in 5 secondi...</p>
+                                            <p className="text-emerald-400 font-black text-lg mb-1">
+                                                ✅ {currentChapter >= selectedVolume.chapters && selectedCollection.volumes.findIndex(v => v.id === selectedVolume.id) === selectedCollection.volumes.length - 1 ? "Raccolta Completata!" : "Volume Completato!"}
+                                            </p>
+                                            <p className="text-white font-semibold text-sm">
+                                                {currentChapter >= selectedVolume.chapters && selectedCollection.volumes.findIndex(v => v.id === selectedVolume.id) === selectedCollection.volumes.length - 1 
+                                                    ? "Passaggio alla prossima Raccolta in 10 secondi..." 
+                                                    : "Passaggio automatico al prossimo volume in 5 secondi..."}
+                                            </p>
                                             <button onClick={closePlayer} className="mt-4 bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-xs transition-colors">
                                                 Annulla e Ferma
                                             </button>
