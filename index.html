@@ -2791,7 +2791,8 @@
         if(!importText.trim()) return; setLoading(true); const lines = importText.split('\n'); let promises = [];
         for (let i = 0; i < lines.length; i++) {
           let line = lines[i].trim(); if(!line) continue;
-          const match = line.match(/^(\d+)?\s*(.*)$/); let qty = match[1] ? parseInt(match[1]) : 1; let name = match[2];
+          // IGNORA LA X O GLI SPAZI DOPO IL NUMERO E PRENDE IL NOME
+          const match = line.match(/^(\d+)?\s*[xX]?\s*(.*)$/); let qty = match[1] ? parseInt(match[1]) : 1; let name = match[2].trim();
           let p = fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`).then(res => { if(res.ok) return res.json(); throw new Error('Not found'); }).then(c => {
                let arr = [];
                for(let j=0; j<qty; j++) {
