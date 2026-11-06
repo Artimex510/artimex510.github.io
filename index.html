@@ -2963,6 +2963,105 @@
             return { weapon: weapon, head: null, body: body, hands: null, feet: feet, artifact: null };
         };
 
+        // ============================================================================
+        // NODI DINAMICI POST-VITTORIA (Impediscono di riaffrontare Boss già sconfitti!)
+        // ============================================================================
+        const CLEARED_ARC_REDIRECT = {
+            tolaria_gates: "cleared_tolaria_node",
+            llanowar_entry: "cleared_llanowar_node",
+            lotus_gauntlet_1: "cleared_lotus_node",
+            urborg_entry: "cleared_urborg_node",
+            dark_depths_entry: "cleared_dark_depths_node",
+            innistrad_ch1: "cleared_innistrad_node",
+            ravnica_ch1: "cleared_ravnica_node",
+            kamigawa_ch1: "cleared_kamigawa_node",
+            zendikar_ch1: "cleared_zendikar_node"
+        };
+
+        const CLEARED_ARC_NODES = {
+            cleared_tolaria_node: {
+                act: "✅ Regione Pacificata — Accademia di Tolaria",
+                title: "Le Torri Libere dai Tramutanti",
+                text: "Tornate sulle coste di Tolaria. La Regina dei Tramutanti è già stata annientata dalla vostra Compagnia e la breccia temporale con Rath è sigillata! Barrin e gli studenti stanno ricostruendo la biblioteca.\n\nPotete perlustrare i laboratori esterni in cerca di qualche componente rimasto, oppure tornare al Crocevia per intraprendere una nuova strada.",
+                choices: [
+                    { text: "🔍 Esplora i laboratori esterni per cercare scorte residue (MAG CD 26)", type: "roll", stat: "mag", dc: 26, successNode: "crossroads_wilds", failNode: "crossroads_wilds", failDamage: 3, failText: "Non trovate nulla di utile tra le macerie e tornate al Crocevia.", rewards: { gold: 15, treasures: 1 } },
+                    { text: "⚔️ Dai la caccia a qualche Tramutante superstite isolato sulla spiaggia", type: "combat", monster: "sliver_swarm", winNode: "crossroads_wilds" },
+                    { text: "⏪ Torna al Crocevia dei Continenti e scegli un'altra direzione", type: "move", nextNode: "crossroads_wilds" }
+                ]
+            },
+            cleared_llanowar_node: {
+                act: "✅ Regione Pacificata — Giungla di Llanowar",
+                title: "I Sentieri Sicuri di Multani",
+                text: "La grande foresta di Llanowar è ora in pace dopo le vostre vittorie e Multani vi ha già concesso la sua benedizione. Gli elfi di Radha presidiano i ponti.",
+                choices: [
+                    { text: "🌺 Visita il Portale Segreto di Argoth (Sfida del Loto Nero)", type: "move", nextNode: "lotus_gauntlet_1" },
+                    { text: "🔍 Cerca erbe curative nel sottobosco prima di ripartire (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "crossroads_wilds", failNode: "crossroads_wilds", rewards: { heal: 8 } },
+                    { text: "⏪ Torna al Crocevia dei Continenti per cambiare strada", type: "move", nextNode: "crossroads_wilds" }
+                ]
+            },
+            cleared_lotus_node: {
+                act: "✅ Santuario Conquistato — Valle di Argoth",
+                title: "Il Piedistallo Vuoto del Black Lotus",
+                text: "Il Colosso Guardiano di Urza giace in frantumi sul pavimento del tempio e avete già reclamato il leggendario Black Lotus. Nel santuario regna un silenzio sacro.",
+                choices: [
+                    { text: "⏪ Torna al Crocevia dei Continenti", type: "move", nextNode: "crossroads_wilds" }
+                ]
+            },
+            cleared_urborg_node: {
+                act: "✅ Regione Conquistata — Urborg & Arena di Otaria",
+                title: "Le Ceneri della Cabala",
+                text: "Le paludi di Urborg e l'Arena di Otaria portano i segni del vostro trionfo su Phage, Akroma e sui campioni della Cabala. I superstiti fuggono al vostro passaggio.",
+                choices: [
+                    { text: "🔍 Perlustra i resti del colosseo in cerca di monete dimenticate (AGI CD 26)", type: "roll", stat: "agi", dc: 26, successNode: "crossroads_wilds", failNode: "crossroads_wilds", rewards: { gold: 20 } },
+                    { text: "⚙️ Prosegui direttamente verso le Grotte di Koilos", type: "move", nextNode: "koilos_gates" },
+                    { text: "⏪ Torna al Crocevia dei Continenti", type: "move", nextNode: "crossroads_wilds" }
+                ]
+            },
+            cleared_dark_depths_node: {
+                act: "✅ Abisso Conquistato — Dark Depths",
+                title: "Il Cratere Vuoto di Marit Lage",
+                text: "Il ghiacciaio eterno è spaccato in due: avete già sconfitto il titanico avatar Marit Lage e reclamato la Cripta di Mana.",
+                choices: [
+                    { text: "⏪ Torna al Nexus dei Planeswalker", type: "move", nextNode: "planeswalker_nexus" }
+                ]
+            },
+            cleared_innistrad_node: {
+                act: "✅ Piano Salvato — Innistrad",
+                title: "La Luce di Avacyn su Thraben",
+                text: "Avacyn vola libera nei cieli di Innistrad grazie alla vostra impresa. Sorin e Thalia hanno già ricompensato la vostra Compagnia.",
+                choices: [
+                    { text: "⚔️ Aiuta le ronde di Thraben a eliminare una banda di Ghoul erranti", type: "combat", monster: "undead_lord", winNode: "planeswalker_nexus" },
+                    { text: "⏪ Torna al Nexus per viaggiare verso un altro Piano", type: "move", nextNode: "planeswalker_nexus" }
+                ]
+            },
+            cleared_ravnica_node: {
+                act: "✅ Piano Salvato — Ravnica",
+                title: "Il Patto delle Gilde Ristabilito",
+                text: "Il Labirinto Implicito è stato completato e le Dieci Gilde sono in tregua sotto la guida di Jace Beleren e Niv-Mizzet.",
+                choices: [
+                    { text: "⚔️ Sgomina una cellula residua di sicari nei vicoli", type: "combat", monster: "bandit_rogues", winNode: "planeswalker_nexus" },
+                    { text: "⏪ Torna al Nexus per viaggiare verso un altro Piano", type: "move", nextNode: "planeswalker_nexus" }
+                ]
+            },
+            cleared_kamigawa_node: {
+                act: "✅ Piano Salvato — Kamigawa",
+                title: "L'Armonia di Boseiju",
+                text: "I Kami e i mortali di Towashi sono in pace dopo la vostra vittoria a Eiganjo e Boseiju.",
+                choices: [
+                    { text: "⏪ Torna al Nexus per viaggiare verso un altro Piano", type: "move", nextNode: "planeswalker_nexus" }
+                ]
+            },
+            cleared_zendikar_node: {
+                act: "✅ Piano Salvato — Zendikar",
+                title: "L'Occhio di Ugin Sigillato",
+                text: "Il Torbido si è placato e Nissa e Nahiri custodiscono il santuario degli Edri che avete liberato.",
+                choices: [
+                    { text: "🦖 Caccia un Dinosauro nelle giungle di Bala Ged", type: "combat", monster: "colossal_dreadmaw", winNode: "planeswalker_nexus" },
+                    { text: "⏪ Torna al Nexus per viaggiare verso un altro Piano", type: "move", nextNode: "planeswalker_nexus" }
+                ]
+            }
+        };
+
         const normalizeCharacterSlots = (char) => {
             if (!char) return null;
             let eq = char.equipped || {};
@@ -2987,6 +3086,8 @@
                 nodeTickCounter: char.nodeTickCounter || 0,
                 spells: Array.isArray(char.spells) ? char.spells : getInitialSpellsForClass(char.classId, mainM),
                 usedOneShots: Array.isArray(char.usedOneShots) ? char.usedOneShots : [],
+                completedArcs: Array.isArray(char.completedArcs) ? char.completedArcs : [],
+                visitedNodes: Array.isArray(char.visitedNodes) ? char.visitedNodes : [],
                 gold: typeof char.gold === 'number' ? char.gold : 10,
                 treasures: typeof char.treasures === 'number' ? char.treasures : 1,
                 food: typeof char.food === 'number' ? char.food : 1,
@@ -3000,7 +3101,6 @@
                 }
             };
         };
-
         const isHeroHealer = (char) => {
             if (!char) return false;
             return char.classId === "chierico" || char.classId === "sciamano" || char.secondaryClassId === "chierico" || char.secondaryClassId === "sciamano";
@@ -3129,12 +3229,14 @@
             localStorage.setItem('rpg_party', JSON.stringify(newParty));
         };
 
+        // CALCOLO STATISTICHE BILANCIATO (Evita che i personaggi arrivino a 35+ rendendo inutili i dadi!)
         const getFinalStats = (char) => {
             const totalLevels = (char.level || 1) + (char.secondaryLevel || 0);
-            let bonus = (totalLevels - 1) * 2;
-            if (char.isLegendary) bonus += 5;
-            if (char.sparkIgnited) bonus += 15;
-            if (char.ascensionForm) bonus += 4;
+            // +1 per livello (invece di +2), +2 per Leggendario (invece di +5), +4 per Planeswalker (invece di +15)
+            let bonus = (totalLevels - 1) * 1;
+            if (char.isLegendary) bonus += 2;
+            if (char.sparkIgnited) bonus += 4;
+            if (char.ascensionForm) bonus += 2;
 
             let eqStr = 0; let eqAgi = 0; let eqMag = 0; let eqCon = 0;
             let activeKeywords = char.mtgKeywords ? [...char.mtgKeywords] : [];
@@ -3155,15 +3257,15 @@
             }
 
             let raceBonusStr = char.raceId === 'leonin' ? 2 : 0;
-            if (char.raceId === 'goblin') raceBonusStr += (playMode === 'party' ? 4 : 2);
+            if (char.raceId === 'goblin') raceBonusStr += (playMode === 'party' ? 3 : 1);
             const raceBonusAgi = char.raceId === 'ratto' ? 2 : 0;
 
             const classStr = (char.classId === 'guerriero' ? 2 : ((char.classId === 'sciamano' || char.classId === 'standard') ? 1 : 0));
             const classAgi = (char.classId === 'farabutto' || char.classId === 'assassino') ? 2 : (char.classId === 'standard' ? 1 : 0);
             const classMag = (char.classId === 'mago' || char.secondaryClassId === 'mago') ? 2 : ((char.classId === 'sciamano' || char.classId === 'standard') ? 1 : 0);
 
-            const totalCon = char.baseStats.con + ((totalLevels - 1) * 2) + eqCon + (char.isLegendary ? 10 : 0) + (char.sparkIgnited ? 20 : 0);
-            const maxHP = totalCon + (totalLevels * 5);
+            const totalCon = char.baseStats.con + ((totalLevels - 1) * 2) + eqCon + (char.isLegendary ? 6 : 0) + (char.sparkIgnited ? 10 : 0);
+            const maxHP = totalCon + (totalLevels * 4);
 
             return {
                 str: char.baseStats.str + bonus + eqStr + raceBonusStr + classStr,
@@ -3175,6 +3277,18 @@
             };
         };
 
+        // CALCOLATORE DI DIFFICOLTÀ EVOLUTIVA (Garantisce che serva sempre un vero tiro di dado 8-14+!)
+        const getDynamicStoryDC = (baseDC, heroChar, statKey) => {
+            if (!heroChar) return baseDC;
+            const st = getFinalStats(heroChar);
+            const statVal = st[statKey] || 12;
+            const humanB = heroChar.raceId === 'umano' ? 1 : 0;
+            const effectiveStat = statVal + humanB;
+
+            if (baseDC <= 22) return Math.max(baseDC, effectiveStat + 8);
+            if (baseDC <= 26) return Math.max(baseDC, effectiveStat + 11);
+            return Math.max(baseDC, effectiveStat + 13);
+        };
         const formatItemBonuses = (it) => {
             if (!it) return "";
             let b = [];
@@ -3931,20 +4045,66 @@
         };
 
         const applyRewardsAndMove = (charState, rewards, targetNodeId, extraBanner = "") => {
-            const nextNodeVal = targetNodeId || charState.currentNode;
+            let requestedNode = targetNodeId || charState.currentNode;
             let allMessages = [];
             if (extraBanner) allMessages.push(extraBanner);
 
+            // MAPPA DEI NODI DI FINE ARCO -> SEGNA AUTOMATICAMENTE LA REGIONE COME COMPLETATA!
+            const VICTORY_NODE_TO_ARC = {
+                tolaria_victory_vault: "tolaria_gates",
+                llanowar_multani_shrine: "llanowar_entry",
+                lotus_sanctum_victory: "lotus_gauntlet_1",
+                otaria_mirari_victory: "urborg_entry",
+                serra_blessing_done: "urborg_entry",
+                dark_depths_victory: "dark_depths_entry",
+                innistrad_ch2: "innistrad_ch1",
+                ravnica_ch2: "ravnica_ch1",
+                kamigawa_ch2: "kamigawa_ch1",
+                zendikar_ch2: "zendikar_ch1"
+            };
+
             const currentPartyList = party.length > 0 ? party : [charState];
+            let sharedCompletedArcs = Array.isArray(charState.completedArcs) ? [...charState.completedArcs] : [];
+            let sharedVisitedNodes = Array.isArray(charState.visitedNodes) ? [...charState.visitedNodes] : [];
+
+            // Se stiamo entrando in un nodo di vittoria finale di un arco, registralo come completato!
+            if (VICTORY_NODE_TO_ARC[requestedNode] && !sharedCompletedArcs.includes(VICTORY_NODE_TO_ARC[requestedNode])) {
+                sharedCompletedArcs.push(VICTORY_NODE_TO_ARC[requestedNode]);
+            }
+
+            // Se il giocatore prova a rientrare nell'inizio di una regione GIÀ COMPLETATA (es. Tolaria dopo aver battuto la Sliver Queen),
+            // devialo automaticamente al nodo "Regione Pacificata"!
+            if (CLEARED_ARC_REDIRECT[requestedNode] && sharedCompletedArcs.includes(requestedNode)) {
+                requestedNode = CLEARED_ARC_REDIRECT[requestedNode];
+                allMessages.push("🧭 Avete già sconfitto il Boss e completato la storia principale di questa regione: entrate nella zona pacificata!");
+            }
+
+            // Anti-Farming: se questo nodo della storia aveva già dato ricompense (EXP/Oro/Loot), non darle una seconda volta!
+            const alreadyClaimedNode = sharedVisitedNodes.includes(requestedNode);
+            let effectiveRewards = rewards;
+            if (alreadyClaimedNode && rewards && requestedNode !== charState.currentNode) {
+                effectiveRewards = {
+                    damage: rewards.damage,
+                    partyDamage: rewards.partyDamage
+                };
+            } else if (rewards && (rewards.exp || rewards.loot || rewards.gold || rewards.makeLegendary)) {
+                sharedVisitedNodes.push(requestedNode);
+            }
+
             let updatedActiveHero = null;
 
             const updatedPartyList = currentPartyList.map(member => {
                 const isAct = member.id === charState.id;
                 const baseMember = isAct ? charState : member;
-                const res = applySingleHeroRewards(baseMember, rewards, isAct, nextNodeVal, currentPartyList.length);
+                const res = applySingleHeroRewards(baseMember, effectiveRewards, isAct, requestedNode, currentPartyList.length);
                 if (res.msgs.length > 0) allMessages = [...allMessages, ...res.msgs];
-                if (isAct) updatedActiveHero = res.hero;
-                return res.hero;
+                const finalHero = {
+                    ...res.hero,
+                    completedArcs: sharedCompletedArcs,
+                    visitedNodes: sharedVisitedNodes
+                };
+                if (isAct) updatedActiveHero = finalHero;
+                return finalHero;
             });
 
             if (!updatedActiveHero) updatedActiveHero = updatedPartyList[0];
@@ -3952,7 +4112,7 @@
             if (allMessages.length > 0) setEventBanner(allMessages.join("\n"));
             else setEventBanner(null);
 
-            setMasterNodeJump(nextNodeVal);
+            setMasterNodeJump(requestedNode);
             setCharacter(updatedActiveHero);
             setParty(updatedPartyList);
             localStorage.setItem('rpg_character', JSON.stringify(updatedActiveHero));
@@ -4017,11 +4177,58 @@
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
             const activeParty = party.length > 0 ? party : [character];
-            const partyScale = playMode === "party" && activeParty.length > 1 ? Math.min(2.5, 1 + (activeParty.length - 1) * 0.45) : 1;
-            const scaledHP = Math.round(mTemplate.maxHP * partyScale);
+
+            // Calcola la potenza reale del Party (Livello medio, Statistica massima e Numero di Oggetti Equipaggiati!)
+            let maxPartyStat = 12;
+            let totalEquippedItems = 0;
+            let sumLevels = 0;
+
+            activeParty.forEach(h => {
+                const st = getFinalStats(h);
+                const bestHeroStat = Math.max(st.str, st.agi, st.mag);
+                if (bestHeroStat > maxPartyStat) maxPartyStat = bestHeroStat;
+                sumLevels += (h.level || 1) + (h.secondaryLevel || 0);
+                if (h.equipped) {
+                    Object.values(h.equipped).forEach(it => {
+                        if (it && it.id && it.id.indexOf("start_") === -1) totalEquippedItems += 1;
+                    });
+                }
+            });
+
+            const avgPartyLvl = sumLevels / Math.max(1, activeParty.length);
+            const isSmallMob = ["goblin_pack", "bandit_rogues", "storm_crow", "fblthp_guards", "brushwagg_mutant"].includes(monsterKey);
+            const isBossMob = mTemplate.isBoss || ["sliver_queen", "phage_untouchable", "akroma_angel", "phyrexian_obliterator", "shivan_dragon", "urza_lotus_guardian", "blightsteel_colossus", "marit_lage"].includes(monsterKey);
+
+            // SCALING DIFFERENZIATO: Creature Piccole vs Creature Elite vs BOSS!
+            let scaledHP = mTemplate.maxHP;
+            let scaledDC = mTemplate.dc;
+            let scaledDmg = mTemplate.dmg;
+
+            const partySizeMult = playMode === "party" && activeParty.length > 1 ? (1 + (activeParty.length - 1) * 0.5) : 1;
+
+            if (isSmallMob) {
+                // I mostri piccoli migliorano pochissimo: senti la crescita del tuo personaggio
+                scaledHP = Math.round(mTemplate.maxHP * partySizeMult * (1 + (avgPartyLvl - 1) * 0.12));
+                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 7); // Serve almeno 7+ sul D20
+                scaledDmg = mTemplate.dmg + Math.floor((avgPartyLvl - 1) * 1.2);
+            } else if (isBossMob) {
+                // I BOSS EVOLVONO COL PARTY E CON GLI OGGETTI EQUIPAGGIATI!
+                // Contro un Boss serve SEMPRE almeno un 12 o 13 sul dado D20 per superare la sua Difesa!
+                const gearPowerFactor = totalEquippedItems * 14;
+                const levelFactor = 1 + (avgPartyLvl - 1) * 0.45;
+                scaledHP = Math.round((mTemplate.maxHP * levelFactor + gearPowerFactor) * partySizeMult);
+                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 12); // Con un 4 sul dado NON colpirai MAI un Boss!
+                scaledDmg = mTemplate.dmg + Math.round((avgPartyLvl - 1) * 3.5) + Math.floor(totalEquippedItems * 0.8);
+            } else {
+                // Creature intermedie/Elite (Tarmogoyf, Lhurgoyf, Wurm, Troll, Juzám Djinn)
+                const gearFactor = totalEquippedItems * 8;
+                scaledHP = Math.round((mTemplate.maxHP * (1 + (avgPartyLvl - 1) * 0.3) + gearFactor) * partySizeMult);
+                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 10); // Serve almeno 10+ sul D20
+                scaledDmg = mTemplate.dmg + Math.round((avgPartyLvl - 1) * 2.2);
+            }
 
             const mD20 = Math.floor(Math.random() * 20) + 1;
-            const mInitBonus = mTemplate.initBonus || 4;
+            const mInitBonus = (mTemplate.initBonus || 4) + (isBossMob ? Math.floor(avgPartyLvl * 1.5) : 0);
             const mInitTotal = mD20 + mInitBonus;
 
             let initialDamageMap = {};
@@ -4034,15 +4241,15 @@
                 monsterFled: false,
                 maxHP: scaledHP,
                 currentHP: scaledHP,
-                dc: mTemplate.dc,
-                dmg: mTemplate.dmg,
+                dc: scaledDC,
+                dmg: scaledDmg,
                 enemyBlueMana: mTemplate.blueMana || 0,
                 maxEnemyBlueMana: mTemplate.blueMana || 0,
                 exp: mTemplate.exp,
-                gold: mTemplate.gold || 25,
+                gold: mTemplate.gold || 20,
                 treasures: mTemplate.treasures || 1,
                 loot: mTemplate.loot,
-                isBoss: mTemplate.isBoss || false,
+                isBoss: isBossMob,
                 winNode: customWinNode || character.currentNode,
                 desc: mTemplate.desc,
                 monsterInitD20: mD20,
@@ -4054,7 +4261,7 @@
                 turnOrder: [],
                 currentTurnIdx: 0,
                 round: 1,
-                log: [`👹 ${mTemplate.name} (${scaledHP} PV) tira Iniziativa: D20 (${mD20}) + ${mInitBonus} = ${mInitTotal}!`]
+                log: [`👹 ${mTemplate.name} (${scaledHP} PV • Difesa CD ${scaledDC} • Danno ${scaledDmg}) tira Iniziativa: ${mInitTotal}!`]
             };
 
             setLastRollInfo(null);
@@ -4498,7 +4705,8 @@
 
             const isCritSuccess = rawD20 === 20;
             const isCritFail = rawD20 === 1 && !treasureBonus;
-            const passed = isCritSuccess || (!isCritFail && total >= choice.dc);
+            const dynamicDC = getDynamicStoryDC(choice.dc, character, choice.stat);
+            const passed = isCritSuccess || (!isCritFail && total >= dynamicDC);
 
             let updatedChar = normalizeCharacterSlots(character);
             let rollNote = "";
@@ -4540,7 +4748,7 @@
             setLastRollInfo({
                 formulaText: formulaBreakdown,
                 total: total,
-                dc: choice.dc,
+                dc: dynamicDC,
                 passed: passed,
                 choiceBackup: choice,
                 note: rollNote || (passed ? "✅ Prova Superata con successo!" : (choice.failText || "❌ Prova Fallita!"))
@@ -4641,7 +4849,7 @@
         // ====================================================================
         if (character && rpgView === "story") {
             const stats = getFinalStats(character);
-            const currentNodeObj = SPECIAL_DYNAMIC_NODES[character.currentNode] || RPG_STORY_NODES[character.currentNode] || RPG_STORY_NODES["start"];
+            const currentNodeObj = CLEARED_ARC_NODES[character.currentNode] || SPECIAL_DYNAMIC_NODES[character.currentNode] || RPG_STORY_NODES[character.currentNode] || RPG_STORY_NODES["start"];
             const avatarSrc = getAvatarSrc(character.raceId, character.classId, character.customAvatar, character.ascensionForm);
             const storyText = (playMode === "party" && currentNodeObj.textParty) ? currentNodeObj.textParty : (currentNodeObj.textSolo || currentNodeObj.text);
 
@@ -5404,6 +5612,9 @@
                                     if (ch.reqKeyword && !stats.keywords.includes(ch.reqKeyword)) return null;
                                     if (ch.reqKeywordAny && !ch.reqKeywordAny.some(k => stats.keywords.includes(k))) return null;
 
+                                    const scaledChoiceDC = ch.type === 'roll' ? getDynamicStoryDC(ch.dc, character, ch.stat) : 0;
+                                    const isClearedPath = ch.type === 'move' && CLEARED_ARC_REDIRECT[ch.nextNode] && (character.completedArcs || []).includes(ch.nextNode);
+
                                     return (
                                         <button
                                             key={idx}
@@ -5412,14 +5623,11 @@
                                         >
                                             <span>{ch.text}</span>
                                             <span className="text-xs font-black px-2 py-1 rounded bg-black/50 text-amber-400 shrink-0">
-                                                {ch.type === 'combat' ? '⚔️ INIZIATIVA & SCONTRO' : (ch.type === 'roll' ? `🎲 ${ch.stat.toUpperCase()} ${ch.dc}` : '➔')}
+                                                {ch.type === 'combat' ? '⚔️ INIZIATIVA & SCONTRO' : (ch.type === 'roll' ? `🎲 ${ch.stat.toUpperCase()} CD ${scaledChoiceDC}` : (isClearedPath ? '✅ GIÀ COMPLETATO' : '➔'))}
                                             </span>
                                         </button>
                                     );
                                 })}
-                            </div>
-                        </div>
-                    )}
 
                     {/* CONSOLE DEL DUNGEON MASTER */}
                     {playMode === "party" && (
