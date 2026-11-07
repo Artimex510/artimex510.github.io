@@ -3062,6 +3062,28 @@
             }
         };
 
+        // Identifica i mostri dotati di Volare (Contro di loro Volare non dà il bonus di +4 danni!)
+        const isMonsterFlying = (monsterKey) => {
+            return ["storm_crow", "serra_griffin", "sengir_vampire", "akroma_angel", "shivan_dragon", "marit_lage"].includes(monsterKey);
+        };
+
+        // Arricchisce automaticamente le abilità degli oggetti iconici con Rapidità, Doppio Attacco e Infettare!
+        const enrichKeywordsFromEquipment = (char, baseKeywords) => {
+            let kw = [...baseKeywords];
+            if (char.raceId === "goblin" || char.classId === "barbaro") {
+                if (!kw.includes("Rapidità")) kw.push("Rapidità");
+            }
+            if (char.equipped) {
+                Object.values(char.equipped).forEach(it => {
+                    if (!it) return;
+                    if ((it.id === "lightning_greaves" || it.id === "Swiftfoot_boots" || it.id === "akroma_armor") && !kw.includes("Rapidità")) kw.push("Rapidità");
+                    if ((it.id === "embercleave" || it.id === "sword_fire_ice" || it.id === "helm_of_the_host") && !kw.includes("Doppio Attacco")) kw.push("Doppio Attacco");
+                    if ((it.id === "venom_bracers" || it.id === "sword_feast_famine") && !kw.includes("Infettare")) kw.push("Infettare");
+                });
+            }
+            return kw;
+        };
+
         const normalizeCharacterSlots = (char) => {
             if (!char) return null;
             let eq = char.equipped || {};
@@ -3266,7 +3288,7 @@
 
             const totalCon = char.baseStats.con + ((totalLevels - 1) * 2) + eqCon + (char.isLegendary ? 6 : 0) + (char.sparkIgnited ? 10 : 0);
             const maxHP = totalCon + (totalLevels * 4);
-
+            activeKeywords = enrichKeywordsFromEquipment(char, activeKeywords);
             return {
                 str: char.baseStats.str + bonus + eqStr + raceBonusStr + classStr,
                 agi: char.baseStats.agi + bonus + eqAgi + raceBonusAgi + classAgi,
@@ -4178,7 +4200,6 @@
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
             const activeParty = party.length > 0 ? party : [character];
 
-            // Calcola la potenza reale del Party (Livello medio, Statistica massima e Numero di Oggetti Equipaggiati!)
             let maxPartyStat = 12;
             let totalEquippedItems = 0;
             let sumLevels = 0;
@@ -4199,7 +4220,6 @@
             const isSmallMob = ["goblin_pack", "bandit_rogues", "storm_crow", "fblthp_guards", "brushwagg_mutant"].includes(monsterKey);
             const isBossMob = mTemplate.isBoss || ["sliver_queen", "phage_untouchable", "akroma_angel", "phyrexian_obliterator", "shivan_dragon", "urza_lotus_guardian", "blightsteel_colossus", "marit_lage"].includes(monsterKey);
 
-            // SCALING DIFFERENZIATO: Creature Piccole vs Creature Elite vs BOSS!
             let scaledHP = mTemplate.maxHP;
             let scaledDC = mTemplate.dc;
             let scaledDmg = mTemplate.dmg;
@@ -4207,23 +4227,19 @@
             const partySizeMult = playMode === "party" && activeParty.length > 1 ? (1 + (activeParty.length - 1) * 0.5) : 1;
 
             if (isSmallMob) {
-                // I mostri piccoli migliorano pochissimo: senti la crescita del tuo personaggio
                 scaledHP = Math.round(mTemplate.maxHP * partySizeMult * (1 + (avgPartyLvl - 1) * 0.12));
-                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 7); // Serve almeno 7+ sul D20
+                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 7);
                 scaledDmg = mTemplate.dmg + Math.floor((avgPartyLvl - 1) * 1.2);
             } else if (isBossMob) {
-                // I BOSS EVOLVONO COL PARTY E CON GLI OGGETTI EQUIPAGGIATI!
-                // Contro un Boss serve SEMPRE almeno un 12 o 13 sul dado D20 per superare la sua Difesa!
                 const gearPowerFactor = totalEquippedItems * 14;
                 const levelFactor = 1 + (avgPartyLvl - 1) * 0.45;
                 scaledHP = Math.round((mTemplate.maxHP * levelFactor + gearPowerFactor) * partySizeMult);
-                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 12); // Con un 4 sul dado NON colpirai MAI un Boss!
+                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 12);
                 scaledDmg = mTemplate.dmg + Math.round((avgPartyLvl - 1) * 3.5) + Math.floor(totalEquippedItems * 0.8);
             } else {
-                // Creature intermedie/Elite (Tarmogoyf, Lhurgoyf, Wurm, Troll, Juzám Djinn)
                 const gearFactor = totalEquippedItems * 8;
                 scaledHP = Math.round((mTemplate.maxHP * (1 + (avgPartyLvl - 1) * 0.3) + gearFactor) * partySizeMult);
-                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 10); // Serve almeno 10+ sul D20
+                scaledDC = Math.max(mTemplate.dc, maxPartyStat + 10);
                 scaledDmg = mTemplate.dmg + Math.round((avgPartyLvl - 1) * 2.2);
             }
 
@@ -4234,15 +4250,22 @@
             let initialDamageMap = {};
             activeParty.forEach(h => { initialDamageMap[h.id] = 0; });
 
+            const flyingMonster = isMonsterFlying(monsterKey);
+
             const baseCombat = {
                 key: monsterKey,
                 name: mTemplate.name,
                 isHumanoid: mTemplate.isHumanoid || false,
+                isFlying: flyingMonster,
                 monsterFled: false,
                 maxHP: scaledHP,
                 currentHP: scaledHP,
                 dc: scaledDC,
                 dmg: scaledDmg,
+                poisonCounters: 0,
+                actedThisRound: [], // Traccia chi ha già attaccato nel round (es. usando Rapidità!)
+                hasteOverrideHeroId: null, // Se un eroe usa Rapidità per attaccare prima del compagno!
+                doubleStrikePendingSecondRoll: null, // Per il 2° dado manuale di Doppio Attacco
                 enemyBlueMana: mTemplate.blueMana || 0,
                 maxEnemyBlueMana: mTemplate.blueMana || 0,
                 exp: mTemplate.exp,
@@ -4261,7 +4284,7 @@
                 turnOrder: [],
                 currentTurnIdx: 0,
                 round: 1,
-                log: [`👹 ${mTemplate.name} (${scaledHP} PV • Difesa CD ${scaledDC} • Danno ${scaledDmg}) tira Iniziativa: ${mInitTotal}!`]
+                log: [`👹 ${mTemplate.name} (${scaledHP} PV • CD ${scaledDC} • Danno ${scaledDmg}${flyingMonster ? " • 🦅 Volante" : " • 🐾 Terrestre"}) tira Iniziativa: ${mInitTotal}!`]
             };
 
             setLastRollInfo(null);
@@ -4298,7 +4321,6 @@
             }
         };
 
-        // Controlla se tutti gli eroi a 0 PV hanno terminato i tiri salvezza quando il mostro se n'è andato
         const checkPostMonsterSurvivalResolution = (updatedCombat, updatedParty) => {
             const anyAliveConscious = updatedParty.some(p => p.status === "alive" && p.currentHP > 0);
             const anyStillRollingDeathSaves = updatedParty.some(p => p.status === "unconscious" && p.currentHP <= 0);
@@ -4310,10 +4332,8 @@
                 return true;
             }
 
-            // Se il mostro se n'è andato e nessuno deve più tirare dadi contro la morte:
             if (updatedCombat.monsterFled && !anyStillRollingDeathSaves) {
                 if (!anyAliveConscious && anyStabilized) {
-                    // Tutti i superstiti sono stabilizzati ma incoscienti a 0 PV -> Avvia il Timer di 1 giorno e 4 ore (64s)!
                     setDormantTimer(64);
                 } else {
                     setCombatState(null);
@@ -4323,6 +4343,7 @@
             return false;
         };
 
+        // GESTIONE AVANZAMENTO TURNI (Salta chi ha già attaccato con Rapidità e applica i Danni da Veleno a inizio Round!)
         const advanceToNextTurn = (updatedCombatState, updatedPartyList) => {
             if (checkPostMonsterSurvivalResolution(updatedCombatState, updatedPartyList)) {
                 return;
@@ -4331,20 +4352,46 @@
             const order = updatedCombatState.turnOrder;
             let nextIdx = updatedCombatState.currentTurnIdx + 1;
             let nextRound = updatedCombatState.round;
+            let actedList = [...(updatedCombatState.actedThisRound || [])];
             let extraLog = [];
 
-            if (nextIdx >= order.length) {
-                nextIdx = 0;
-                nextRound += 1;
-                if (!updatedCombatState.monsterFled && updatedCombatState.key === "llanowar_troll" && updatedCombatState.currentHP > 0) {
-                    updatedCombatState.currentHP = Math.min(updatedCombatState.maxHP, updatedCombatState.currentHP + 4);
-                    extraLog.push(`🌿 Rigenerazione del Troll: ${updatedCombatState.name} recupera +4 PV a inizio Round ${nextRound}!`);
+            // Funzione interna per gestire l'inizio di un nuovo Round
+            const handleNewRoundEffects = () => {
+                actedList = []; // A inizio nuovo round tutti possono agire di nuovo (inclusa Rapidità!)
+                if (!updatedCombatState.monsterFled && updatedCombatState.currentHP > 0) {
+                    // Danni da Veleno / Infettare a inizio round!
+                    if ((updatedCombatState.poisonCounters || 0) > 0) {
+                        const poisonDmg = updatedCombatState.poisonCounters * 3;
+                        updatedCombatState.currentHP = Math.max(1, updatedCombatState.currentHP - poisonDmg);
+                        extraLog.push(`☣️ INFETTARE / VELENO (${updatedCombatState.poisonCounters} segnalini): ${updatedCombatState.name} perde **${poisonDmg} PV** per il veleno a inizio Round ${nextRound}!`);
+                    }
+                    if (updatedCombatState.key === "llanowar_troll") {
+                        updatedCombatState.currentHP = Math.min(updatedCombatState.maxHP, updatedCombatState.currentHP + 4);
+                        extraLog.push(`🌿 Rigenerazione del Troll: ${updatedCombatState.name} recupera +4 PV a inizio Round ${nextRound}!`);
+                    }
                 }
-            }
+            };
 
-            // Se il mostro se n'è andato (`monsterFled: true`), salta automaticamente lo slot del mostro!
-            if (updatedCombatState.monsterFled && order[nextIdx] && order[nextIdx].type === "monster") {
-                nextIdx = (nextIdx + 1) % order.length;
+            // Cerca il prossimo combattente valido che non abbia già agito tramite Rapidità in questo round!
+            let safetyLoop = 0;
+            while (safetyLoop < order.length + 2) {
+                safetyLoop++;
+                if (nextIdx >= order.length) {
+                    nextIdx = 0;
+                    nextRound += 1;
+                    handleNewRoundEffects();
+                }
+                const candidate = order[nextIdx];
+                if (updatedCombatState.monsterFled && candidate.type === "monster") {
+                    nextIdx++;
+                    continue;
+                }
+                if (candidate.type === "hero" && actedList.includes(candidate.id)) {
+                    extraLog.push(`⚡ ${candidate.name} aveva già attaccato in anticipo usando **Rapidità** in questo round: si passa oltre!`);
+                    nextIdx++;
+                    continue;
+                }
+                break;
             }
 
             const nextCombatant = order[nextIdx];
@@ -4358,13 +4405,15 @@
 
             setCombatState({
                 ...updatedCombatState,
+                actedThisRound: actedList,
+                hasteOverrideHeroId: null,
+                doubleStrikePendingSecondRoll: null,
                 currentTurnIdx: nextIdx,
                 round: nextRound,
                 log: [...extraLog, `👉 Tocca ora a: ${nextCombatant ? nextCombatant.name : "Compagnia"}!`, ...updatedCombatState.log].slice(0, 8)
             });
         };
 
-        // TIRO SALVEZZA CONTRO LA MORTE (1 = 2 Fallimenti, 2-9 = 1 Fallimento, 10-19 = 1 Successo, 20 = Torna a 1 PV!)
         const executeDeathSavingThrow = (d20Val) => {
             if (!character || !combatState) return;
             const roll = Math.max(1, Math.min(20, parseInt(d20Val) || 10));
@@ -4404,7 +4453,6 @@
             advanceToNextTurn({ ...combatState, log: turnLog }, newParty);
         };
 
-        // DECISIONE DEL MOSTRO QUANDO TUTTA LA COMPAGNIA È A 0 PV (1-2 Infierisce, 3-4 Se ne va, 5-6 Prende in Ostaggio!)
         const executeMonsterDecisionOnUnconsciousParty = (d6DecisionVal) => {
             if (!combatState) return;
             const currentPartyList = party.length > 0 ? [...party] : [{ ...character }];
@@ -4413,7 +4461,6 @@
 
             setPendingMonsterBehaviorManual(false);
 
-            // CASO 3: CATTURA COME OSTAGGI (5-6 se il nemico è intelligente/umanoide: Ladri, Banditi, Goblin, Dimir)
             if (d6 >= 5 && combatState.isHumanoid) {
                 const hostageParty = currentPartyList.map(h => {
                     if (h.status === "dead") return h;
@@ -4428,20 +4475,17 @@
                 });
                 savePartyState(hostageParty);
                 setCombatState(null);
-                setEventBanner(`⛓️ CATTURATI COME OSTAGGI (Dado Comportamento: ${d6})! **${combatState.name}** decide di non uccidervi: vi lega e vi trascina nelle sue prigioni per interrogarvi sui vostri tesori!`);
+                setEventBanner(`⛓️ CATTURATI COME OSTAGGI (Dado Comportamento: ${d6})! **${combatState.name}** vi lega e vi trascina nelle sue prigioni!`);
                 return;
             }
 
-            // CASO 2: IL MOSTRO SE NE VA (3-4, oppure 5-6 se è una bestia non umanoide)
             if (d6 >= 3) {
-                turnLog.unshift(`👣 **${combatState.name}** (Dado Comportamento: ${d6}) vi crede spacciati e **se ne va abbandonando il campo**! Continuate a tirare i Dadi Salvezza Morte a turno finché non viene decretata l'incoscienza stabile o la morte!`);
+                turnLog.unshift(`👣 **${combatState.name}** (Dado Comportamento: ${d6}) vi crede spacciati e **se ne va abbandonando il campo**! Continuate a tirare i Dadi Salvezza Morte!`);
                 const updatedCombat = { ...combatState, monsterFled: true, log: turnLog };
                 advanceToNextTurn(updatedCombat, currentPartyList);
                 return;
             }
 
-            // CASO 1: IL MOSTRO INFIERISCE SUI CORPI (Dado 1-2)!
-            // Lancia un D20 d'attacco per il mostro: se colpisce (>= 9), infligge +2 Fallimenti Salvezza Morte!
             const unconsciousTargets = currentPartyList.filter(h => h.status !== "dead" && h.currentHP <= 0);
             if (unconsciousTargets.length === 0) {
                 setCombatState(null);
@@ -4464,15 +4508,15 @@
                     return h;
                 });
                 savePartyState(nextParty);
-                turnLog.unshift(`🩸👹 CRUDELE FEROCIA (Dado Comportamento ${d6} ➔ Attacco Mostro D20: ${attackRoll} COLPITO!): **${combatState.name}** infierisce sul corpo inerme di **${victim.name}** infliggendogli **+2 FALLIMENTI CONTRO LA MORTE** (${newFailures}/3)!${diedNow ? ` 💀 **${victim.name} MUORE SUL COLPO!**` : " (È a un solo fallimento dalla morte!)"}`);
+                turnLog.unshift(`🩸👹 CRUDELE FEROCIA (D20: ${attackRoll} COLPITO!): **${combatState.name}** infierisce su **${victim.name}** infliggendogli **+2 FALLIMENTI CONTRO LA MORTE** (${newFailures}/3)!${diedNow ? ` 💀 **${victim.name} MUORE SUL COLPO!**` : ""}`);
                 advanceToNextTurn({ ...combatState, log: turnLog }, nextParty);
             } else {
-                turnLog.unshift(`🛡️👹 ${combatState.name} prova a infierire sul corpo di **${victim.name}** (Dado Comportamento ${d6}), ma **sbaglia l'attacco (D20: ${attackRoll})** colpendo la roccia! Ora tocca ai giocatori tirare i Dadi contro la Morte!`);
+                turnLog.unshift(`🛡️👹 ${combatState.name} prova a infierire su **${victim.name}**, ma **sbaglia l'attacco (D20: ${attackRoll})**!`);
                 advanceToNextTurn({ ...combatState, log: turnLog }, currentPartyList);
             }
         };
 
-        // TURNO ORDINARIO DEL MOSTRO (Quando c'è almeno un eroe cosciente > 0 PV)
+        // TURNO DEL MOSTRO (Con applicazione pratica di CAUTELA = METÀ DANNI SUBITI!)
         const executeMonsterTurn = () => {
             if (!combatState || combatState.phase !== "battle") return;
             const currentPartyList = party.length > 0 ? [...party] : [{ ...character }];
@@ -4493,7 +4537,6 @@
             }
 
             const consciousTargets = currentPartyList.filter(h => h.status === "alive" && h.currentHP > 0);
-            // Se tutti sono a 0 PV, usa il sistema di Decisione del Mostro (Infierire / Andarsene / Ostaggi)!
             if (consciousTargets.length === 0) {
                 if (diceMode === "manual") {
                     setPendingMonsterBehaviorManual(true);
@@ -4516,11 +4559,18 @@
             const chosenTarget = consciousTargets[Math.floor(Math.random() * consciousTargets.length)];
             const targetStats = getFinalStats(chosenTarget);
 
-            let dmg = combatState.dmg + (isCrit ? 5 : 0);
-            if (chosenTarget.raceId === 'nano') dmg = Math.max(1, dmg - 2);
-            if (targetStats.keywords.includes("Cautela")) dmg = Math.max(1, dmg - 2);
+            let rawDmg = combatState.dmg + (isCrit ? 5 : 0);
+            if (chosenTarget.raceId === 'nano') rawDmg = Math.max(1, rawDmg - 2);
 
-            const newHP = Math.max(0, chosenTarget.currentHP - dmg);
+            // REGOLA CAUTELA (Vigilance): Il personaggio non tappa per attaccare, quindi resta in guardia e DIMEZZA i danni subiti!
+            let vigilanceNote = "";
+            let finalDmg = rawDmg;
+            if (targetStats.keywords.includes("Cautela")) {
+                finalDmg = Math.max(1, Math.floor(rawDmg / 2));
+                vigilanceNote = ` 🛡️ [CAUTELA dimezza i danni da ${rawDmg} a ${finalDmg}!]`;
+            }
+
+            const newHP = Math.max(0, chosenTarget.currentHP - finalDmg);
             const fellUnconscious = newHP === 0;
 
             const nextParty = currentPartyList.map(h => {
@@ -4538,7 +4588,7 @@
 
             savePartyState(nextParty);
 
-            turnLog.unshift(`👹 ${combatState.name} attacca **${chosenTarget.name}** (Dado ${mRoll}${isCrit ? " CRITICO!" : ""}) infliggendo **${dmg} danni**! (${chosenTarget.name}: ${newHP} PV)${fellUnconscious ? ` 🩸 **${chosenTarget.name} CADE INCOSCIENTE A 0 PV! Non si esce dallo scontro: tirerà i Dadi contro la Morte al suo turno!**` : ""}`);
+            turnLog.unshift(`👹 ${combatState.name} attacca **${chosenTarget.name}** (Dado ${mRoll}${isCrit ? " CRITICO!" : ""}) infliggendo **${finalDmg} danni**!${vigilanceNote} (${chosenTarget.name}: ${newHP} PV)${fellUnconscious ? ` 🩸 **${chosenTarget.name} CADE INCOSCIENTE A 0 PV!**` : ""}`);
 
             advanceToNextTurn({ ...combatState, log: turnLog }, nextParty);
         };
@@ -4593,91 +4643,216 @@
             );
         };
 
-        const resolveCombatTurn = (actionStat, d20Value) => {
-            if (!combatState || combatState.phase !== "battle") return;
-            const rawD20 = Math.max(1, Math.min(20, parseInt(d20Value) || 10));
-            const stats = getFinalStats(character);
+        // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC (Volare, Travolgere, Tocco Letale, Attacco Improvviso, Infettare)
+        const calculateSingleStrikeOutcome = (heroChar, actionStat, rawD20, currentMonsterHP, isSecondStrike = false) => {
+            const stats = getFinalStats(heroChar);
             const baseStatVal = stats[actionStat] || 10;
+            const humanBonus = heroChar.raceId === 'umano' ? 1 : 0;
+            const firstStrikeRollBonus = (actionStat !== "mag" && stats.keywords.includes("Attacco Improvviso")) ? 2 : 0;
+            const treasureBonus = (!isSecondStrike && treasureBoostActive) ? 5 : 0;
+            const growthBonus = (!isSecondStrike && giantGrowthActive) ? 6 : 0;
 
-            const humanBonus = character.raceId === 'umano' ? 1 : 0;
-            const firstStrikeBonus = (actionStat !== "mag" && stats.keywords.includes("Attacco Improvviso")) ? 2 : 0;
-            const treasureBonus = treasureBoostActive ? 5 : 0;
-            const growthBonus = giantGrowthActive ? 6 : 0;
-
-            const total = rawD20 + baseStatVal + humanBonus + firstStrikeBonus + treasureBonus + growthBonus;
+            const total = rawD20 + baseStatVal + humanBonus + firstStrikeRollBonus + treasureBonus + growthBonus;
 
             let breakdownParts = [`Dado (${rawD20})`, `${actionStat.toUpperCase()} (${baseStatVal})`];
             if (humanBonus) breakdownParts.push(`Umano (+1)`);
-            if (firstStrikeBonus) breakdownParts.push(`Att.Improvviso (+2)`);
+            if (firstStrikeRollBonus) breakdownParts.push(`Att.Imp (+2)`);
             if (treasureBonus) breakdownParts.push(`Tesoro (+5)`);
             if (growthBonus) breakdownParts.push(`Crescita (+6)`);
-            const formulaStr = `${breakdownParts.join(" + ")} = ${total}`;
+            const formulaStr = `${breakdownParts.join("+")} = ${total}`;
 
             const isCrit = rawD20 === 20;
-            const isFumble = rawD20 === 1 && !treasureBoostActive;
+            const isFumble = rawD20 === 1 && !treasureBonus;
             const hit = isCrit || (!isFumble && total >= combatState.dc);
 
+            if (!hit) {
+                return { hit: false, isCrit: false, isFumble: isFumble, dmg: 0, poisonAdded: 0, text: `❌ ${ isSecondStrike ? "[2° Colpo Doppio Attacco] " : "" }${heroChar.name} manca [${formulaStr} vs CD ${combatState.dc}]!` };
+            }
+
+            let dmg = Math.max(5, Math.round(baseStatVal * 0.55) + Math.floor(rawD20 / 4)) + (treasureBonus ? 8 : 0) + (growthBonus ? 8 : 0);
+            let kwNotes = [];
+
+            // 1. ATTACCO IMPROVVISO: +2 danni base a tutti!
+            if (stats.keywords.includes("Attacco Improvviso")) {
+                dmg += 2;
+                kwNotes.push("Att.Improvviso +2");
+            }
+
+            // 2. VOLARE: +4 danni contro mostri che NON volano (Goblin, Wurm, Troll, ecc.), normale contro mostri volanti!
+            if (stats.keywords.includes("Volare")) {
+                if (!combatState.isFlying) {
+                    dmg += 4;
+                    kwNotes.push("🦅 Volare vs Terrestre +4");
+                } else {
+                    kwNotes.push("🦅 Nemico Volante +0");
+                }
+            }
+
+            // 3. TRAVOLGERE (Trample): Danni extra pari all'eccedenza del tiro rispetto alla CD del mostro!
+            if (stats.keywords.includes("Travolgere")) {
+                const excess = Math.max(0, total - combatState.dc);
+                if (excess > 0) {
+                    dmg += excess;
+                    kwNotes.push(`🦏 Travolgere +${excess} (Eccedenza su CD ${combatState.dc})`);
+                }
+            }
+
+            // 4. TOCCO LETALE (Deathtouch bilanciato!):
+            // - Strappa un +15% della salute attuale del mostro (min +4, max +18)
+            // - Uccide all'istante i mostri non-Boss se sono sotto il 25% di vita o con un 20 Naturale!
+            if (stats.keywords.includes("Tocco Letale")) {
+                const executeThreshold = Math.round(combatState.maxHP * 0.25);
+                if (!combatState.isBoss && (isCrit || (currentMonsterHP - dmg) <= executeThreshold)) {
+                    dmg = currentMonsterHP;
+                    kwNotes.push("☠️ TOCCO LETALE (Esecuzione Mortale!)");
+                } else if (combatState.isBoss && isCrit) {
+                    dmg += 25;
+                    kwNotes.push("☠️ Tocco Letale Critico su Boss +25");
+                } else {
+                    const necrosis = Math.max(4, Math.min(18, Math.round(currentMonsterHP * 0.15)));
+                    dmg += necrosis;
+                    kwNotes.push(`☠️ Tocco Letale (15% PV) +${necrosis}`);
+                }
+            }
+
+            if (isCrit && dmg < currentMonsterHP) {
+                dmg = Math.round(dmg * 1.6);
+                kwNotes.push("🌟 CRITICO!");
+            }
+
+            // 5. INFETTARE / VELENO (Infect / Poison): Applica 2 segnalini veleno che tolgono PV a ogni round!
+            let poisonAdded = 0;
+            if (stats.keywords.includes("Infettare") || stats.keywords.includes("Tocco Letale")) {
+                poisonAdded = stats.keywords.includes("Infettare") ? 2 : 1;
+                kwNotes.push(`☣️ +${poisonAdded} Veleno`);
+            }
+
+            const notesStr = kwNotes.length > 0 ? ` (${kwNotes.join(" • ")})` : "";
+            const text = `✅ ${isSecondStrike ? "⚔️⚔️ [2° Colpo DOPPIO ATTACCO] " : ""}${heroChar.name} [${formulaStr} vs CD ${combatState.dc}]: Infligge **${dmg} danni**!${notesStr}`;
+
+            return { hit: true, isCrit: isCrit, isFumble: false, dmg: dmg, poisonAdded: poisonAdded, text: text };
+        };
+
+        // ESECUZIONE ATTACCO (Supporta DOPPIO ATTACCO e RAPIDITÀ!)
+        const resolveCombatTurn = (actionStat, d20Value) => {
+            if (!combatState || combatState.phase !== "battle") return;
+            const stats = getFinalStats(character);
+            const hasDoubleStrike = stats.keywords.includes("Doppio Attacco");
+
             let newMonsterHP = combatState.currentHP;
+            let newPoison = combatState.poisonCounters || 0;
             let newHero = { ...character };
             let turnLog = [...combatState.log];
             let dmgMap = { ...(combatState.damageDealtByHero || {}) };
 
+            // Se siamo in modalità Dado Manuale e questo è il 1° colpo di un Doppio Attacco, chiedi il 2° dado!
+            if (hasDoubleStrike && diceMode === "manual" && !combatState.doubleStrikePendingSecondRoll) {
+                const firstRes = calculateSingleStrikeOutcome(newHero, actionStat, d20Value, newMonsterHP, false);
+                if (treasureBoostActive) setTreasureBoostActive(false);
+                if (giantGrowthActive) setGiantGrowthActive(false);
+
+                newMonsterHP = Math.max(0, newMonsterHP - firstRes.dmg);
+                newPoison += firstRes.poisonAdded;
+                dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + firstRes.dmg;
+                turnLog.unshift(firstRes.text);
+
+                if (newMonsterHP <= 0) {
+                    setPendingCombatAction(null);
+                    finishCombatVictory(newHero, dmgMap, firstRes.text);
+                    return;
+                }
+
+                // Chiede ora il 2° lancio del dado per Doppio Attacco!
+                setCombatState({
+                    ...combatState,
+                    currentHP: newMonsterHP,
+                    poisonCounters: newPoison,
+                    damageDealtByHero: dmgMap,
+                    doubleStrikePendingSecondRoll: actionStat,
+                    log: [`⚔️⚔️ DOPPIO ATTACCO ATTIVO! Tira ora il **2° Dado D20** per il secondo colpo di ${newHero.name}!`, ...turnLog].slice(0, 8)
+                });
+                return;
+            }
+
+            // Esecuzione standard (o 2° colpo manuale di Doppio Attacco, oppure 1°+2° colpo automatico!)
+            const isManualSecond = Boolean(combatState.doubleStrikePendingSecondRoll);
+            const firstOutcome = calculateSingleStrikeOutcome(newHero, actionStat, d20Value, newMonsterHP, isManualSecond);
+
             if (treasureBoostActive) setTreasureBoostActive(false);
             if (giantGrowthActive) setGiantGrowthActive(false);
 
-            if (hit) {
-                let playerDmg = Math.max(6, Math.round(baseStatVal * 0.65) + Math.floor(rawD20 / 3)) + (treasureBonus ? 8 : 0) + (growthBonus ? 8 : 0);
-                if (isCrit) playerDmg *= 2;
-                if (stats.keywords.includes("Travolgere")) playerDmg += 4;
-                if (stats.keywords.includes("Tocco Letale") && !combatState.isBoss && isCrit) {
-                    playerDmg = newMonsterHP;
-                }
+            newMonsterHP = Math.max(0, newMonsterHP - firstOutcome.dmg);
+            newPoison += firstOutcome.poisonAdded;
+            dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + firstOutcome.dmg;
+            turnLog.unshift(firstOutcome.text);
 
-                newMonsterHP = Math.max(0, newMonsterHP - playerDmg);
-                dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + playerDmg;
+            if (firstOutcome.isFumble) {
+                newHero.currentHP = Math.max(0, newHero.currentHP - 3);
+                if (newHero.currentHP === 0) newHero.status = "unconscious";
+            }
+            if (firstOutcome.hit && stats.keywords.includes("Legame Vitale")) {
+                const healL = firstOutcome.isCrit ? 5 : 2;
+                newHero.currentHP = Math.min(stats.maxHP, newHero.currentHP + healL);
+                turnLog.unshift(`🩸 Legame Vitale cura ${newHero.name} di +${healL} PV!`);
+            }
 
-                const hitText = `✅ ${newHero.name} [${formulaStr} vs CD ${combatState.dc}]: Infligge **${playerDmg} danni**!${isCrit ? " 🌟 CRITICO!" : ""}`;
-                turnLog.unshift(hitText);
-
-                if (isCrit && stats.keywords.includes("Legame Vitale")) {
-                    newHero.currentHP = Math.min(stats.maxHP, newHero.currentHP + 4);
-                    turnLog.unshift(`🩸 Legame Vitale cura ${newHero.name} di 4 PV!`);
-                }
-
-                if (isCrit && !newHero.sparkIgnited && (newHero.level >= 4 || newHero.isLegendary) && combatState.isBoss) {
-                    newHero.sparkIgnited = true;
-                    newHero.isLegendary = true;
-                    newHero.currentHP += 20;
-                    turnLog.unshift(`🔥 MIRACOLO PLANARE! Con un 20 Naturale contro un Boss, la SCINTILLA DI ${newHero.name.toUpperCase()} SI È ACCESA!`);
-                }
-
-                setPendingCombatAction(null);
-                if (newMonsterHP <= 0) {
-                    finishCombatVictory(newHero, dmgMap, hitText);
-                    return;
-                }
-            } else {
-                if (isFumble) {
-                    newHero.currentHP = Math.max(0, newHero.currentHP - 3);
-                    if (newHero.currentHP === 0) newHero.status = "unconscious";
-                    turnLog.unshift(`💀 1 NATURALE di ${newHero.name}! Si sbilancia e subisce 3 danni!`);
-                } else {
-                    turnLog.unshift(`❌ ${newHero.name} manca il bersaglio [${formulaStr} vs CD ${combatState.dc}]!`);
-                }
+            // Se ha Doppio Attacco ed è in Dado Auto, tira automaticamente anche il 2° dado D20!
+            if (hasDoubleStrike && diceMode === "auto" && newMonsterHP > 0) {
+                const secondD20 = Math.floor(Math.random() * 20) + 1;
+                const secondOutcome = calculateSingleStrikeOutcome(newHero, actionStat, secondD20, newMonsterHP, true);
+                newMonsterHP = Math.max(0, newMonsterHP - secondOutcome.dmg);
+                newPoison += secondOutcome.poisonAdded;
+                dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + secondOutcome.dmg;
+                turnLog.unshift(secondOutcome.text);
             }
 
             setPendingCombatAction(null);
+
+            if (newMonsterHP <= 0) {
+                finishCombatVictory(newHero, dmgMap, turnLog[0]);
+                return;
+            }
+
             const updatedPartyList = (party.length > 0 ? party : [newHero]).map(p => p.id === newHero.id ? newHero : p);
             savePartyState(updatedPartyList);
+
+            // Segna che questo eroe ha già agito in questo round
+            const newActedList = [...(combatState.actedThisRound || []), newHero.id];
+
+            // CASO SPECIALE RAPIDITÀ (Haste):
+            // Se Rock ha usato Rapidità per attaccare al posto di Rin (prima di Rin), ora il turno TORNA A RIN!
+            if (combatState.hasteOverrideHeroId === newHero.id) {
+                const scheduledCombatant = combatState.turnOrder[combatState.currentTurnIdx];
+                if (scheduledCombatant && scheduledCombatant.type === "hero") {
+                    const originalHero = updatedPartyList.find(h => h.id === scheduledCombatant.id);
+                    if (originalHero) {
+                        setCharacter(originalHero);
+                        localStorage.setItem('rpg_character', JSON.stringify(originalHero));
+                    }
+                }
+                setCombatState({
+                    ...combatState,
+                    currentHP: newMonsterHP,
+                    poisonCounters: newPoison,
+                    damageDealtByHero: dmgMap,
+                    actedThisRound: newActedList,
+                    hasteOverrideHeroId: null,
+                    doubleStrikePendingSecondRoll: null,
+                    log: [`⚡ Rapidità completata da ${newHero.name}! Ora l'azione torna regolarmente a **${scheduledCombatant ? scheduledCombatant.name : "Compagnia"}**!`, ...turnLog].slice(0, 8)
+                });
+                return;
+            }
 
             advanceToNextTurn({
                 ...combatState,
                 currentHP: newMonsterHP,
+                poisonCounters: newPoison,
                 damageDealtByHero: dmgMap,
+                actedThisRound: newActedList,
+                doubleStrikePendingSecondRoll: null,
                 log: turnLog
             }, updatedPartyList);
         };
-
         const executeRollCalculation = (choice, d20Value) => {
             if (character.status !== "alive" || character.currentHP <= 0) {
                 return alert(`${character.name} è a 0 PV! Seleziona un compagno cosciente nella barra in alto.`);
@@ -5483,50 +5658,96 @@
                                                     )}
                                                 </div>
                                             ) : (
-                                                /* TURNO D'ATTACCO DELL'EROE COSCIENTE */
+                                                /* TURNO D'ATTACCO DELL'EROE COSCIENTE (CON BLOCCO FUORI TURNO E RAPIDITÀ!) */
                                                 <div className="space-y-3">
-                                                    {pendingCombatAction && (
-                                                        <div className="bg-indigo-950 border-2 border-emerald-400 rounded-xl p-3 text-center space-y-2">
-                                                            <p className="text-xs font-black text-emerald-300 uppercase">
-                                                                🎲 Tira il tuo D20 Reale per l'attacco di {character.name} su {pendingCombatAction.toUpperCase()}! Tocca il risultato:
-                                                            </p>
-                                                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
-                                                                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(n => (
-                                                                    <button key={n} onClick={() => resolveCombatTurn(pendingCombatAction, n)} className="bg-gray-900 hover:bg-emerald-600 text-white font-black text-xs py-2 rounded border border-gray-600">
-                                                                        {n}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
+                                                    {combatState.poisonCounters > 0 && (
+                                                        <div className="bg-emerald-950/80 border border-emerald-500 rounded-lg px-3 py-1 text-center text-xs font-black text-emerald-300">
+                                                            ☣️ Segnalini Veleno sul Mostro: {combatState.poisonCounters} (-{combatState.poisonCounters * 3} PV a inizio round!)
                                                         </div>
                                                     )}
 
-                                                    <p className="text-xs font-black uppercase text-amber-400">
-                                                        🛡️ Turno di Attacco: <span className="text-white underline">{character.name}</span> (Oppure lancia una Magia dal Grimorio sopra!):
-                                                    </p>
+                                                    {/* CONTROLLA SE L'EROE SELEZIONATO È DAVVERO QUELLO DI TURNO NELLA LISTA D'INIZIATIVA! */}
+                                                    {(currentTurnCombatant && currentTurnCombatant.type === "hero" && currentTurnCombatant.id !== character.id && combatState.hasteOverrideHeroId !== character.id) ? (
+                                                        <div className="bg-gray-950 border-2 border-amber-500 rounded-xl p-4 text-center space-y-3 animate-fade">
+                                                            <p className="text-xs sm:text-sm font-black text-amber-400 uppercase">
+                                                                ⏳ Non è il turno di attacco di {character.name}! (Tocca a: <span className="text-white underline">{currentTurnCombatant.name}</span>)
+                                                            </p>
+                                                            <p className="text-xs text-gray-300">
+                                                                Fuori dal proprio turno **{character.name}** non può attaccare, ma può lanciare **⚡ Magie Istantanee** dal Grimorio qui sopra!
+                                                            </p>
 
-                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                        <button
-                                                            onClick={() => diceMode === "manual" ? setPendingCombatAction("str") : resolveCombatTurn("str", Math.floor(Math.random()*20)+1)}
-                                                            className="bg-red-900/80 hover:bg-red-800 border-2 border-red-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
-                                                        >
-                                                            <span className="text-sm font-black block">⚔️ Assalto col Ferro (FOR)</span>
-                                                            <span className="text-gray-300 text-[11px]">Stat FOR: {stats.str}</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => diceMode === "manual" ? setPendingCombatAction("agi") : resolveCombatTurn("agi", Math.floor(Math.random()*20)+1)}
-                                                            className="bg-emerald-900/80 hover:bg-emerald-800 border-2 border-emerald-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
-                                                        >
-                                                            <span className="text-sm font-black block">🏹 Colpo Mirato (AGI)</span>
-                                                            <span className="text-gray-300 text-[11px]">Stat AGI: {stats.agi}</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => diceMode === "manual" ? setPendingCombatAction("mag") : resolveCombatTurn("mag", Math.floor(Math.random()*20)+1)}
-                                                            className="bg-indigo-900/80 hover:bg-indigo-800 border-2 border-indigo-400 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
-                                                        >
-                                                            <span className="text-sm font-black block">🔮 Attacco Magico Base (MAG)</span>
-                                                            <span className="text-gray-300 text-[11px]">Stat MAG: {stats.mag}</span>
-                                                        </button>
-                                                    </div>
+                                                            {/* SE L'EROE SELEZIONATO HA "RAPIDITÀ" E NON HA ANCORA AGITO IN QUESTO ROUND, PUÒ ANTICIPARE IL COMPAGNO! */}
+                                                            {stats.keywords.includes("Rapidità") && !(combatState.actedThisRound || []).includes(character.id) && (
+                                                                <button
+                                                                    onClick={() => setCombatState({
+                                                                        ...combatState,
+                                                                        hasteOverrideHeroId: character.id,
+                                                                        log: [`⚡ RAPIDITÀ ATTIVATA! **${character.name}** scatta in avanti per attaccare prima di ${currentTurnCombatant.name} (salterà poi il suo slot normale in questo round)!`, ...combatState.log].slice(0, 8)
+                                                                    })}
+                                                                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-black py-3 px-4 rounded-xl shadow-lg text-xs sm:text-sm border border-white animate-pulse"
+                                                                >
+                                                                    ⚡ Sfrutta RAPIDITÀ: Attacca ora con {character.name} prima di {currentTurnCombatant.name}!
+                                                                </button>
+                                                            )}
+
+                                                            <button
+                                                                onClick={() => {
+                                                                    const rightHero = activePartyList.find(h => h.id === currentTurnCombatant.id);
+                                                                    if (rightHero) setCharacter(rightHero);
+                                                                }}
+                                                                className="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs px-5 py-2.5 rounded-lg shadow"
+                                                            >
+                                                                🛡️ Torna alla scheda di {currentTurnCombatant.name} (Di Turno) ➔
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-3">
+                                                            {(pendingCombatAction || combatState.doubleStrikePendingSecondRoll) && (
+                                                                <div className="bg-indigo-950 border-2 border-emerald-400 rounded-xl p-3 text-center space-y-2">
+                                                                    <p className="text-xs font-black text-emerald-300 uppercase">
+                                                                        🎲 {combatState.doubleStrikePendingSecondRoll ? `⚔️⚔️ 2° LANCIO DOPPIO ATTACCO di ${character.name}!` : `Tira il tuo D20 Reale per l'attacco di ${character.name}!`} Tocca il risultato:
+                                                                    </p>
+                                                                    <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
+                                                                        {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(n => (
+                                                                            <button key={n} onClick={() => resolveCombatTurn(combatState.doubleStrikePendingSecondRoll || pendingCombatAction, n)} className="bg-gray-900 hover:bg-emerald-600 text-white font-black text-xs py-2 rounded border border-gray-600">
+                                                                                {n}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            <p className="text-xs font-black uppercase text-amber-400">
+                                                                🛡️ Turno di Attacco: <span className="text-white underline">{character.name}</span>
+                                                                {combatState.hasteOverrideHeroId === character.id ? " (⚡ IN ANTICIPO CON RAPIDITÀ!)" : ""}
+                                                                {stats.keywords.length > 0 ? ` — Attive: [${stats.keywords.join(", ")}]` : ""}:
+                                                            </p>
+
+                                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                                <button
+                                                                    onClick={() => diceMode === "manual" ? setPendingCombatAction("str") : resolveCombatTurn("str", Math.floor(Math.random()*20)+1)}
+                                                                    className="bg-red-900/80 hover:bg-red-800 border-2 border-red-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
+                                                                >
+                                                                    <span className="text-sm font-black block">⚔️ Assalto col Ferro (FOR)</span>
+                                                                    <span className="text-gray-300 text-[11px]">Stat FOR: {stats.str}</span>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => diceMode === "manual" ? setPendingCombatAction("agi") : resolveCombatTurn("agi", Math.floor(Math.random()*20)+1)}
+                                                                    className="bg-emerald-900/80 hover:bg-emerald-800 border-2 border-emerald-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
+                                                                >
+                                                                    <span className="text-sm font-black block">🏹 Colpo Mirato (AGI)</span>
+                                                                    <span className="text-gray-300 text-[11px]">Stat AGI: {stats.agi}</span>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => diceMode === "manual" ? setPendingCombatAction("mag") : resolveCombatTurn("mag", Math.floor(Math.random()*20)+1)}
+                                                                    className="bg-indigo-900/80 hover:bg-indigo-800 border-2 border-indigo-400 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
+                                                                >
+                                                                    <span className="text-sm font-black block">🔮 Attacco Magico Base (MAG)</span>
+                                                                    <span className="text-gray-300 text-[11px]">Stat MAG: {stats.mag}</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
