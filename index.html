@@ -1762,7 +1762,13 @@
         omnath_roil: { name: "Omnath, Locus della Creazione & del Torbido", isHumanoid: false, maxHP: 102, initBonus: 7, dc: 29, dmg: 14, blueMana: 2, exp: 185, gold: 80, treasures: 3, loot: "gauntlets_power", isBoss: true, desc: "L'incarnazione elementale vivente dei 4 colori di Mana di Zendikar: scatena maremoti, fulmini e terremoti (2💧)!" },
         ob_nixilis_reignited: { name: "Ob Nixilis della Fiamma Rinnovata (Boss Demone)", isHumanoid: true, maxHP: 108, initBonus: 8, dc: 30, dmg: 15, blueMana: 2, exp: 205, gold: 90, treasures: 3, loot: "nevinyrral_disk", isBoss: true, desc: "Il conquistatore demoniaco che ha assorbito il potere della rete di Edri di Valakut per riaccendere la sua Scintilla!" },
         kozilek_distortion: { name: "Avatar di Kozilek, la Grande Distorsione (Titano)", isHumanoid: false, maxHP: 118, initBonus: 8, dc: 30, dmg: 15, blueMana: 4, exp: 230, gold: 100, treasures: 3, loot: "isochron_scepter", isBoss: true, desc: "Fluttua tra lame di bismuto che piegano lo spazio-tempo: possiede ben 4💧 Mana Blu per annullare la realtà (Counterspell)!" },
-        ulamog_ceaseless: { name: "Avatar di Ulamog, la Fame Incessante (Boss)", isHumanoid: false, maxHP: 128, initBonus: 8, dc: 31, dmg: 16, blueMana: 2, exp: 260, gold: 120, treasures: 4, loot: "sword_fire_ice", isBoss: true, desc: "Il Titano Eldrazi Indistruttibile che prosciuga il Mana stesso di Zendikar davanti all'Occhio di Ugin!" }
+        ulamog_ceaseless: { name: "Avatar di Ulamog, la Fame Incessante (Boss)", isHumanoid: false, maxHP: 128, initBonus: 8, dc: 31, dmg: 16, blueMana: 2, exp: 260, gold: 120, treasures: 4, loot: "sword_fire_ice", isBoss: true, desc: "Il Titano Eldrazi Indistruttibile che prosciuga il Mana stesso di Zendikar davanti all'Occhio di Ugin!" },
+        tezzeret_bridge_master: { name: "Tezzeret, Maestro del Ponte Planare (Boss)", isHumanoid: true, maxHP: 112, initBonus: 8, dc: 30, dmg: 14, blueMana: 4, exp: 220, gold: 95, treasures: 3, loot: "staff_domination", isBoss: true, desc: "L'artefice oscuro con il Ponte Planare incastonato nel torace di Etherium: dispone di 4💧 Mana Blu per Counterspell!" },
+        vorinclex_sheoldred_duo: { name: "Vorinclex & Sheoldred, Pretori dell'Apocalisse", isHumanoid: true, maxHP: 122, initBonus: 7, dc: 31, dmg: 15, blueMana: 2, exp: 245, gold: 105, treasures: 3, loot: "batterskull", isBoss: true, desc: "La fame brutale della Giungla di Quicksilver unita ai sussurri letali delle Fosse di Dross!" },
+        atraxa_grand_unifier: { name: "Atraxa, Voce dei Pretori (Angelo a 4 Colori)", isHumanoid: true, maxHP: 126, initBonus: 9, dc: 31, dmg: 15, blueMana: 2, exp: 260, gold: 115, treasures: 3, loot: "helm_host", isBoss: true, desc: "Volare, Cautela, Tocco Letale, Legame Vitale: il capolavoro angelico corrotto da quattro Pretori di Phyrexia!" },
+        elesh_norn_mother: { name: "Elesh Norn, Madre delle Macchine (Super-Boss)", isHumanoid: true, maxHP: 138, initBonus: 8, dc: 32, dmg: 16, blueMana: 2, exp: 310, gold: 150, treasures: 4, loot: "akroma_armor", isBoss: true, desc: "La Regina Cenobita della Basilica Equa: vuole unificare l'intero Multiverso sotto la porcellana e l'acciaio!" },
+        scarab_god_eternals: { name: "Il Dio Scarabeo & Gli Dei-Eterni di Amonkhet", isHumanoid: false, maxHP: 128, initBonus: 8, dc: 31, dmg: 15, blueMana: 4, exp: 270, gold: 120, treasures: 3, loot: "the_mirari", isBoss: true, desc: "Il comandante dell'Orda Infernale affiancato dagli Dei-Zombi ricoperti di Lazotep (4💧 Mana Blu)!" },
+        nicol_bolas_dragon_god: { name: "Nicol Bolas, Dio-Drago della Singolarità (BOSS FINALE)", isHumanoid: false, maxHP: 150, initBonus: 9, dc: 33, dmg: 17, blueMana: 4, exp: 400, gold: 200, treasures: 5, loot: "blackblade", isBoss: true, desc: "L'Antico Drago Planeswalker asceso a Dio-Faraone grazie all'Incantesimo degli Antichi: 150 PV e 4💧 Mana Blu!" }
     };
 
     // ============================================================================
@@ -3262,62 +3268,256 @@
         },
 
         // ====================================================================
-        // ATTO V: IL GRAN FINALE MULTIVERSALE (ELESH NORN, NICOL BOLAS & UGIN)
+        // ATTO V: IL GRAN FINALE MULTIVERSALE (18 CAPITOLI ESPANSI)
+        // FASE I: NUOVA PHYREXIA & ELESH NORN | FASE II: GUERRA DELLA SCINTILLA | FASE III: NICOL BOLAS
         // ====================================================================
         finale_planar_bridge: {
-            act: "Atto V — Il Ponte Planare e il Realmbreaker",
+            act: "Atto V — Capitolo 1 di 18 (Il Ponte Planare)",
             title: "La Soglia dell'Apocalisse",
             textSolo: "Attraversi il vortice supremo della Cieca Eternità. Davanti a te i rami biomeccanici del *Frangireami (Realmbreaker)* di Nuova Phyrexia si intrecciano con le guglie d'ossidiana della **Cittadella di Nicol Bolas**! Per arrivare al Trono della Singolarità dovrai prima sfondare il blocco della Madre delle Macchine!",
-            textParty: "La vostra Compagnia di Planeswalker varca insieme il Ponte Planare! Davanti a voi si staglia l'incubo supremo del Multiverso: le legioni biomeccaniche di **Elesh Norn** e l'Esercito degli Eterni di **Nicol Bolas** presidiano la Cittadella della Singolarità! È l'inizio della Battaglia Finale!",
+            textParty: "La vostra Compagnia di Planeswalker varca insieme il Ponte Planare! Davanti a voi si staglia l'incubo supremo del Multiverso: le legioni biomeccaniche di **Elesh Norn** e l'Esercito degli Eterni di **Nicol Bolas** presidiano l'accesso alla Cittadella della Singolarità! È l'inizio della Battaglia Finale!",
             choices: [
-                { text: "⚔️ [FASE 1 FINALE] Sfondate il Bastione Phyrexiano affrontando il COLOSSO DI BLIGHTSTEEL!", type: "combat", monster: "blightsteel_colossus", winNode: "finale_bolas_citadel" },
-                { text: "💿 Usa la scienza di Urza e il Disco di Nevinyrral per polverizzare il blocco (MAG CD 32)", type: "roll", stat: "mag", dc: 32, successNode: "finale_bolas_citadel", failNode: "finale_praetor_forced", failDamage: 9, failText: "Gli scudi dei Pretori resistono all'esplosione! Il Colosso carica!", rewards: { exp: 250, loot: "nevinyrral_disk" } },
-                { text: "⏪ Torna al Nexus Planare per fare gli ultimi acquisti dal Mercante", type: "move", nextNode: "planeswalker_nexus" }
+                { text: "⚔️ [FASE 1 FINALE] Sfondate il Bastione Phyrexiano affrontando il COLOSSO DI BLIGHTSTEEL!", type: "combat", monster: "blightsteel_colossus", winNode: "finale_tezzeret_nexus" },
+                { text: "💿 Usa la scienza di Urza e il Disco di Nevinyrral per polverizzare il blocco (MAG CD 32)", type: "roll", stat: "mag", dc: 32, successNode: "finale_tezzeret_nexus", failNode: "finale_praetor_forced", failDamage: 9, failText: "Gli scudi dei Pretori resistono all'esplosione! Il Colosso carica!", rewards: { exp: 250, loot: "nevinyrral_disk" } },
+                { text: "⏪ Torna al Nexus Planare per gli ultimi preparativi", type: "move", nextNode: "planeswalker_nexus" }
             ]
         },
 
         finale_praetor_forced: {
             act: "Atto V — Il Bastione dei Pretori",
             title: "L'Avanguardia di Nuova Phyrexia!",
-            text: "Il Colosso di Blightsteel cala il suo maglio infetto su di voi! Abbattetelo per entrare nella Cittadella!",
+            text: "Il **Colosso di Blightsteel (11/11 Infettare)** cala il suo maglio infetto su di voi! Abbattetelo per sfondare la testa di ponte!",
             choices: [
-                { text: "⚔️ Combatti il Colosso di Blightsteel nell'Arena!", type: "combat", monster: "blightsteel_colossus", winNode: "finale_bolas_citadel" }
+                { text: "⚔️ Combatti il Colosso di Blightsteel nell'Arena!", type: "combat", monster: "blightsteel_colossus", winNode: "finale_tezzeret_nexus" }
+            ]
+        },
+
+        finale_tezzeret_nexus: {
+            act: "Atto V — Capitolo 2 di 18 (Il Nucleo di Etherium)",
+            title: "Tezzeret, Maestro del Ponte Planare",
+            text: "Superato il bastione esterno, irrompete nella camera di controllo del **Ponte Planare**. Al centro dei condotti d'energia fluttua **Tezzeret**, il Planeswalker artefice al servizio sia di Nicol Bolas che dei Pretori, con l'anello del portale interplanare fuso direttamente nel suo torace di Etherium e Darksteel:\n\n«Siete arrivati troppo tardi, eroi! Il Ponte ha già collegato Nuova Phyrexia e la Cittadella di Bolas a tutti i mondi del Multiverso!»",
+            choices: [
+                { text: "⚙️ [BOSS DEL PONTE] Affronta TEZZERET, MAESTRO DEL PONTE PLANARE (4 Mana Blu)!", type: "combat", monster: "tezzeret_bridge_master", winNode: "finale_realmbreaker_roots" },
+                { text: "⚡ Sovraccarica il nucleo di Etherium nel petto di Tezzeret (MAG o AGI CD 30)", type: "roll", stat: "mag", dc: 30, successNode: "finale_realmbreaker_roots", failNode: "finale_tezzeret_ambush", failDamage: 8, failText: "Tezzeret devia il fulmine con 4 Mana Blu e vi scaglia contro una tempesta di lame di metallo!", rewards: { exp: 195, gold: 90, treasures: 2, loot: "staff_domination" } }
+            ]
+        },
+
+        finale_tezzeret_ambush: {
+            act: "Atto V — Camera del Ponte Planare",
+            title: "La Furia di Etherium di Tezzeret",
+            text: "**Tezzeret** modella il metallo liquido della sala in falci letali per impedirvi di spegnere il portale!",
+            choices: [
+                { text: "⚔️ Sconfiggi Tezzeret nell'Arena e conquista il Bastone della Dominazione!", type: "combat", monster: "tezzeret_bridge_master", winNode: "finale_realmbreaker_roots" }
+            ]
+        },
+
+        finale_realmbreaker_roots: {
+            act: "Atto V — Capitolo 3 di 18 (Il Frangireami)",
+            title: "I Rami Biomeccanici del Realmbreaker",
+            text: "Costretto Tezzeret alla fuga, dovete attraversare il colossale tronco dell'albero-macchina **Frangireami (Realmbreaker)**, le cui radici di tendini e rame pompano fiumi di **Olio Scintillante (Glistening Oil)** per infettare i Piani. Tentacoli metallici e nubi di spore di Phyresis cercano di corrompere le vostre armature!",
+            choices: [
+                { text: "🛡️ Avanza attraverso la pioggia di Olio Scintillante resistendo alla Phyresis (COS CD 30)", type: "roll", stat: "con", dc: 30, successNode: "finale_urabrask_forge", failNode: "finale_urabrask_forge", failDamage: 8, failText: "L'olio bollente corrode gli scudi, ma raggiungete il livello della Fornace senza essere infettati!", rewards: { exp: 160, gold: 75, treasures: 1 } },
+                { text: "🦅 [Volare / Indistruttibile] Sorvola i fiumi di Olio Scintillante senza subire corruzione!", type: "move", reqKeywordAny: ["Volare", "Indistruttibile"], nextNode: "finale_urabrask_forge", rewards: { exp: 165, gold: 80 } },
+                { text: "🪓 Taglia i condotti arteriosi del Frangireami con la forza bruta (FOR CD 30)", type: "roll", stat: "str", dc: 30, successNode: "finale_urabrask_forge", failNode: "finale_urabrask_forge", failDamage: 8, failText: "Un getto ad alta pressione vi investe mentre tranciate il condotto principale!", rewards: { exp: 165, gold: 80 } }
+            ]
+        },
+
+        finale_urabrask_forge: {
+            act: "Atto V — Capitolo 4 di 18 (La Fornace Quieta)",
+            title: "L'Alleanza Ribelle: Urabrask, Koth ed Elspeth Tirel",
+            text: "Scendete nello strato incandescente della **Fornace Quieta**, dove il Pretore Rosso eretico **Urabrask** ha rifiutato la tirannia di Elesh Norn alleandosi con la resistenza Mirran guidata dal geomante **Koth del Martello** e dalla guerriera Planeswalker **Elspeth Tirel**!\n\n«La Madre delle Macchine tradisce la libertà stessa della Grande Opera» ringhia Urabrask tra i vapori di scoria fusa. «Aiutate Koth a piazzare le cariche di Sylex sotto la Basilica Equa e vi apriremo la scorciatoia attraverso il labirinto dei Pretori!»",
+            choices: [
+                { text: "🔥 Forgia le cariche esplosive nella lava insieme a Koth e Urabrask (FOR o COS CD 29)", type: "roll", stat: "str", dc: 29, successNode: "finale_praetors_ambush", failNode: "finale_praetors_ambush", failDamage: 7, failText: "Le scintille della Grande Fornace vi bruciano le mani, ma le cariche sono pronte e ricevete il dono dei ribelli!", rewards: { exp: 160, gold: 80, foods: 2, heal: 30 } },
+                { text: "⚡ [Rapidità / Travolgere] Guida la sortita dei ribelli Mirran con Elspeth Tirel!", type: "move", reqKeywordAny: ["Rapidità", "Travolgere"], nextNode: "finale_praetors_ambush", rewards: { exp: 165, gold: 85, heal: 30 } }
+            ]
+        },
+
+        finale_praetors_ambush: {
+            act: "Atto V — Capitolo 5 di 18 (L'Arena dei Pretori)",
+            title: "L'Assalto Congiunto di Vorinclex e Sheoldred!",
+            text: "Mentre salite dal livello della Fornace verso la Basilica, il pavimento d'acciaio viene sfondato da due incubi viventi: il Pretore Verde **Vorinclex, Predatore Mostruoso** (una montagna di zanne, corna e muscoli bionici) e la Pretore Nera **Sheoldred, l'Apocalisse** (innestata su un colossale corpo aracnide di necrogeno)!\n\n«Solo il più forte sopravvive nella Giungla!» ruggisce Vorinclex. «E tutto il resto diventerà carne per i miei sussurri!» sibila Sheoldred!",
+            choices: [
+                { text: "🦖🕷️ [BOSS PRETORI] Affronta VORINCLEX & SHEOLDRED nell'Arena!", type: "combat", monster: "vorinclex_sheoldred_duo", winNode: "finale_dross_pits" },
+                { text: "💥 Fa' brillare le mine di Koth sotto le zampe di Sheoldred e Vorinclex (AGI CD 30)", type: "roll", stat: "agi", dc: 30, successNode: "finale_dross_pits", failNode: "finale_praetors_clash", failDamage: 9, failText: "Vorinclex afferra la catena del detonatore e vi trascina nel mezzo dell'arena!", rewards: { exp: 205, gold: 95, treasures: 2, loot: "batterskull" } }
+            ]
+        },
+
+        finale_praetors_clash: {
+            act: "Atto V — Fauci e Ragnatele d'Acciaio",
+            title: "La Caccia di Vorinclex e Sheoldred",
+            text: "I due Pretori di Nuova Phyrexia vi chiudono in una morsa letale! Sconfiggeteli per conquistare lo **Sfondacranio (Batterskull)** e proseguire!",
+            choices: [
+                { text: "⚔️ Sconfiggi Vorinclex & Sheoldred nell'Arena!", type: "combat", monster: "vorinclex_sheoldred_duo", winNode: "finale_dross_pits" }
+            ]
+        },
+
+        finale_dross_pits: {
+            act: "Atto V — Capitolo 6 di 18",
+            title: "Il Santuario di Melira, la Guaritrice Silvana",
+            text: "Abbattuti Vorinclex e Sheoldred, raggiungete l'avamposto segreto dove la guaritrice Mirran **Melira** — l'unica mortale nata completamente immune all'infezione phyrexiana — sta curando i Planeswalker feriti insieme a **Karn** e **Teferi**.\n\n«Lasciate che la mia luce purifichi ogni traccia di Olio Scintillante dal vostro sangue prima che affrontiate l'angelo Atraxa ed Elesh Norn!»",
+            choices: [
+                { text: "🌿 Ricevi la Purificazione Totale di Melira (+50 PV, +150 EXP, +2 Cibi) e sali alla Cattedrale", type: "move", nextNode: "finale_atraxa_cathedral", rewards: { heal: 50, exp: 150, foods: 2, karma: 1 } }
+            ]
+        },
+
+        finale_atraxa_cathedral: {
+            act: "Atto V — Capitolo 7 di 18 (La Cattedrale di Porcellana)",
+            title: "Atraxa, Voce dei Pretori e Grande Unificatrice",
+            text: "Varcaste le navate di osso levigato e porcellana bianca della **Basilica Equa**. Dall'alto della cupola scende in picchiata **Atraxa, la Grande Unificatrice**: un tempo angelo di Mirrodin, fu catturata e riforgiata da Elesh Norn, Jin-Gitaxias, Sheoldred e Vorinclex in un'arma vivente a quattro ali che padroneggia Volare, Cautela, Tocco Letale e Legame Vitale!",
+            choices: [
+                { text: "👼 [BOSS ANGELO PHYREXIANO] Affronta ATRAXA, VOCE DEI PRETORI nell'Arena!", type: "combat", monster: "atraxa_grand_unifier", winNode: "finale_fair_basilica_gates" },
+                { text: "🗡️ [Attacco Improvviso / Doppio Attacco] Spezza la lancia a quattro lame di Atraxa in volo (FOR o AGI CD 30)", type: "roll", stat: "str", dc: 30, successNode: "finale_fair_basilica_gates", failNode: "finale_atraxa_duel", failDamage: 9, failText: "Le quattro ali di Atraxa generano un ciclone di lame che vi costringe al duello!", rewards: { exp: 215, gold: 100, treasures: 2, loot: "helm_host" } }
+            ]
+        },
+
+        finale_atraxa_duel: {
+            act: "Atto V — La Cupola di Porcellana",
+            title: "Il Giudizio di Atraxa",
+            text: "**Atraxa, Voce dei Pretori**, cala su di voi con la furia combinata di quattro colori di Mana!",
+            choices: [
+                { text: "⚔️ Sconfiggi Atraxa nell'Arena e conquista l'Elmo delle Moltitudini!", type: "combat", monster: "atraxa_grand_unifier", winNode: "finale_fair_basilica_gates" }
+            ]
+        },
+
+        finale_fair_basilica_gates: {
+            act: "Atto V — Capitolo 8 di 18",
+            title: "Il Coro dei Cenobiti e i Cancelli di Elesh Norn",
+            text: "Superata Atraxa, vi trovate davanti al portale monumentale del **Trono della Macchina Madre**. Migliaia di sacerdoti di porcellana intonano un canto stridente in lingua phyrexiana capace di frantumare la volontà dei mortali.",
+            choices: [
+                { text: "🧠 Innalza uno scudo psichico ed entra nella Sala del Trono di Elesh Norn (MAG CD 30)", type: "roll", stat: "mag", dc: 30, successNode: "finale_elesh_norn_climax", failNode: "finale_elesh_norn_climax", failDamage: 8, failText: "Il coro dissonante dei Cenobiti vi fa sanguinare le tempie, ma sfondate i battenti del trono!", rewards: { exp: 165, gold: 80, treasures: 1 } },
+                { text: "🔨 Sfonda i battenti di porcellana rossa con Karn ed Elspeth (FOR CD 30)", type: "roll", stat: "str", dc: 30, successNode: "finale_elesh_norn_climax", failNode: "finale_elesh_norn_climax", failDamage: 8, failText: "Le spine difensive del portone vi lacerano le braccia mentre i battenti crollano!", rewards: { exp: 165, gold: 85 } }
+            ]
+        },
+
+        finale_elesh_norn_climax: {
+            act: "Atto V — Capitolo 9 di 18 (SUPER-BOSS FASE I: NUOVA PHYREXIA)",
+            title: "Elesh Norn, la Madre delle Macchine!",
+            text: "Siete al cospetto di **Elesh Norn, la Madre delle Macchine**! Alta, regale e terrificante nel suo manto di placche d'osso candido e tendini scarlatti esposti, la sovrana di Nuova Phyrexia allarga le braccia davanti al nucleo del Frangireami:\n\n«Perché resistete alla perfezione? Presto ogni Piano, ogni eroe e lo stesso Nicol Bolas saranno *Uno* sotto la mia gloria!»\n\nIn quel momento **Elspeth Tirel**, ascesa a forma d'Arcangelo di Serra, e il golem **Karn** scendono al vostro fianco per regolare i conti una volta per tutte!",
+            choices: [
+                { text: "👑 [SUPER-BOSS DI PHYREXIA] Affronta ELESH NORN, MADRE DELLE MACCHINE nell'Arena!", type: "combat", monster: "elesh_norn_mother", winNode: "finale_dreadhorde_march" },
+                { text: "☀️ [CLIMAX PHYREXIA] Canalizza la Luce di Serra con Elspeth e Karn per disintegrare il trono di Norn (MAG o FOR CD 31)", type: "roll", stat: "mag", dc: 31, successNode: "finale_dreadhorde_march", failNode: "finale_norn_final_battle", failDamage: 9, failText: "Il manto di porcellana di Elesh Norn riflette il raggio: dovete abbatterla col ferro e col fuoco!", rewards: { exp: 250, gold: 120, treasures: 3, loot: "akroma_armor" } }
+            ]
+        },
+
+        finale_norn_final_battle: {
+            act: "Atto V — Il Trono del Cenobita",
+            title: "La Caduta della Madre delle Macchine",
+            text: "**Elesh Norn** scatena l'intera potenza di Nuova Phyrexia! Sconfiggetela insieme a Karn ed Elspeth per recidere per sempre il Frangireami!",
+            choices: [
+                { text: "⚔️ Annienta Elesh Norn nell'Arena e conquista l'Armatura di Akroma!", type: "combat", monster: "elesh_norn_mother", winNode: "finale_dreadhorde_march" }
+            ]
+        },
+
+        finale_dreadhorde_march: {
+            act: "Atto V — Capitolo 10 di 18 (FASE II: La Guerra della Scintilla)",
+            title: "L'Avanzata dell'Orda Infernale di Lazotep!",
+            text: "Con la distruzione di Elesh Norn e il crollo del Frangireami, la prima minaccia è spezzata! Ma dall'altro lato del Ponte Planare risuona il tamburo di guerra di **Nicol Bolas**: dalla Cittadella della Singolarità marcia l'**Orda Infernale (Dreadhorde)**, un esercito sterminato di guerrieri mummificati d'élite ricoperti del minerale blu indistruttibile **Lazotep**, mietuti sul piano desertico di Amonkhet!",
+            choices: [
+                { text: "⚔️ Spezza la falange degli Eterni di Lazotep con un assalto frontale (FOR CD 30)", type: "roll", stat: "str", dc: 30, successNode: "finale_immortal_sun_vault", failNode: "finale_immortal_sun_vault", failDamage: 8, failText: "I kopesh rivestiti di Lazotep blu vi feriscono, ma aprite una breccia verso le torri esterne!", rewards: { exp: 170, gold: 85 } },
+                { text: "🔥 Incenerisci i ranghi dell'Orda Infernale col fuoco arcano (MAG CD 30)", type: "roll", stat: "mag", dc: 30, successNode: "finale_immortal_sun_vault", failNode: "finale_immortal_sun_vault", failDamage: 8, failText: "Le frecce degli arcieri Eterni vi sfiorano mentre fate esplodere il ponte di Lazotep!", rewards: { exp: 170, gold: 85, treasures: 1 } }
+            ]
+        },
+
+        finale_immortal_sun_vault: {
+            act: "Atto V — Capitolo 11 di 18 (Il Sole Immortale)",
+            title: "Il Sabotaggio del Sole Immortale e Dovin Baan",
+            text: "Entrate nel bastione inferiore della Cittadella dove brilla una gigantesca sfera d'oro rotante rubata da Ixalan: **Il Sole Immortale**! Nicol Bolas lo sta usando come una gabbia dimensionale per impedire ai Planeswalker di fuggire mentre ne divora le Scintille. L'artefatto è presidiato dal freddo ispettore vedalken **Dovin Baan** e dai suoi totteri blindati!",
+            choices: [
+                { text: "🔧 Sabota gli anelli giroscopici del Sole Immortale e acceca i sensori di Dovin Baan (AGI o MAG CD 30)", type: "roll", stat: "agi", dc: 30, successNode: "finale_god_eternals_plaza", failNode: "finale_immortal_sun_vault_fight", failDamage: 8, failText: "I totteri di Dovin Baan fanno scattare la griglia laser attorno al Sole Immortale!", rewards: { exp: 180, gold: 90, treasures: 2 } },
+                { text: "👁️ [Imbloccabile / Attacco Improvviso] Neutralizza Dovin Baan nell'ombra e spegni il Sole Immortale!", type: "move", reqKeywordAny: ["Imbloccabile", "Attacco Improvviso"], nextNode: "finale_god_eternals_plaza", rewards: { exp: 185, gold: 95, treasures: 2 } }
+            ]
+        },
+
+        finale_immortal_sun_vault_fight: {
+            act: "Atto V — Camera del Sole Immortale",
+            title: "Le Sentinelle di Dovin Baan",
+            text: "Le guardie d'élite e i maghi di Dovin Baan vi sbarrano la strada attorno al Sole Immortale! Sconfiggeteli per disattivare l'artefatto!",
+            choices: [
+                { text: "⚔️ Sbaraglia la scorta arcana e spegni il Sole Immortale!", type: "combat", monster: "bandit_rogues", winNode: "finale_god_eternals_plaza" }
+            ]
+        },
+
+        finale_god_eternals_plaza: {
+            act: "Atto V — Capitolo 12 di 18 (La Piazza degli Dei-Eterni)",
+            title: "Il Dio Scarabeo e i Quattro Dei-Eterni di Amonkhet!",
+            text: "Disattivato il Sole Immortale, sbucate sulla grande spianata ai piedi della piramide-cittadella di Bolas. Qui l'aria si fa gelida: **Il Dio Scarabeo** emerge dalle tenebre scortato dalle quattro divinità di Amonkhet profanate e trasformate da Bolas in mostruosi **Dei-Eterni di Lazotep e ossa: Oketra, Kefnet, Bontu e Rhonas**!",
+            choices: [
+                { text: "🪲 [BOSS DEGLI ETERNI] Affronta IL DIO SCARABEO & GLI DEI-ETERNI (4 Mana Blu)!", type: "combat", monster: "scarab_god_eternals", winNode: "finale_liliana_redemption" },
+                { text: "🏹 Concentra il fuoco della Compagnia sul nucleo di Lazotep del Dio Scarabeo (FOR o MAG CD 31)", type: "roll", stat: "str", dc: 31, successNode: "finale_liliana_redemption", failNode: "finale_god_eternals_clash", failDamage: 9, failText: "La freccia divina di Oketra e le ali di Kefnet respingono il colpo: gli Dei-Eterni vi caricano!", rewards: { exp: 220, gold: 105, treasures: 2, loot: "the_mirari" } }
+            ]
+        },
+
+        finale_god_eternals_clash: {
+            act: "Atto V — Spianata della Cittadella",
+            title: "La Marcia degli Dei-Eterni",
+            text: "**Il Dio Scarabeo** e i quattro **Dei-Eterni** scatenano la loro potenza necromantica e 4 riserve di Mana Blu contro la Compagnia!",
+            choices: [
+                { text: "⚔️ Sconfiggi il Dio Scarabeo e gli Dei-Eterni nell'Arena!", type: "combat", monster: "scarab_god_eternals", winNode: "finale_liliana_redemption" }
+            ]
+        },
+
+        finale_liliana_redemption: {
+            act: "Atto V — Capitolo 13 di 18",
+            title: "La Ribellione di Liliana Vess e lo Scudo di Gideon Jura",
+            text: "In cima alla balconata della Cittadella, **Liliana Vess** — costretta fino a quel momento a comandare l'Orda Infernale dal contratto demoniaco di Bolas — decide di ribellarsi al Dio-Drago! Quando la maledizione contrattuale inizia a incenerire il corpo di Liliana, il campione **Gideon Jura** interviene avvolgendola nella propria aura dorata d'invulnerabilità e donando alla vostra Compagnia il suo ultimo **Scudo di Luce Indistruttibile**:\n\n«Io terrò la linea qui fuori con Liliana!» vi grida Gideon con la *Blackblade* in pugno. «Salite la scalinata stellare, raggiungete Ugin e abbattete Nicol Bolas!»",
+            choices: [
+                { text: "🛡️ Ricevi l'Eredità Eroica di Gideon e Liliana (+Cautela / +35 PV / +160 EXP) e sali alla Cittadella", type: "move", nextNode: "finale_bolas_citadel", rewards: { addKeyword: "Cautela", heal: 35, exp: 160, gold: 80, karma: 2 } }
             ]
         },
 
         finale_bolas_citadel: {
-            act: "Atto V — La Cittadella del Dio-Faraone",
+            act: "Atto V — Capitolo 14 di 18 (La Cittadella del Dio-Faraone)",
             title: "L'Alleanza con Ugin, il Drago Spirito",
-            text: "Superate le linee phyrexiane e salite la scalinata stellare della Cittadella. Nel cielo sopra di voi appare **Ugin, il Drago Spirito**, avvolto da fuoco spettrale incolore:\n\n«Campioni di Dominaria! Mio fratello **Nicol Bolas** ha fuso la sua essenza draconica con il nucleo della Singolarità. Vi dono la mia benedizione curativa: entrate nella Sala del Trono e spezzate per sempre il suo dominio!»",
+            text: "Superate le linee esterne e salite la scalinata stellare della Cittadella. Nel cielo sopra di voi appare **Ugin, il Drago Spirito**, avvolto da fuoco spettrale incolore:\n\n«Campioni di Dominaria! Mio fratello gemello **Nicol Bolas** sta completando l'**Incantesimo degli Antichi (The Elderspell)** per ascendere a divinità onnipotente. Vi dono la mia benedizione curativa: attraversate il vortice e spezzate per sempre il suo dominio nella Sala del Trono!»",
             choices: [
-                { text: "✨ Ricevi la Benedizione di Ugin (+40 PV a tutta la Compagnia, +2 Tesori 💎) ed entra nella Sala del Trono!", type: "move", nextNode: "finale_realm_gate", rewards: { heal: 40, treasures: 2, exp: 200 } }
+                { text: "✨ Ricevi la Benedizione di Ugin (+50 PV a tutta la Compagnia, +2 Tesori 💎, +200 EXP)", type: "move", nextNode: "finale_elder_spell_vortex", rewards: { heal: 50, treasures: 2, exp: 200 } }
+            ]
+        },
+
+        finale_elder_spell_vortex: {
+            act: "Atto V — Capitolo 15 di 18 (Il Corridoio delle Scintille)",
+            title: "La Tempesta dell'Incantesimo degli Antichi (The Elderspell)",
+            text: "Davanti ai portoni ciclopici della Sala del Trono infuria il vortice viola e nero dell'**Incantesimo degli Antichi**: decine di Scintille strappate ai Planeswalker caduti sfrecciano come comete verso le corna di Nicol Bolas! Se venite colpiti in pieno dal vortice prima di entrare, Bolas assorbirà parte del vostro vigore!",
+            choices: [
+                { text: "🌟 Assorbi le Scintille vaganti per potenziare la Compagnia prima del Boss Finale! (MAG o COS CD 31)", type: "roll", stat: "mag", dc: 31, successNode: "finale_realm_gate", failNode: "finale_realm_gate", failDamage: 8, failText: "La furia dell'Elderspell vi brucia le vesti prima che sfondiate i portoni del Trono!", rewards: { exp: 200, gold: 100, treasures: 2, heal: 40 } },
+                { text: "💨 [Rapidità / Volare / Indistruttibile] Sfreccia indenne attraverso l'Elderspell e spalanca la Sala del Trono!", type: "move", reqKeywordAny: ["Rapidità", "Volare", "Indistruttibile"], nextNode: "finale_realm_gate", rewards: { exp: 200, gold: 100, heal: 40 } }
             ]
         },
 
         finale_realm_gate: {
-            act: "Atto V — Il Trono dell'Eternità",
-            title: "Lo Scontro Finale col Dio-Drago della Singolarità",
-            textSolo: "Le porte della Sala del Trono esplodono. Tra le corna dell'immenso **Avatar Draconico di Nicol Bolas** ruota la Gemma del Divinire mentre 4💧 Mana Blu brillano attorno ai suoi artigli per neutralizzare le tue magie. È il duello finale per il destino di ogni Piano!",
-            textParty: "La Compagnia irrompe nella Sala del Trono! L'**Avatar Draconico di Nicol Bolas** dispiega le sue ali colossali sopra l'abisso cosmico: dispone di 130 Punti Vita e 4💧 Mana Blu per contrastare i vostri incantesimi!\n\nImpugnate le vostre armi leggendarie, usate saggiamente la vostra Riserva di Mana e sconfiggetelo insieme!",
+            act: "Atto V — Capitolo 16 di 18 (IL TRONO DELL'ETERNITÀ)",
+            title: "Lo Scontro Finale con Nicol Bolas, Dio-Drago della Singolarità!",
+            textSolo: "Le porte della Sala del Trono esplodono! Tra le corna dell'immenso **Nicol Bolas, Dio-Drago della Singolarità**, ruota la Gemma del Divenire mentre 4💧 Mana Blu brillano attorno ai suoi artigli per neutralizzare le tue magie. È il duello finale per il destino di ogni Piano!",
+            textParty: "La Compagnia irrompe nella Sala del Trono! **Nicol Bolas, Dio-Drago della Singolarità**, dispiega le sue ali colossali sopra l'abisso cosmico: dispone di **150 Punti Vita base** e **4💧 Mana Blu** per contrastare i vostri incantesimi con *Counterspell*!\n\nImpugnate le vostre armi leggendarie, svuotate le sue riserve blu e sconfiggetelo tutti insieme!",
             choices: [
-                { text: "⚔️ [BOSS FINALE DEL GIOCO] Affronta l'AVATAR DRACONICO DI BOLAS nell'Arena a Turni!", type: "combat", monster: "shivan_dragon", winNode: "finale_climax_strike" }
+                { text: "🐉 [BOSS FINALE ASSOLUTO DEL GIOCO] Affronta NICOL BOLAS, DIO-DRAGO DELLA SINGOLARITÀ!", type: "combat", monster: "nicol_bolas_dragon_god", winNode: "finale_gem_shatter" }
+            ]
+        },
+
+        finale_gem_shatter: {
+            act: "Atto V — Capitolo 17 di 18 (La Gemma del Divenire)",
+            title: "Il Colpo di Grazia alla Scintilla del Dio-Drago!",
+            text: "Il titanico corpo draconico di **Nicol Bolas** barcolla sull'orlo dell'abisso, con l'armatura dorata in frantumi! Tra le sue corna la **Gemma del Divenire** — che racchiude tutte le Scintille rubate — pulsa a un passo dall'esplosione critica, mentre gli spiriti di Bontu e Liliana invertono il flusso dell'Incantesimo degli Antichi contro lo stesso Bolas!",
+            choices: [
+                { text: "🗡️ Scaglia il colpo finale sulla Gemma del Divenire tra le corna di Bolas! (FOR o AGI CD 30)", type: "roll", stat: "str", dc: 30, successNode: "finale_climax_strike", failNode: "finale_climax_strike", failDamage: 6, failText: "L'onda d'urto dell'esplosione della Gemma vi investe, ma Nicol Bolas perde la sua Scintilla e crolla!", rewards: { exp: 250, gold: 150, treasures: 3 } },
+                { text: "🔮 Canalizza l'Incantesimo degli Antichi inverso per strappare la divinità a Bolas! (MAG CD 30)", type: "roll", stat: "mag", dc: 30, successNode: "finale_climax_strike", failNode: "finale_climax_strike", failDamage: 6, failText: "Il boato psichico scuote la Cittadella, ma la Scintilla di Bolas va in mille pezzi!", rewards: { exp: 250, gold: 150, treasures: 3 } }
             ]
         },
 
         finale_climax_strike: {
-            act: "Atto V — Il Crollo della Singolarità",
-            title: "L'Ultimo Sigillo dei Cinque Soli",
-            text: "Con un ruggito che scuote l'intera Cieca Eternità, l'Avatar Draconico precipita nel vuoto! Ugin lo incatena nel Reame della Meditazione, mentre a voi resta l'ultimo gesto eroico: sigillare la Frattura del Multiverso con la luce combinata delle vostre Scintille!",
+            act: "Atto V — Capitolo 18 di 18 (Il Crollo della Singolarità)",
+            title: "La Prigione di Ugin e il Raggio dei Cinque Soli",
+            text: "Privato della sua Scintilla, del suo potere divino e del suo stesso vero nome, Nicol Bolas precipita nel vuoto! **Ugin, il Drago Spirito**, lo afferra e sigilla per sempre il Reame della Meditazione attorno a lui, diventandone l'eterno carceriere.\n\nA voi, leggendari eroi del Multiverso, resta l'ultimo gesto supremo: unire i Cinque Colori del Mana per sigillare la Frattura Cosmica e riportare la luce su tutti i Piani!",
             choices: [
-                { text: "👑 Scatena il Raggio dei Cinque Colori di Mana e salva il Multiverso!", type: "move", nextNode: "victory_epilogue", rewards: { exp: 500, gold: 300, heal: 100, treasures: 5 } }
+                { text: "👑 Scatena il Raggio dei Cinque Colori di Mana e salva il Multiverso! (+500 EXP, +300 Oro, +5 Tesori)", type: "move", nextNode: "victory_epilogue", rewards: { exp: 500, gold: 300, heal: 100, treasures: 5, karma: 3 } }
             ]
         },
 
         victory_epilogue: {
             act: "🏆 EPILOGO LEGGENDARIO — I Custodi del Multiverso",
             title: "Gloria Eterna su Dominaria e Oltre i Piani",
-            textSolo: "Un'onda di luce dorata attraversa Dominaria, Innistrad, Ravnica, Kamigawa e Zendikar! A Nuova Benalia, Jhoira, Teferi e Karn innalzano un monumento in tuo onore.\n\n🏆 **COMPLIMENTI! HAI COMPLETATO L'INTERA CAMPAGNA GDR!**\nIl tuo eroe è entrato nella leggenda assoluta di Magic: The Gathering. Ora puoi stampare la tua **Scheda Personaggio in formato A4** con tutte le reliquie conquistate, oppure continuare a viaggiare liberamente nel Post-Game!",
-            textParty: "Un'onda di luce dorata guarisce le ferite di Dominaria, Innistrad, Ravnica, Kamigawa e Zendikar! A Nuova Benalia, Jhoira, Teferi, Karn e Ugin accolgono la vostra Compagnia come i più grandi salvatori che il Multiverso abbia mai conosciuto!\n\n🏆 **AVETE COMPLETATO LA MAXI-CAMPAGNA DI GRUPPO!**\nPotete ora aprire e stampare in A4 le **Schede Personaggio definitive** di tutta la compagnia come trofeo dell'avventura, sfidare il Super-Boss segreto **Marit Lage** nei ghiacci di Dark Depths o avviare una Nuova Partita+ mantenendo livelli, magie e artefatti!",
+            textSolo: "Un'onda di luce dorata attraversa Dominaria, Innistrad, Ravnica, Kamigawa e Zendikar! A Nuova Benalia, Jhoira, Teferi, Elspeth e Karn innalzano un monumento eterno in tuo onore.\n\n🏆 **COMPLIMENTI! HAI COMPLETATO L'INTERA CAMPAGNA GDR!**\nIl tuo eroe è entrato nella leggenda assoluta di Magic: The Gathering. Ora puoi stampare la tua **Scheda Personaggio in formato A4** con tutte le reliquie conquistate, sfidare Marit Lage o continuare a viaggiare liberamente nel Post-Game!",
+            textParty: "Un'onda di luce dorata guarisce le ferite di Dominaria, Innistrad, Ravnica, Kamigawa e Zendikar! A Nuova Benalia, Jhoira, Teferi, Karn, Elspeth e Ugin accolgono la vostra Compagnia come i più grandi salvatori che il Multiverso abbia mai conosciuto!\n\n🏆 **AVETE COMPLETATO LA MAXI-CAMPAGNA DI GRUPPO!**\nPotete ora aprire e stampare in A4 le **Schede Personaggio definitive** di tutta la compagnia come trofeo dell'avventura, sfidare il Super-Boss segreto **Marit Lage** nei ghiacci di Dark Depths o avviare una Nuova Partita+ mantenendo livelli, magie e artefatti!",
             choices: [
                 { text: "🌌 Torna al Nexus Planare (Modalità Esplorazione Libera / Sfida Marit Lage)", type: "move", nextNode: "planeswalker_nexus", rewards: { heal: 100 } },
                 { text: "🔄 Avvia Nuova Partita+ dalla Locanda di Jhoira (Mantieni Livello, Oro, Magie e Black Lotus!)", type: "move", nextNode: "start", rewards: { heal: 100 } }
