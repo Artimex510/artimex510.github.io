@@ -1900,7 +1900,7 @@
             text: "Scendete nei vicoli nebbiosi della Città Bassa. Qui, accovacciato dietro un barile di fronte a una ronda di guardie corrotte, tremante e completamente fuori posto, vedete **Fblthp**, il piccolo homunculus con un occhio solo finito per sbaglio su Dominaria da Ravnica!\n\nPoco più in là, dietro una porta blindata sorvegliata da rune esplosive, si trova il **Caveau della Gilda dei Ladri**.",
             choices: [
                 { text: "👁️ Difendi il povero Fblthp dalla pattuglia di guardie corrotte!", type: "combat", monster: "fblthp_guards", winNode: "benalia_fblthp_rescue" },
-                { text: "🗡️ [RISCHIO SETBACK!] Tenta di scassinare il Caveau della Gilda dei Ladri (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "benalia_cabal_sewers", failNode: "benalia_heist_trap_setback", failDamage: 7, failText: "TRAPPOLA ESPLOSIVA! La runa di guardia detona facendo crollare il pavimento!", rewards: { loot: "hood_assassin", exp: 65, gold: 50, treasures: 1 }, oncePerCampaignLoot: "undercity_heist_loot" },
+                { text: "🗡️ Tenta di scassinare il Caveau della Gilda dei Ladri (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "benalia_cabal_sewers", failNode: "benalia_heist_trap_setback", failDamage: 7, failText: "TRAPPOLA ESPLOSIVA! La runa di guardia detona facendo crollare il pavimento!", rewards: { loot: "hood_assassin", exp: 65, gold: 50, treasures: 1 }, oncePerCampaignLoot: "undercity_heist_loot" },
                 { text: "🚶 Ignora i vicoli e prosegui lungo le fogne verso le porte della città", type: "move", nextNode: "benalia_cabal_sewers" }
             ]
         },
@@ -2014,10 +2014,10 @@
         keld_canyon_entry: {
             act: "Atto I — Il Labirinto del Passo di Keld",
             title: "L'Assedio del Goblin Battipalo e il Bivio della Miniera",
-            text: "Siete nel cuore del canyon roccioso di Keld! Dall'alto dei ponti di corda, un'orda urlante guidata dal famigerato **Goblin Battipalo (Goblin Piledriver)** fa piovere massi e barili di pece!\n\nPotete sfondare la barricata frontalmente, oppure tentare di aggirare il canyon infilandovi nel **Tunnel Buio della Miniera Abbandonata** (attenzione: una frana nel tunnel vi farà precipitare indietro fino all'Acquedotto!).",
+            text: "Siete nel cuore del canyon roccioso di Keld! Dall'alto dei ponti di corda, un'orda urlante guidata dal famigerato **Goblin Battipalo (Goblin Piledriver)** fa piovere massi e barili di pece!\n\nPotete sfondare la barricata frontalmente, oppure tentare di aggirare il canyon infilandovi nel **Tunnel Buio della Miniera Abbandonata**",
             choices: [
                 { text: "⚔️ Carica frontalmente la barricata del GOBLIN BATTIPALO!", type: "combat", monster: "goblin_piledriver", winNode: "keld_necropolis_heroes" },
-                { text: "⛏️ [RISCHIO SETBACK!] Tenta di attraversare il Tunnel Buio della Miniera (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "keld_necropolis_heroes", failNode: "keld_mine_collapse_setback", failDamage: 7, failText: "FRANA CATASTROFICA! Il soffitto della miniera cede sotto i vostri piedi!", rewards: { exp: 70, gold: 40, treasures: 1 }, oncePerCampaignLoot: "keld_mine_treasure" },
+                { text: "⛏️ Tenta di attraversare il Tunnel Buio della Miniera (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "keld_necropolis_heroes", failNode: "keld_mine_collapse_setback", failDamage: 7, failText: "FRANA CATASTROFICA! Il soffitto della miniera cede sotto i vostri piedi!", rewards: { exp: 70, gold: 40, treasures: 1 }, oncePerCampaignLoot: "keld_mine_treasure" },
                 { text: "💥 [Travolgere / Rapidità] Travolgi la prima linea di Goblin prima che lancino i barili!", type: "move", reqKeywordAny: ["Travolgere", "Rapidità"], nextNode: "keld_necropolis_heroes", rewards: { exp: 65, gold: 30 } }
             ]
         },
@@ -2114,7 +2114,7 @@
                 { text: "🌳 Esplora la Giungla di Llanowar, Yavimaya e Argoth (Tarmogoyf e Black Lotus!)", type: "move", nextNode: "llanowar_entry" },
                 { text: "💧 Naviga verso l'Accademia di Tolaria e Rath (Saga dei Tramutanti e dei Maghi)", type: "move", nextNode: "tolaria_gates" },
                 { text: "💀 Addentrati nelle Paludi di Urborg e nell'Arena della Cabala", type: "move", nextNode: "urborg_entry" },
-                { text: "⚙️ [ARCO SPECIALE - MIRRODIN] Varca il Vortice d'Argento verso Mirrodin (Memnarch & Olio Phyrexiano!)", type: "move", nextNode: "mirrodin_glimmervoid_entry" },
+                { text: "⚙️ [ARCO SPECIALE - MIRRODIN] Varca il Vortice d'Argento verso Mirrodin (Esplora i Cinque Soli di Mirrodin!)", type: "move", nextNode: "mirrodin_glimmervoid_entry" },
                 { text: "🏛️ Marcia direttamente alle Grotte di Koilos (Consigliato Liv. 3+)", type: "move", nextNode: "koilos_gates" }
             ]
         },
@@ -2306,10 +2306,10 @@
         argoth_citanul_druids: {
             act: "🌺 Dungeon di Argoth — Il Cratere del Destino",
             title: "Il Cerchio di Citanul e il Sylex di Golgothian",
-            text: "I due sentieri di Argoth convergono sull'altura di **Citanul**, proprio a ridosso della valle segreta del Loto Nero! In lontananza vedete **Urza** inginocchiato davanti a un calice runico accecante — il **Sylex di Golgothian** — mentre affronta il fratello **Mishra**, ormai fuso con le macchine di Phyrexia!\n\nPotete scendere lungo il sentiero sicuro nella Gauntlet del Loto Nero, oppure tentare di assorbire un frammento di energia pura dal Sylex prima che detoni (attenzione: se l'onda d'urto vi travolge, verrete sbalzati indietro all'inizio del portale di Argoth!).",
+            text: "I due sentieri di Argoth convergono sull'altura di **Citanul**, proprio a ridosso della valle segreta del Loto Nero! In lontananza vedete **Urza** inginocchiato davanti a un calice runico accecante — il **Sylex di Golgothian** — mentre affronta il fratello **Mishra**, ormai fuso con le macchine di Phyrexia!\n\nPotete scendere lungo il sentiero sicuro nella Gauntlet del Loto Nero, oppure tentare di assorbire un frammento di energia pura dal Sylex prima che detoni.",
             choices: [
                 { text: "🌺 Entra direttamente nella Gauntlet del Loto Nero (3 Scontri Consecutivi!)", type: "move", nextNode: "lotus_gauntlet_1" },
-                { text: "💥 [RISCHIO SETBACK!] Tenta di attingere potere dall'onda del Sylex di Urza (MAG o COS CD 28)", type: "roll", stat: "mag", dc: 28, successNode: "lotus_gauntlet_1", failNode: "argoth_sylex_blast_setback", failDamage: 8, failText: "ONDA D'URTO TEMPORALE! Il bagliore del Sylex vi spazza via nel vortice cronologico!", rewards: { exp: 130, gold: 70, treasures: 2, heal: 20 }, oncePerCampaignLoot: "sylex_spark_absorb" }
+                { text: "💥 Tenta di attingere potere dall'onda del Sylex di Urza (MAG o COS CD 28)", type: "roll", stat: "mag", dc: 28, successNode: "lotus_gauntlet_1", failNode: "argoth_sylex_blast_setback", failDamage: 8, failText: "ONDA D'URTO TEMPORALE! Il bagliore del Sylex vi spazza via nel vortice cronologico!", rewards: { exp: 130, gold: 70, treasures: 2, heal: 20 }, oncePerCampaignLoot: "sylex_spark_absorb" }
             ]
         },
 
@@ -2502,11 +2502,11 @@
         tolaria_chrono_maze: {
             act: "Atto II — I Corridoi del Tempo di Tolaria",
             title: "Il Labirinto Cronologico di Urza",
-            text: "Entrate nella Grande Biblioteca di Tolaria. Barrin vi avverte: «Abbiamo scoperto la verità: i Tramutanti vengono inviati qui direttamente dalla **Fortezza di Rath**! Per raggiungere il portale nel Reattore dovete attraversare tre archi cronologici. Scegliete la sequenza corretta (Passato ➔ Presente ➔ Futuro) o verrete rispediti indietro nel tempo sulla spiaggia d'ingresso dell'isola!»",
+            text: "Entrate nella Grande Biblioteca di Tolaria. Barrin vi avverte: «Abbiamo scoperto la verità: i Tramutanti vengono inviati qui direttamente dalla **Fortezza di Rath**! Per raggiungere il portale nel Reattore dovete attraversare tre archi cronologici. Scegliete la sequenza corretta (Passato ➔ Presente ➔ Futuro)»",
             choices: [
-                { text: "⏳ [RISCHIO SETBACK!] Varca l'Arco d'Argento (Passato) e calcola i pendoli per la Cappa del Sensei (MAG CD 26)", type: "roll", stat: "mag", dc: 26, successNode: "tolaria_planar_portal_rath", failNode: "tolaria_time_loop_setback", failDamage: 6, failText: "I pendoli invertono il flusso! Venite risucchiati indietro nel tempo!", rewards: { exp: 95, loot: "sensei_top" }, oncePerCampaignLoot: "tolaria_sensei_top" },
+                { text: "⏳ Varca l'Arco d'Argento (Passato) e calcola i pendoli per la Cappa del Sensei (MAG CD 26)", type: "roll", stat: "mag", dc: 26, successNode: "tolaria_planar_portal_rath", failNode: "tolaria_time_loop_setback", failDamage: 6, failText: "I pendoli invertono il flusso! Venite risucchiati indietro nel tempo!", rewards: { exp: 95, loot: "sensei_top" }, oncePerCampaignLoot: "tolaria_sensei_top" },
                 { text: "⚡ [Attacco Improvviso / Imbloccabile] Sfreccia tra le bolle temporali prima che si chiudano!", type: "move", reqKeywordAny: ["Attacco Improvviso", "Imbloccabile"], nextNode: "tolaria_planar_portal_rath", rewards: { exp: 80, gold: 30 }, oncePerCampaignLoot: "tolaria_maze_dash" },
-                { text: "🌀 [RISCHIO SETBACK!] Tenta di sfondare la porta centrale della Biblioteca con la forza (FOR CD 28)", type: "roll", stat: "str", dc: 28, successNode: "tolaria_planar_portal_rath", failNode: "tolaria_time_loop_setback", failDamage: 6, failText: "La barriera temporale rimbalza il colpo e vi catapulta fuori dall'Accademia!", rewards: { exp: 95, treasures: 1 }, oncePerCampaignLoot: "tolaria_maze_force" }
+                { text: "🌀 Tenta di sfondare la porta centrale della Biblioteca con la forza (FOR CD 28)", type: "roll", stat: "str", dc: 28, successNode: "tolaria_planar_portal_rath", failNode: "tolaria_time_loop_setback", failDamage: 6, failText: "La barriera temporale rimbalza il colpo e vi catapulta fuori dall'Accademia!", rewards: { exp: 95, treasures: 1 }, oncePerCampaignLoot: "tolaria_maze_force" }
             ]
         },
 
@@ -2615,9 +2615,9 @@
         rath_dream_halls: {
             act: "Atto II (Piano di Rath) — Il Labirinto Psichico",
             title: "Le Sale dei Sogni (Dream Halls) e l'Inganno di Volrath",
-            text: "Raggiungete le surreali **Sale dei Sogni (Dream Halls)** della Fortezza, dove il giovane mago **Ertai** e il principe **Crovax** stanno cercando di liberare dalle celle **Starkey** e sua figlia **Takara**.\n\nAttenzione: le Sale dei Sogni permettono di lanciare incantesimi con la sola forza del pensiero, ma se cadete nell'illusione psichica di Volrath, una valanga di Pietra Fluida vi farà scivolare **indietro fino al ponte d'ingresso di Rath**!",
+            text: "Raggiungete le surreali **Sale dei Sogni (Dream Halls)** della Fortezza, dove il giovane mago **Ertai** e il principe **Crovax** stanno cercando di liberare dalle celle **Starkey** e sua figlia **Takara**.\n\nAttenzione: le Sale dei Sogni permettono di lanciare incantesimi con la sola forza del pensiero",
             choices: [
-                { text: "🧠 [RISCHIO SETBACK!] Smaschera il mutaforma nascosto tra i prigionieri nelle Sale dei Sogni (MAG CD 27)", type: "roll", stat: "mag", dc: 27, successNode: "rath_volrath_throne", failNode: "rath_flowstone_slide_setback", failDamage: 7, failText: "È UNA TRAPPOLA DI VOLRATH! Il pavimento di Pietra Fluida si apre facendovi precipitare fuori dalla Fortezza!", rewards: { exp: 115, gold: 60, treasures: 2, heal: 20 }, oncePerCampaignLoot: "dream_halls_insight" },
+                { text: "🧠 Smaschera il mutaforma nascosto tra i prigionieri nelle Sale dei Sogni (MAG CD 27)", type: "roll", stat: "mag", dc: 27, successNode: "rath_volrath_throne", failNode: "rath_flowstone_slide_setback", failDamage: 7, failText: "È UNA TRAPPOLA DI VOLRATH! Il pavimento di Pietra Fluida si apre facendovi precipitare fuori dalla Fortezza!", rewards: { exp: 115, gold: 60, treasures: 2, heal: 20 }, oncePerCampaignLoot: "dream_halls_insight" },
                 { text: "🚪 Marcia direttamente con Gerrard verso la Sala del Trono dell'Evincaro Volrath", type: "move", nextNode: "rath_volrath_throne" }
             ]
         },
@@ -2702,7 +2702,7 @@
             choices: [
                 { text: "👹 Avanza nella Fossa Sulfurea del leggendario JUZÁM DJINN (1993)!", type: "move", nextNode: "urborg_juzam_bog" },
                 { text: "🧛 Dirigiti verso il Castello Oscuro del BARONE SENGIR e la Tenuta di CROVAX!", type: "move", nextNode: "urborg_sengir_castle" },
-                { text: "💀 [RISCHIO SETBACK!] Sacrifica vitalità sull'altare di Braids per la Morsa Cerebrale (COS CD 25)", type: "roll", stat: "con", dc: 25, successNode: "urborg_tormod_crypt_trap", failNode: "urborg_pit_trap_setback", failDamage: 7, failText: "Gli incubi di Braids vi trascinano in una voragine di fango nero!", rewards: { exp: 85, karma: -1, loot: "skullclamp" }, oncePerCampaignLoot: "braids_altar_skullclamp" },
+                { text: "💀 Avvicinati all'altare d'ossa di Braids (COS CD 25)", type: "roll", stat: "con", dc: 25, successNode: "urborg_tormod_crypt_trap", failNode: "urborg_pit_trap_setback", failDamage: 7, failText: "Gli incubi di Braids vi trascinano in una voragine di fango nero!", rewards: { exp: 85, karma: -1, loot: "skullclamp" }, oncePerCampaignLoot: "braids_altar_skullclamp" },
                 { text: "⏪ Torna indietro al Crocevia dei Continenti", type: "move", nextNode: "crossroads_wilds" }
             ]
         },
@@ -2882,10 +2882,10 @@
         otaria_topos_desert: {
             act: "Atto II (Continente di Otaria) — Le Sabbie della Realtà",
             title: "Il Deserto di Topos e il Palazzo di Ixidor",
-            text: "Per arrivare al Colosseo Centrale dovete attraversare il **Deserto di Topos**, dove il leggendario **Ixidor, Scultore della Realtà**, ha plasmato un intero regno con la sola forza dei suoi sogni dopo la morte dell'amata Niven.\n\nAttenzione: se tentate di saccheggiare il miraggio dei sogni di Ixidor e fallite la prova mentale, una tempesta di sabbia illusoria vi rispedirà **indietro al Porto di Otaria**!",
+            text: "Per arrivare al Colosseo Centrale dovete attraversare il **Deserto di Topos**, dove il leggendario **Ixidor, Scultore della Realtà**, ha plasmato un intero regno con la sola forza dei suoi sogni dopo la morte dell'amata Niven.",
             choices: [
                 { text: "🎨 [BOSS DELL'ILLUSIONE] Sfida IXIDOR, SCULTORE DELLA REALTÀ (2💧 Mana Blu)!", type: "combat", monster: "ixidor_sculptor", winNode: "otaria_cabal_pit_trap" },
-                { text: "🌪️ [RISCHIO SETBACK!] Tenta di piegare il Miraggio dei Sogni di Ixidor col tuo Mana (MAG CD 28)", type: "roll", stat: "mag", dc: 28, successNode: "otaria_cabal_pit_trap", failNode: "otaria_desert_mirage_setback", failDamage: 7, failText: "IL MIRAGGIO COLLASSA! Una tempesta spazio-mentale vi spazza via fino alla costa!", rewards: { exp: 130, gold: 65, treasures: 2 }, oncePerCampaignLoot: "ixidor_dream_loot" }
+                { text: "🌪️ Tenta di piegare il Miraggio dei Sogni di Ixidor col tuo Mana (MAG CD 28)", type: "roll", stat: "mag", dc: 28, successNode: "otaria_cabal_pit_trap", failNode: "otaria_desert_mirage_setback", failDamage: 7, failText: "IL MIRAGGIO COLLASSA! Una tempesta spazio-mentale vi spazza via fino alla costa!", rewards: { exp: 130, gold: 65, treasures: 2 }, oncePerCampaignLoot: "ixidor_dream_loot" }
             ]
         },
 
@@ -2991,7 +2991,7 @@
             act: "Atto II (Piano Metallico di Mirrodin) — I Cinque Soli",
             title: "Il Vuoto Scintillante (Glimmervoid) e i Campi di Rasoi",
             textSolo: "Attraversi il vortice d'argento del Crocevia ed emergi su **Mirrodin** (il mondo artificiale originariamente creato da Karn come *Argentum*): qui l'erba è fatta di lame di rasoio d'acciaio, gli alberi sono di rame massiccio e nel cielo splendono **Cinque Soli di puro Mana**! In lontananza la leonina **Kemba, Reggente di Kha**, ti avverte che il guardiano del piano — **Memnarch** — è impazzito nel suo Panopticon a causa di una misteriosa sostanza nera che cola dal nucleo del mondo...",
-            textParty: "La vostra Compagnia varca il vortice d'argento e mette piede sul mondo metallico di **Mirrodin**, illuminato da **Cinque Soli di Mana**! Sotto i vostri stivali si stendono pianure di lame d'acciaio e mari di mercurio liquido.\n\nUna pattuglia di guerrieri felini Leonin di **Taj-Nar** vi avverte: «Il folle **Memnarch** ha rapito creature da decine di Piani con le sue Trappole dell'Anima, ma nel Nucleo di Mycosynth c'è qualcosa di ancora più oscuro: una sfera bagnata da un **Olio Scintillante** capace di corrompere il cuore stesso degli eroi!»",
+            textParty: "La vostra Compagnia varca il vortice d'argento e mette piede sul mondo metallico di **Mirrodin**, illuminato da **Cinque Soli di Mana**! Sotto i vostri stivali si stendono pianure di lame d'acciaio e mari di mercurio liquido.\n\nUna pattuglia di guerrieri felini Leonin di **Taj-Nar** vi avverte: «Il folle **Memnarch** ha rapito creature da decine di Piani con le sue Trappole dell'Anima, ma nel Nucleo di Mycosynth c'è qualcosa di ancora più oscuro: nel Nucleo di Mycosynth pulsa un antico artefatto dal potere incalcolabile!»",
             choices: [
                 { text: "🦁 Attraversa i Campi di Rasoi di Taj-Nar con i Leonin (AGI o COS CD 26)", type: "roll", stat: "agi", dc: 26, successNode: "mirrodin_synod_bazaar", failNode: "mirrodin_razor_ambush", failDamage: 6, failText: "L'erba di lame d'acciaio taglia i vostri stivali mentre un costrutto di Memnarch vi intercetta!", rewards: { exp: 95, gold: 45, treasures: 1 }, oncePerCampaignLoot: "mirrodin_razor_cross" },
                 { text: "🛒 Dirigiti subito alla Cittadella di Lumengrid e al Bazar del Synod", type: "move", nextNode: "mirrodin_synod_bazaar" },
@@ -3086,14 +3086,12 @@
         // (SCELTA INDIVIDUALE PER OGNI GIOCATORE + MANA DI PHYREXIA + PVP 30%!)
         // ====================================================================
         mirrodin_phyrexian_oil_sphere: {
-            act: "Atto II (Il Cuore Segreto di Mirrodin) — ⚠️ EVENTO CRITICO DI SQUADRA!",
-            title: "La Sfera di Mycosynth e l'Olio Scintillante di Phyrexia!",
+            act: "Atto II — Il Cuore Segreto di Mirrodin",
+            title: "La Sfera Lucente del Nucleo",
             isPhyrexianTrialNode: true,
-            text: "Scendete nella caverna più profonda del Nucleo di Mirrodin. Qui, sospesa sopra i reticoli di **Mycosynth**, fluttua una **Sfera Splendente ricolma di Mana purissimo**, ma dalla sua superficie trasuda un denso liquido nero iridescente: è l'**Olio Scintillante di Phyrexia (Glistening Oil)**, lasciato involontariamente dal cuore di Xantcha dentro Karn!\n\nUna voce metallica e seducente risuona nella mente di **ciascun singolo giocatore**:\n*«Toccami... Diventa Perfetto. Potrai lanciare ogni magia pagando Punti Vita invece del Mana (Φ Mana di Phyrexia) e riceverai una Forza sovrumana (+30% a tutte le Statistiche per ogni compagno non infetto, diviso tra gli infetti)!»*\n\n⚠️ **ATTENZIONE:** Ogni giocatore deve decidere individualmente se **TOCCARE LA SFERA** o **RIFIUTARE**!\n• Se **alcuni toccano e altri no**, i giocatori infetti diventeranno i **Villain Phyrexiani** e scoppierà una **Battaglia Mortale PvP** contro il resto del gruppo!\n• Se **tutti toccano la sfera**, potrete scegliere se terminare la partita o avviare la **Campagna Malvagia Capovolta contro Dominaria**!",
+            text: "Scendete nella caverna più profonda e silenziosa del Nucleo di Mirrodin. Al centro della camera, sospesa sopra un intreccio di cristalli di Mycosynth, fluttua una **Sfera Splendente** che irradia un'energia arcana immensa, antica e ipnotica.\n\nAvvicinandovi, sentite una vibrazione calda attraversare le vostre armi: sembra che chiunque abbia il coraggio di posare il palmo sulla Sfera possa assorbirne direttamente la forza primordiale. Tuttavia, una strana ombra scura danza lentamente sotto la superficie del cristallo...\n\nCiascun membro della Compagnia deve decidere per sé: **allungare la mano e toccare la Sfera**, oppure **restare indietro**?",
             choices: [
-                { text: "🩸⚖️ [SCELTA INDIVIDUALE DI SQUADRA] Ogni Giocatore decide ora se TOCCARE o RIFIUTARE la Sfera Phyrexiana!", type: "phyrexian_oil_trial", pureNode: "mirrodin_panopticon_ascent", pvpNode: "mirrodin_pvp_betrayal_arena", allCorruptedNode: "phyrexian_all_corrupted_choice" },
-                { text: "🛡️ [Tutti Rifiutano Subito] Nessuno tocca la Sfera: salite puri verso la Torre di Memnarch!", type: "move", nextNode: "mirrodin_panopticon_ascent", rewards: { exp: 100, karma: 2 } },
-                { text: "☣️ [Tutti Toccano Subito] Tutta la Compagnia abbraccia la Perfezione di Phyrexia!", type: "move", nextNode: "phyrexian_all_corrupted_choice", rewards: { makeAllPhyrexian: true, exp: 120, karma: -3 } }
+                { text: "✋✨ Conferma le scelte della Compagnia davanti alla Sfera", type: "phyrexian_oil_trial", pureNode: "mirrodin_panopticon_ascent", pvpNode: "mirrodin_pvp_betrayal_arena", allCorruptedNode: "phyrexian_all_corrupted_choice" }
             ]
         },
 
@@ -3484,7 +3482,7 @@
                 { text: "🐉 [BOSS PRINCIPALE] Scala il Cratere del Trono e affronta il DRAGO DI SHIV ANTICO!", type: "move", nextNode: "shiv_dragon_throne" },
                 { text: "🔥🐉 [BOSS PRIMORDIALE] Entra nella Caldera Antica e sfida DARIGAAZ IL RINATO!", type: "move", nextNode: "shiv_darigaaz_caldera" },
                 { text: "🤖 [SUPER-BOSS OPZIONALE] Entra nella Forgia Infetta e sfida il COLOSSO DI BLIGHTSTEEL (11/11)!", type: "combat", monster: "blightsteel_colossus", winNode: "shiv_blightsteel_win" },
-                { text: "🤸 [RISCHIO SETBACK!] Tenta di saltare i geyser di lava per una scorciatoia diretta (AGI CD 29)", type: "roll", stat: "agi", dc: 29, successNode: "obelisk_spark_trial", failNode: "shiv_lava_setback", failDamage: 8, failText: "Un'eruzione di magma fa crollare la passerella sotto i vostri piedi!", rewards: { addMana: "R", exp: 150, loot: "sword_fire_ice" }, oncePerCampaignLoot: "shiv_geyser_jump_sword" }
+                { text: "🤸 Tenta di saltare i geyser di lava per una scorciatoia diretta (AGI CD 29)", type: "roll", stat: "agi", dc: 29, successNode: "obelisk_spark_trial", failNode: "shiv_lava_setback", failDamage: 8, failText: "Un'eruzione di magma fa crollare la passerella sotto i vostri piedi!", rewards: { addMana: "R", exp: 150, loot: "sword_fire_ice" }, oncePerCampaignLoot: "shiv_geyser_jump_sword" }
             ]
         },
 
@@ -5496,6 +5494,20 @@
                 });
             }
 
+            // Calcolo diretto dei malus da Traumi/Ferite presenti nello Zaino
+            let traumaStr = 0; let traumaAgi = 0; let traumaMag = 0; let traumaCon = 0; let traumaCount = 0;
+            if (char.inventory && Array.isArray(char.inventory)) {
+                char.inventory.forEach(it => {
+                    if (it && it.isTrauma) {
+                        traumaStr += (it.str || 0);
+                        traumaAgi += (it.agi || 0);
+                        traumaMag += (it.mag || 0);
+                        traumaCon += (it.con || 0);
+                        traumaCount += 1;
+                    }
+                });
+            }
+
             let raceBonusStr = char.raceId === 'leonin' ? 2 : 0;
             if (char.raceId === 'goblin') raceBonusStr += (playMode === 'party' ? 3 : 1);
             const raceBonusAgi = char.raceId === 'ratto' ? 2 : 0;
@@ -5507,13 +5519,15 @@
             const totalCon = char.baseStats.con + ((totalLevels - 1) * 2) + eqCon + (char.isLegendary ? 6 : 0) + (char.sparkIgnited ? 10 : 0);
             const maxHP = totalCon + (totalLevels * 4);
             activeKeywords = enrichKeywordsFromEquipment(char, activeKeywords);
+
             return {
-                str: char.baseStats.str + bonus + eqStr + raceBonusStr + classStr,
-                agi: char.baseStats.agi + bonus + eqAgi + raceBonusAgi + classAgi,
-                mag: char.baseStats.mag + bonus + eqMag + classMag,
-                con: totalCon,
-                maxHP: maxHP,
-                keywords: activeKeywords
+                str: Math.max(1, char.baseStats.str + bonus + eqStr + raceBonusStr + classStr + traumaStr),
+                agi: Math.max(1, char.baseStats.agi + bonus + eqAgi + raceBonusAgi + classAgi + traumaAgi),
+                mag: Math.max(1, char.baseStats.mag + bonus + eqMag + classMag + traumaMag),
+                con: Math.max(5, totalCon + traumaCon),
+                maxHP: Math.max(10, maxHP + (traumaCon * 2)),
+                keywords: activeKeywords,
+                traumaCount: traumaCount
             };
         };
 
@@ -6417,6 +6431,16 @@
             let allMessages = [];
             if (extraBanner) allMessages.push(extraBanner);
 
+            // Se ci spostiamo in un nuovo nodo, l'Orologio Planare avanza di +1 Ora!
+            if (requestedNode && requestedNode !== charState.currentNode && typeof advanceWorldClock === "function") {
+                const newHour = advanceWorldClock(1);
+                if (newHour === 5) {
+                    allMessages.push("🌅 IL SOLE CALA (Ora 5/12 — Crepuscolo d'Assedio): Le pattuglie nemiche si intensificano (+1 CD a tutte le prove, Mostri +15% PV)!");
+                } else if (newHour === 9) {
+                    allMessages.push("🌑 ECLISSI APOCALITTICA (Ora 9/12): Il tempo stringe! Tutte le CD aumentano di +3 e i nemici infliggono +3 danni, ma si aprono i Varchi Segreti dell'Eclissi!");
+                }
+            }
+
             // Normalizza sempre unlockMana -> addMana e foods -> food
             let normalizedRewards = rewards ? Object.assign({}, rewards) : null;
             if (normalizedRewards) {
@@ -6456,8 +6480,7 @@
                 allMessages.push("🧭 Avete già sconfitto il Boss e completato la storia principale di questa regione: entrate nella zona pacificata!");
             }
 
-            // FIX BUG HUB: Traccia la transizione (Da Nodo -> A Nodo) così tornare a jaya_squee_camp,
-            // crossroads_wilds o planeswalker_nexus NON cancella mai le ricompense!
+            // Traccia la transizione (Da Nodo -> A Nodo) così tornare a un Hub (es. jaya_squee_camp o crossroads_wilds) non blocca i premi!
             const transitionKey = (charState.currentNode || "start") + "->" + requestedNode;
             const hasUniqueLoot = normalizedRewards && (normalizedRewards.loot || normalizedRewards.addMana || normalizedRewards.makeLegendary || normalizedRewards.igniteSpark);
             const alreadyClaimedTransition = sharedVisitedNodes.includes(transitionKey) && !hasUniqueLoot;
@@ -6729,6 +6752,224 @@
         // ============================================================================
         // --- FINE PASSO 3 ---
         // ============================================================================
+
+        // ============================================================================
+        // --- MOTORE HARDCORE: OROLOGIO PLANARE, TRAUMI IN ZAINO (6 SLOT),
+        // --- ENIGMI A DEDUZIONE SENZA DADI E PUZZLE BOSS A 3 FASI ---
+        // (100% Compatibile con Babel 6 - Zero Optional Chaining)
+        // ============================================================================
+        const MAX_BACKPACK_SLOTS = 6;
+        const [worldClock, setWorldClock] = useState(() => {
+            try { return parseInt(localStorage.getItem('rpg_world_clock') || "1", 10) || 1; } catch (e) { return 1; }
+        });
+        const [showEnigmaModal, setShowEnigmaModal] = useState(false);
+        const [enigmaInput, setEnigmaInput] = useState("");
+
+        const TRAUMA_CARDS_DB = [
+            { id: "trauma_bleed", name: "🩸 FERITA: Emorragia Profonda", isTrauma: true, slot: "artifact", str: -2, agi: -1, mag: 0, con: -2, desc: "Occupazione Slot Zaino (-2 FOR, -1 AGI, -2 COS finché non curata!)" },
+            { id: "trauma_fracture", name: "🦴 FERITA: Frattura Composta", isTrauma: true, slot: "feet", str: -1, agi: -3, mag: 0, con: -2, desc: "Occupazione Slot Zaino (-3 AGI, -1 FOR, -2 COS finché non curata!)" },
+            { id: "trauma_terror", name: "😱 TRAUMA: Terrore dell'Abisso", isTrauma: true, slot: "head", str: 0, agi: -1, mag: -3, con: -2, desc: "Occupazione Slot Zaino (-3 MAG, -1 AGI, -2 COS finché non curata!)" },
+            { id: "trauma_phyresis", name: "☣️ INFEZIONE: Spore Necrotiche", isTrauma: true, slot: "body", str: -2, agi: -2, mag: -2, con: -3, desc: "Occupazione Slot Zaino (-2 a tutto e -3 COS finché non purificata!)" }
+        ];
+
+        // Restituisce la fascia oraria attuale e i malus di difficoltà associati al Tempo!
+        const getWorldTimePhase = () => {
+            const h = worldClock || 1;
+            if (h <= 4) {
+                return { name: "☀️ Giorno (Ore " + h + "/12)", dcMod: 0, dmgMod: 0, hpMult: 1, shopMult: 1, isEclipse: false, color: "text-amber-300 border-amber-500/60 bg-amber-950/60" };
+            }
+            if (h <= 8) {
+                return { name: "🌅 Crepuscolo d'Assedio (Ore " + h + "/12 • +1 CD, Mostri +15% PV)", dcMod: 1, dmgMod: 1, hpMult: 1.15, shopMult: 1.2, isEclipse: false, color: "text-orange-300 border-orange-500 bg-orange-950/70" };
+            }
+            return { name: "🌑 Eclissi Apocalittica (Ore " + h + "/12 • +3 CD, +3 Danni Nemici, Varchi Segreti Attivi!)", dcMod: 3, dmgMod: 3, hpMult: 1.3, shopMult: 1.5, isEclipse: true, color: "text-purple-200 border-purple-400 bg-purple-950/90 animate-pulse" };
+        };
+
+        const advanceWorldClock = (ticks) => {
+            const nextClock = ((worldClock - 1 + (ticks || 1)) % 12) + 1;
+            setWorldClock(nextClock);
+            try { localStorage.setItem('rpg_world_clock', String(nextClock)); } catch (e) {}
+            return nextClock;
+        };
+
+        // Infligge una Ferita/Trauma fisico che occupa 1 dei 6 slot dello Zaino (e butta a terra un oggetto se lo zaino è pieno!)
+        const inflictPhysicalTraumaToHero = (heroObj) => {
+            if (!heroObj || heroObj.status === "dead") return { hero: heroObj, msg: "" };
+            const inv = Array.isArray(heroObj.inventory) ? heroObj.inventory.slice() : [];
+            const traumaTemplate = TRAUMA_CARDS_DB[Math.floor(Math.random() * TRAUMA_CARDS_DB.length)];
+            const newTrauma = Object.assign({}, traumaTemplate, { id: traumaTemplate.id + "_" + Date.now() });
+
+            let droppedMsg = "";
+            if (inv.length >= MAX_BACKPACK_SLOTS) {
+                // Cerca un oggetto non-trauma da far cadere a terra per mancanza di forze!
+                let dropIdx = -1;
+                for (let i = inv.length - 1; i >= 0; i--) {
+                    if (inv[i] && !inv[i].isTrauma) { dropIdx = i; break; }
+                }
+                if (dropIdx !== -1) {
+                    const droppedItem = inv[dropIdx];
+                    inv.splice(dropIdx, 1);
+                    droppedMsg = ` ⚠️ Zaino pieno (6/6): per il dolore ${heroObj.name} è costretto ad abbandonare a terra **${droppedItem.name}**!`;
+                } else {
+                    return { hero: heroObj, msg: `🩸 ${heroObj.name} ha tutti i 6 slot dello zaino occupati da Traumi!` };
+                }
+            }
+
+            inv.push(newTrauma);
+            const updated = Object.assign({}, heroObj, { inventory: inv });
+            return {
+                hero: updated,
+                msg: `\n🩸🎒 TRAUMA FISICO NELLO ZAINO: **${heroObj.name}** subisce **${newTrauma.name}** (occupa 1 Slot Zaino e riduce le statistiche finché non viene curato)!${droppedMsg}`
+            };
+        };
+
+        // Cura e rimuove un Trauma dallo Zaino pagando 1 Pedina Cibo + 20 Oro
+        const cureTraumaInBackpack = (invIdx) => {
+            if (!character || !character.inventory || !character.inventory[invIdx]) return;
+            const tItem = character.inventory[invIdx];
+            if (!tItem.isTrauma) return;
+
+            if ((character.food || 0) < 1 || (character.gold || 0) < 20) {
+                return alert("Per curare e rimuovere un Trauma fisico dallo Zaino servono 1 Pedina Cibo (🍖) e 20 Monete d'Oro (🪙)!");
+            }
+
+            const newInv = character.inventory.slice();
+            newInv.splice(invIdx, 1);
+            const curedHero = Object.assign({}, character, {
+                inventory: newInv,
+                food: character.food - 1,
+                gold: character.gold - 20
+            });
+            saveCharState(curedHero);
+            setEventBanner(`💚✨ TRAUMA GUARITO! ${character.name} spende 1 Cibo e 20 Oro per rimuovere **${tItem.name}** e liberare lo slot dello zaino!`);
+        };
+
+        // Calcola il malus totale dei Traumi presenti nello Zaino
+        const getTraumaPenalties = (heroObj) => {
+            let p = { str: 0, agi: 0, mag: 0, con: 0, count: 0 };
+            if (!heroObj || !Array.isArray(heroObj.inventory)) return p;
+            heroObj.inventory.forEach(it => {
+                if (it && it.isTrauma) {
+                    p.str += (it.str || 0);
+                    p.agi += (it.agi || 0);
+                    p.mag += (it.mag || 0);
+                    p.con += (it.con || 0);
+                    p.count += 1;
+                }
+            });
+            return p;
+        };
+
+        // Risoluzione Manovre Puzzle per i Boss a 3 Stati (Scassinare le difese del Boss invece di fare solo attacchi base!)
+        const executeBossPuzzleManeuver = (stageType) => {
+            if (!combatState || !character) return;
+            const st = getFinalStats(character);
+            const d20 = Math.floor(Math.random() * 20) + 1;
+
+            // FASE 1 DEL PUZZLE: Spezzare lo Scudo/Corazza Esterna (-70% danni subiti dal Boss)
+            if (stageType === "break_shield") {
+                const bestTactical = Math.max(st.agi, st.mag);
+                const total = d20 + bestTactical;
+                const reqDC = combatState.dc - 2;
+                if (d20 === 20 || total >= reqDC) {
+                    const structDmg = Math.max(8, Math.round(combatState.maxHP * 0.12));
+                    const nextHP = Math.max(1, combatState.currentHP - structDmg);
+                    const msg = `🧩💥 FASE 1 PUZZLE SUPERATA (${total} vs CD ${reqDC})! **${character.name}** individua la faglia ambientale e **frantuma lo Scudo Esterno** di ${combatState.name} (-${structDmg} PV strutturali)! Ora resta da sabotare il Nucleo di Contrattacco!`;
+                    setCombatState({
+                        ...combatState,
+                        currentHP: nextHP,
+                        puzzleArmorActive: false,
+                        puzzleCoreActive: true,
+                        log: [msg, ...combatState.log].slice(0, 8)
+                    });
+                    setEventBanner(msg);
+                } else {
+                    const recoil = 5;
+                    const updatedH = Object.assign({}, character, { currentHP: Math.max(1, character.currentHP - recoil) });
+                    saveCharState(updatedH);
+                    const failMsg = `🧩❌ Manovra Puzzle Fallita (${total} vs CD ${reqDC})! Lo scudo di ${combatState.name} respinge ${character.name} infliggendo **${recoil} danni da rimbalzo**!`;
+                    setCombatState({
+                        ...combatState,
+                        log: [failMsg, ...combatState.log].slice(0, 8)
+                    });
+                }
+                return;
+            }
+
+            // FASE 2 DEL PUZZLE: Collassare il Nucleo / Punto Vitale del Boss (-3 CD e fine dei contrattacchi!)
+            if (stageType === "break_core") {
+                const bestPower = Math.max(st.str, st.mag);
+                const total = d20 + bestPower;
+                const reqDC = combatState.dc - 1;
+                if (d20 === 20 || total >= reqDC) {
+                    const coreDmg = Math.max(12, Math.round(combatState.maxHP * 0.15));
+                    const nextHP = Math.max(1, combatState.currentHP - coreDmg);
+                    const nextDC = Math.max(15, combatState.dc - 3);
+                    const msg = `🧩🔥 SERRATURA DEL BOSS SCASSINATA (${total} vs CD ${reqDC})! **${character.name}** fa collassare il Nucleo di ${combatState.name}: **-${coreDmg} PV**, **-3 alla CD** e **Punto Vitale completamente esposto**!`;
+                    setCombatState({
+                        ...combatState,
+                        currentHP: nextHP,
+                        dc: nextDC,
+                        puzzleCoreActive: false,
+                        log: [msg, ...combatState.log].slice(0, 8)
+                    });
+                    setEventBanner(msg);
+                } else {
+                    const recoil = 6;
+                    const updatedH = Object.assign({}, character, { currentHP: Math.max(1, character.currentHP - recoil) });
+                    saveCharState(updatedH);
+                    const failMsg = `🧩⚡ Il Nucleo di ${combatState.name} scarica una vampa su ${character.name} (${total} vs CD ${reqDC}: **-${recoil} PV**)!`;
+                    setCombatState({
+                        ...combatState,
+                        log: [failMsg, ...combatState.log].slice(0, 8)
+                    });
+                }
+            }
+        };
+
+        // ENIGMI A DEDUZIONE PURA (Senza tiro di dado: premia l'ingegno dei giocatori, punisce chi tira a indovinare!)
+        const submitDeductionEnigma = () => {
+            const val = (enigmaInput || "").trim().toUpperCase();
+            if (!val) return alert("Inserisci un numero o una parola chiave per risolvere l'Enigma!");
+
+            const claimed = getClaimedLootMap();
+
+            // Enigma 1: "1993" o "ALPHA" (Anno di nascita di Magic e del Black Lotus)
+            if (val === "1993" || val === "ALPHA") {
+                if (claimed["enigma_1993"]) return alert("Avete già riscosso il segreto del 1993 in questa campagna!");
+                markLootKeyClaimed("enigma_1993");
+                setShowEnigmaModal(false);
+                setEnigmaInput("");
+                applyRewardsAndMove(character, { treasures: 2, gold: 80, exp: 100 }, character.currentNode, "🔐🧠 DEDUZIONE PERFETTA (Codice 1993)! Il forziere ancestrale di Alpha si apre senza dadi: +2 Tesori 💎, +80 Oro 🪙 e +100 EXP!");
+                return;
+            }
+
+            // Enigma 2: "15" o "MIRRODIN" (I 5 Soli di Mirrodin + I 10 Sigilli di Dark Depths = 15)
+            if (val === "15" || val === "FIFTH DAWN") {
+                if (claimed["enigma_15"]) return alert("Avete già risolto l'Enigma dei Soli e dei Ghiacci!");
+                markLootKeyClaimed("enigma_15");
+                setShowEnigmaModal(false);
+                setEnigmaInput("");
+                applyRewardsAndMove(character, { loot: "chromatic_lantern", exp: 120 }, character.currentNode, "🔐🧠 DEDUZIONE PERFETTA (5 Soli + 10 Sigilli = 15)! Avete sbloccato la **Lanterna Cromatica** con il puro ingegno!");
+                return;
+            }
+
+            // Enigma 3: "KERRICK" o "7" (Il traditore di Tolaria di 7 lettere)
+            if (val === "KERRICK" || val === "7") {
+                if (claimed["enigma_kerrick"]) return alert("Avete già smascherato il codice di Kerrick!");
+                markLootKeyClaimed("enigma_kerrick");
+                setShowEnigmaModal(false);
+                setEnigmaInput("");
+                applyRewardsAndMove(character, { treasures: 2, food: 2, exp: 110 }, character.currentNode, "🔐🧠 DEDUZIONE PERFETTA (Kerrick = 7 lettere)! La cassaforte temporale di Tolaria si apre: +2 Tesori 💎, +2 Cibi 🍖 e +110 EXP!");
+                return;
+            }
+
+            // RISPOSTA ERRATA -> PUNITIVA! (-8 PV all'eroe attivo per evitare tentativi a caso!)
+            const punishHP = Math.max(1, (character.currentHP || 10) - 8);
+            const punishedHero = Object.assign({}, character, { currentHP: punishHP });
+            saveCharState(punishedHero);
+            setEnigmaInput("");
+            setEventBanner(`⚡🔐 CODICE ERRATO ("${val}")! La serratura runica punisce chi tira a indovinare: **${character.name} subisce -8 PV**!`);
+        };
 
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
@@ -7250,6 +7491,7 @@
         };
       
         // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC (Volare, Travolgere, Tocco Letale, Attacco Improvviso, Infettare)
+        // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC + SCUDO PUZZLE DEI BOSS
         const calculateSingleStrikeOutcome = (heroChar, actionStat, rawD20, currentMonsterHP, isSecondStrike = false) => {
             const stats = getFinalStats(heroChar);
             const baseStatVal = stats[actionStat] || 10;
@@ -7284,7 +7526,7 @@
                 kwNotes.push("Att.Improvviso +2");
             }
 
-            // 2. VOLARE: +4 danni contro mostri che NON volano (Goblin, Wurm, Troll, ecc.), normale contro mostri volanti!
+            // 2. VOLARE: +4 danni contro mostri che NON volano
             if (stats.keywords.includes("Volare")) {
                 if (!combatState.isFlying) {
                     dmg += 4;
@@ -7303,9 +7545,7 @@
                 }
             }
 
-            // 4. TOCCO LETALE (Deathtouch bilanciato!):
-            // - Strappa un +15% della salute attuale del mostro (min +4, max +18)
-            // - Uccide all'istante i mostri non-Boss se sono sotto il 25% di vita o con un 20 Naturale!
+            // 4. TOCCO LETALE (Deathtouch bilanciato!)
             if (stats.keywords.includes("Tocco Letale")) {
                 const executeThreshold = Math.round(combatState.maxHP * 0.25);
                 if (!combatState.isBoss && (isCrit || (currentMonsterHP - dmg) <= executeThreshold)) {
@@ -7326,11 +7566,17 @@
                 kwNotes.push("🌟 CRITICO!");
             }
 
-            // 5. INFETTARE / VELENO (Infect / Poison): Applica 2 segnalini veleno che tolgono PV a ogni round!
+            // 5. INFETTARE / VELENO (Infect / Poison)
             let poisonAdded = 0;
             if (stats.keywords.includes("Infettare") || stats.keywords.includes("Tocco Letale")) {
                 poisonAdded = stats.keywords.includes("Infettare") ? 2 : 1;
                 kwNotes.push(`☣️ +${poisonAdded} Veleno`);
+            }
+
+            // 6. MECCANICA BOSS PUZZLE: Finché lo Scudo Esterno del Boss è attivo, gli attacchi normali fanno solo il 30% dei danni!
+            if (combatState.puzzleArmorActive && !isCrit) {
+                dmg = Math.max(2, Math.round(dmg * 0.3));
+                kwNotes.push("🧩 [SCUDO PUZZLE ATTIVO: Danni ridotti del 70%! Usa la Manovra Puzzle!]");
             }
 
             const notesStr = kwNotes.length > 0 ? ` (${kwNotes.join(" • ")})` : "";
@@ -7487,7 +7733,10 @@
 
             const isCritSuccess = rawD20 === 20;
             const isCritFail = rawD20 === 1 && !treasureBonus;
-            const dynamicDC = getDynamicStoryDC(choice.dc, character, choice.stat);
+
+            // Applica anche l'eventuale incremento di difficoltà dell'Orologio Planare (Crepuscolo +1 CD / Eclissi +3 CD)!
+            const timePhase = typeof getWorldTimePhase === "function" ? getWorldTimePhase() : { dcMod: 0 };
+            const dynamicDC = getDynamicStoryDC(choice.dc, character, choice.stat) + (timePhase.dcMod || 0);
             const passed = isCritSuccess || (!isCritFail && total >= dynamicDC);
 
             let updatedChar = normalizeCharacterSlots(character);
@@ -7513,15 +7762,27 @@
                     updatedChar.equipped = { ...updatedChar.equipped, [slotToBreak]: null };
                     rollNote += ` Si è DISTRUTTO il tuo oggetto: ${itemInSlot.name}!`;
                 }
+                // INFLIGGE UN TRAUMA FISICO CHE OCCUPA 1 DEI 6 SLOT DELLO ZAINO!
+                if (typeof inflictPhysicalTraumaToHero === "function") {
+                    const traumaRes = inflictPhysicalTraumaToHero(updatedChar);
+                    updatedChar = traumaRes.hero;
+                    rollNote += traumaRes.msg;
+                }
             }
 
             if (!passed && choice.failDamage) {
-                let dmg = choice.failDamage;
+                let dmg = choice.failDamage + (timePhase.dmgMod || 0);
                 if (updatedChar.raceId === 'nano') dmg = Math.max(1, dmg - 2);
                 updatedChar.currentHP = Math.max(0, updatedChar.currentHP - dmg);
                 if (updatedChar.currentHP === 0) {
                     updatedChar.status = "unconscious";
                     rollNote += ` Subisci ${dmg} danni e cadi INCOSCIENTE a 0 PV!`;
+                    // Cadere a 0 PV lascia una Ferita/Trauma nello Zaino!
+                    if (!isCritFail && typeof inflictPhysicalTraumaToHero === "function") {
+                        const koTrauma = inflictPhysicalTraumaToHero(updatedChar);
+                        updatedChar = koTrauma.hero;
+                        rollNote += koTrauma.msg;
+                    }
                 } else {
                     rollNote += ` Subisci ${dmg} danni!`;
                 }
@@ -7539,7 +7800,6 @@
             setPendingRollChoice(null);
             const targetNode = passed ? choice.successNode : choice.failNode;
 
-            // Consegna il premio se la prova è superata (o se è una prova narrativa dove successNode === failNode)
             const shouldGrantRewards = passed || (choice.successNode && choice.successNode === choice.failNode);
 
             // SIGILLA LA RICOMPENSA PER TUTTA LA COMPAGNIA SOLO QUANDO VIENE EFFETTIVAMENTE OTTENUTA!
@@ -7644,7 +7904,7 @@
             if (!window.__phyrexianSelectionMap) window.__phyrexianSelectionMap = {};
             window.__phyrexianSelectionMap[heroId] = !window.__phyrexianSelectionMap[heroId];
             const count = Object.keys(window.__phyrexianSelectionMap).filter(k => window.__phyrexianSelectionMap[k]).length;
-            setEventBanner("🩸 Scelta Sfera di Mycosynth aggiornata (" + count + " eroi hanno scelto di toccare l'Olio).");
+            setEventBanner("✨ Scelta registrata (" + count + " eroi hanno deciso di toccare la Sfera).");
         };
 
         const confirmPhyrexianOilTrial = (pureNode, pvpNode, allCorruptedNode) => {
@@ -8331,31 +8591,31 @@
                         </div>
                     </div>
 
-                    {/* PANNELLO INTERATTIVO SCELTA INDIVIDUALE SFERA DELL'OLIO DI PHYREXIA (SU MIRRODIN) */}
+                    {/* PANNELLO INTERATTIVO SCELTA INDIVIDUALE DELLA SFERA (ZERO SPOILER!) */}
                     {currentNodeObj && currentNodeObj.isPhyrexianTrialNode && (
-                        <div className="bg-gradient-to-b from-gray-950 via-lime-950/80 to-black border-4 border-lime-500 rounded-2xl p-4 shadow-2xl space-y-3 animate-fade">
-                            <h3 className="text-lime-300 font-black text-base uppercase text-center">
-                                ☣️ Scelta Individuale di Squadra: Chi Tocca la Sfera di Mycosynth?
+                        <div className="bg-gradient-to-b from-gray-950 via-amber-950/60 to-black border-4 border-amber-400 rounded-2xl p-4 shadow-2xl space-y-3 animate-fade">
+                            <h3 className="text-amber-300 font-black text-base uppercase text-center">
+                                ✨ La Sfera del Nucleo: Chi di voi decide di toccarla?
                             </h3>
                             <p className="text-xs text-gray-200 text-center">
-                                Clicca per ciascun eroe se **Resistere** o **Toccare l'Olio Scintillante** (Formula PvP: <b>+30% Statistiche per ogni eroe puro</b>, diviso tra gli infetti, + <b>Mana di Phyrexia Φ</b>!):
+                                Scegliete individualmente per ciascun eroe della Compagnia prima di confermare qui sotto:
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {activePartyList.filter(h => h.status !== "dead").map(h => {
                                     const willTouch = Boolean(window.__phyrexianSelectionMap && window.__phyrexianSelectionMap[h.id]);
                                     return (
-                                        <div key={h.id} className={`p-3 rounded-xl border-2 flex justify-between items-center gap-2 ${willTouch ? "bg-lime-950/90 border-lime-400" : "bg-gray-900 border-cyan-500"}`}>
+                                        <div key={h.id} className={`p-3 rounded-xl border-2 flex justify-between items-center gap-2 ${willTouch ? "bg-amber-950/80 border-amber-400" : "bg-gray-900 border-gray-600"}`}>
                                             <div>
                                                 <p className="text-white font-black text-xs">{h.name} (LIV {h.level})</p>
-                                                <p className={`text-[10px] font-bold ${willTouch ? "text-lime-300" : "text-cyan-300"}`}>
-                                                    {willTouch ? "☣️ TOCCHERÀ L'OLIO (Diventa Phyrexiano!)" : "🛡️ RESTA PURO (Difensore di Dominaria)"}
+                                                <p className={`text-[10px] font-bold ${willTouch ? "text-amber-300" : "text-gray-400"}`}>
+                                                    {willTouch ? "✋ Tocca la Sfera" : "👣 Resta indietro"}
                                                 </p>
                                             </div>
                                             <button
                                                 onClick={() => togglePhyrexianSelection(h.id)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-black shadow ${willTouch ? "bg-lime-500 text-black" : "bg-cyan-600 text-white"}`}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-black shadow ${willTouch ? "bg-amber-500 text-black" : "bg-gray-700 text-white hover:bg-gray-600"}`}
                                             >
-                                                {willTouch ? "Cambia in Puro" : "Tocca la Sfera ☣️"}
+                                                {willTouch ? "Fai un passo indietro" : "Tocca la Sfera ✋"}
                                             </button>
                                         </div>
                                     );
