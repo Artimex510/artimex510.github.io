@@ -3118,11 +3118,12 @@
         },
 
         phyrexian_pvp_game_over: {
-            act: "💀 FINE DELLA PARTITA — ASSIMILATI DA PHYREXIA!",
-            title: "Tutto Sarà Uno: La Caduta degli Eroi",
-            text: "I campioni infettati dall'Olio Scintillante hanno sopraffatto il resto della Compagnia! Nel cuore metallico di Mirrodin non resta più nessuno a opporsi alla Grande Opera dei Pretori: i corpi degli eroi caduti vengono convertiti in implacabili macchine da guerra phyrexiane.\n\n💀 **LA VOSTRA AVVENTURA COME SALVATORI DEL MULTIVERSO FINISCE QUI.**",
+            act: "☣️ TRIONFO PHYREXIANO NEL PVP — ASSIMILAZIONE COMPLETATA!",
+            title: "Tutto Sarà Uno: La Nascita della Nuova Legione",
+            text: "I campioni infettati dall'Olio Scintillante hanno sconfitto i difensori Puri nel cuore di Mirrodin! Anziché distruggerli, li immergono nella Sfera di Mycosynth: l'Olio Scintillante sutura le loro ferite, riveste i loro corpi di metallo vivente e li rianima come **Pretori Completati di Phyrexia**!\n\nOra l'intera Compagnia è unita sotto il vessillo di Nuova Phyrexia (con il **Mana di Phyrexia Φ** e l'abilità **Infettare**). Cosa volete fare?",
             choices: [
-                { text: "🔄 Ricomincia una Nuova Partita dalla Locanda di Jhoira", type: "move", nextNode: "start", rewards: { resetCampaignOnLoss: true, heal: 100 } }
+                { text: "☣️🔥 [GIOCA LA CAMPAGNA MALVAGIA!] Marcia su Dominaria con tutta la Compagnia assimilata e stermina gli Eroi della Luce!", type: "move", nextNode: "phyrexian_evil_campaign_start", rewards: { makeAllPhyrexian: true, addKeyword: "Infettare", heal: 100, exp: 150 } },
+                { text: "🔄 Dichiarate conclusa la storia degli eroi e ricominciate una Nuova Partita dalla Locanda", type: "move", nextNode: "start", rewards: { resetCampaignOnLoss: true, heal: 100 } }
             ]
         },
 
@@ -7900,26 +7901,38 @@
             setEventBanner("💰 Hai venduto " + itemName + " al Mercante per +" + sellPrice + " Monete d'Oro 🪙!");
         };
 
-        const togglePhyrexianSelection = (heroId) => {
-            if (!window.__phyrexianSelectionMap) window.__phyrexianSelectionMap = {};
-            window.__phyrexianSelectionMap[heroId] = !window.__phyrexianSelectionMap[heroId];
-            const count = Object.keys(window.__phyrexianSelectionMap).filter(k => window.__phyrexianSelectionMap[k]).length;
-            setEventBanner("✨ Scelta registrata (" + count + " eroi hanno deciso di toccare la Sfera).");
+        // Stato per le scelte obbligatorie della Sfera ("touch" | "refuse") e bersaglio PvP
+        const [sphereDecisions, setSphereDecisions] = useState({});
+        const [pvpTargetHeroId, setPvpTargetHeroId] = useState(null);
+        const [pendingPvpBossStat, setPendingPvpBossStat] = useState(null);
+
+        const setHeroSphereDecision = (heroId, decisionVal) => {
+            setSphereDecisions(prev => {
+                const next = Object.assign({}, prev);
+                next[heroId] = decisionVal;
+                return next;
+            });
         };
 
         const confirmPhyrexianOilTrial = (pureNode, pvpNode, allCorruptedNode) => {
-            const selMap = window.__phyrexianSelectionMap || {};
             const list = party.length > 0 ? party.slice() : (character ? [Object.assign({}, character)] : []);
             const aliveList = list.filter(h => h.status !== "dead");
-            const infectedIds = aliveList.filter(h => selMap[h.id]).map(h => h.id);
+
+            // Controllo di sicurezza: tutti i giocatori vivi devono aver scelto!
+            const allDecided = aliveList.every(h => sphereDecisions[h.id] === "touch" || sphereDecisions[h.id] === "refuse");
+            if (!allDecided) {
+                return alert("⚠️ Ogni giocatore della Compagnia deve prima cliccare su 'Tocca la Sfera' o 'Resta Indietro'!");
+            }
+
+            const infectedIds = aliveList.filter(h => sphereDecisions[h.id] === "touch").map(h => h.id);
             const infectedCount = infectedIds.length;
             const pureCount = aliveList.length - infectedCount;
 
-            window.__phyrexianSelectionMap = {};
+            setSphereDecisions({});
 
-            // CASO 1: NESSUNO TOCCA L'OGGETTO (TUTTI PURI)
+            // CASO 1: NESSUNO TOCCA LA SFERA (TUTTI PURI)
             if (infectedCount === 0) {
-                setEventBanner("🛡️ Tutta la Compagnia ha resistito alla tentazione dell'Olio Scintillante!");
+                setEventBanner("🛡️ Nessuno ha toccato la Sfera: la Compagnia prosegue unita verso la Cittadella!");
                 applyRewardsAndMove(character, { exp: 100, karma: 2 }, pureNode || "mirrodin_panopticon_ascent");
                 return;
             }
@@ -7931,28 +7944,30 @@
             const bonusPct = Math.round(bonusMultiplier * 100);
 
             const updatedParty = list.map(h => {
-                if (infectedIds.indexOf(h.id) === -1) return h;
-                const baseS = h.str || 10;
-                const baseA = h.agi || 10;
-                const baseM = h.mag || 10;
-                const baseC = h.con || 18;
+                if (infectedIds.indexOf(h.id) === -1) return Object.assign({}, h, { isPhyrexian: false });
+                const baseS = h.baseStats ? h.baseStats.str : 10;
+                const baseA = h.baseStats ? h.baseStats.agi : 10;
+                const baseM = h.baseStats ? h.baseStats.mag : 10;
+                const baseC = h.baseStats ? h.baseStats.con : 18;
                 const addS = Math.max(2, Math.round(baseS * bonusMultiplier));
                 const addA = Math.max(2, Math.round(baseA * bonusMultiplier));
                 const addM = Math.max(2, Math.round(baseM * bonusMultiplier));
                 const addC = Math.max(4, Math.round(baseC * bonusMultiplier));
-                const newKws = (h.keywords || []).slice();
+                const newKws = (h.mtgKeywords || []).slice();
                 if (newKws.indexOf("Infettare") === -1) newKws.push("Infettare");
 
                 return Object.assign({}, h, {
                     isPhyrexian: true,
                     hasPhyrexianMana: true,
                     phyrexianBonusPct: bonusPct,
-                    str: baseS + addS,
-                    agi: baseA + addA,
-                    mag: baseM + addM,
-                    con: baseC + addC,
+                    baseStats: {
+                        str: baseS + addS,
+                        agi: baseA + addA,
+                        mag: baseM + addM,
+                        con: baseC + addC
+                    },
                     currentHP: (h.currentHP || 20) + (addC * 2),
-                    keywords: newKws
+                    mtgKeywords: newKws
                 });
             });
 
@@ -7960,28 +7975,30 @@
                 setParty(updatedParty);
                 localStorage.setItem('rpg_party', JSON.stringify(updatedParty));
             }
-            const currentUpdated = updatedParty.find(h => character && h.id === character.id) || updatedParty[0];
-            if (currentUpdated) {
-                setCharacter(currentUpdated);
-                localStorage.setItem('rpg_character', JSON.stringify(currentUpdated));
-            }
 
-            // CASO 2: TUTTI TOCCANO L'OLIO -> BIVIO FINE PARTITA O CAMPAGNA MALVAGIA PHYREXIANA!
+            // CASO 2: TUTTI TOCCANO LA SFERA -> SCELTA FINE PARTITA O CAMPAGNA MALVAGIA PHYREXIANA!
             if (pureCount === 0) {
-                setEventBanner("☣️ TUTTI INFETTI (+35% Stat e Mana di Phyrexia Φ)! Scegliete il vostro destino!");
-                applyRewardsAndMove(currentUpdated, null, allCorruptedNode || "phyrexian_all_corrupted_choice");
+                const firstCorrupted = updatedParty[0];
+                setCharacter(firstCorrupted);
+                localStorage.setItem('rpg_character', JSON.stringify(firstCorrupted));
+                setEventBanner("☣️ L'Olio Scintillante ha assimilato l'intera Compagnia (+35% Stat e Mana Φ)!");
+                applyRewardsAndMove(firstCorrupted, null, allCorruptedNode || "phyrexian_all_corrupted_choice");
                 return;
             }
 
-            // CASO 3: GRUPPO DIVISO -> BATTAGLIA PVP TRA GIOCATORI (PURI VS PHYREXIANI POTENZIATI!)
-            setEventBanner("⚔️🩸 TRADIMENTO! Gli infetti ottengono +" + bonusPct + "% Statistiche e attaccano i compagni puri!");
-            applyRewardsAndMove(currentUpdated, null, pvpNode || "mirrodin_pvp_betrayal_arena");
+            // CASO 3: GRUPPO DIVISO -> VAI AL NODO PRE-ARENA PVP!
+            const firstPure = updatedParty.find(h => h.status !== "dead" && !h.isPhyrexian) || updatedParty[0];
+            setCharacter(firstPure);
+            localStorage.setItem('rpg_character', JSON.stringify(firstPure));
+            setEventBanner("⚔️🩸 COLPO DI SCENA! La Sfera conteneva l'Olio di Phyrexia: chi l'ha toccata ottiene +" + bonusPct + "% alle Statistiche e si rivolta contro i compagni!");
+            applyRewardsAndMove(firstPure, null, pvpNode || "mirrodin_pvp_betrayal_arena");
         };
 
+        // AVVIA LA VERA BATTAGLIA PVP NELL'ARENA A TURNI (EROI PURI CONTRO EROI PHYREXIANI GIOCABILI!)
         const resolvePvpClashRound = (pureWinNode, phyrexianWinNode) => {
-            const list = party.length > 0 ? party : (character ? [character] : []);
-            const pureHeroes = list.filter(h => h.status !== "dead" && !h.isPhyrexian);
-            const phyrexianHeroes = list.filter(h => h.status !== "dead" && h.isPhyrexian);
+            const fullList = party.length > 0 ? party.slice() : (character ? [character] : []);
+            const pureHeroes = fullList.filter(h => h.status !== "dead" && !h.isPhyrexian);
+            const phyrexianHeroes = fullList.filter(h => h.status !== "dead" && h.isPhyrexian);
 
             if (pureHeroes.length === 0) {
                 applyRewardsAndMove(character, null, phyrexianWinNode || "phyrexian_pvp_game_over");
@@ -7992,30 +8009,239 @@
                 return;
             }
 
-            // Calcolo scontro D20 + Statistiche (con il +30% già applicato ai Phyrexiani!)
-            let pureScore = 0;
-            pureHeroes.forEach(h => {
-                const st = getFinalStats(h);
-                const d20 = Math.floor(Math.random() * 20) + 1;
-                pureScore += d20 + Math.max(st.str || 10, st.agi || 10, st.mag || 10) + Math.floor((h.currentHP || 10) / 4);
+            // Salva l'intera compagnia in backup così da ripristinare tutti i membri a fine scontro PvP!
+            try {
+                localStorage.setItem('rpg_pvp_full_party_backup', JSON.stringify(fullList));
+            } catch (e) {}
+
+            let totalPhyHP = 0;
+            let bestPhyStr = 12;
+            let bestPhyAgi = 12;
+            let bestPhyMag = 12;
+            let totalBlueMana = 0;
+            const phyNames = [];
+
+            phyrexianHeroes.forEach(ph => {
+                const st = getFinalStats(ph);
+                phyNames.push(ph.name);
+                totalPhyHP += Math.max(28, st.maxHP);
+                if (st.str > bestPhyStr) bestPhyStr = st.str;
+                if (st.agi > bestPhyAgi) bestPhyAgi = st.agi;
+                if (st.mag > bestPhyMag) bestPhyMag = st.mag;
+                if (ph.manaPool && ph.manaPool.U) totalBlueMana += ph.manaPool.U;
             });
 
-            let phyScore = 0;
-            phyrexianHeroes.forEach(h => {
-                const st = getFinalStats(h);
-                const d20 = Math.floor(Math.random() * 20) + 1;
-                phyScore += d20 + Math.max(st.str || 10, st.agi || 10, st.mag || 10) + Math.floor((h.currentHP || 10) / 4);
-            });
-
-            if (pureScore >= phyScore) {
-                setEventBanner("☀️ VITTORIA DEI PURI (" + pureScore + " vs " + phyScore + ")! I compagni infetti vengono disarmati e purificati!");
-                applyRewardsAndMove(character, { exp: 150, heal: 40 }, pureWinNode || "mirrodin_purification_shrine");
-            } else {
-                setEventBanner("☣️ VITTORIA DEI PHYREXIANI (" + phyScore + " vs " + pureScore + ")! I traditori hanno sopraffatto la Compagnia!");
-                applyRewardsAndMove(character, null, phyrexianWinNode || "phyrexian_pvp_game_over");
+            if (pureHeroes.length > phyrexianHeroes.length) {
+                totalPhyHP = Math.round(totalPhyHP * (1 + (pureHeroes.length - phyrexianHeroes.length) * 0.35));
             }
+
+            const pvpBossDC = Math.max(22, Math.max(bestPhyStr, bestPhyAgi, bestPhyMag) + 8);
+            const pvpBossDmg = Math.max(9, Math.round(Math.max(bestPhyStr, bestPhyAgi, bestPhyMag) * 0.55));
+            const mD20 = Math.floor(Math.random() * 20) + 1;
+            const mInitTotal = mD20 + Math.floor(bestPhyAgi / 2) + 4;
+
+            setParty(pureHeroes);
+            setCharacter(pureHeroes[0]);
+            setPvpTargetHeroId(pureHeroes[0].id);
+
+            let initialDamageMap = {};
+            pureHeroes.forEach(h => { initialDamageMap[h.id] = 0; });
+
+            const pvpCombatObj = {
+                key: "pvp_phyrexian_players",
+                name: "☣️ Compagni Corrotti: " + phyNames.join(" & "),
+                isPvpBoss: true,
+                pvpPhyrexianStats: { str: bestPhyStr, agi: bestPhyAgi, mag: bestPhyMag },
+                pvpLoseNode: phyrexianWinNode || "phyrexian_pvp_game_over",
+                isHumanoid: false,
+                isFlying: false,
+                monsterFled: false,
+                maxHP: totalPhyHP,
+                currentHP: totalPhyHP,
+                dc: pvpBossDC,
+                dmg: pvpBossDmg,
+                puzzleArmorActive: false,
+                puzzleCoreActive: false,
+                bonusPlunderGold: 0,
+                bonusPlunderTreasures: 0,
+                bonusPlunderFood: 0,
+                poisonCounters: 0,
+                actedThisRound: [],
+                hasteOverrideHeroId: null,
+                doubleStrikePendingSecondRoll: null,
+                enemyBlueMana: Math.min(4, totalBlueMana),
+                maxEnemyBlueMana: Math.min(4, totalBlueMana),
+                exp: 180,
+                gold: 60,
+                treasures: 2,
+                loot: null,
+                isBoss: true,
+                winNode: pureWinNode || "mirrodin_purification_shrine",
+                desc: "DUELLO PVP TRA GIOCATORI! Nel turno del Boss sono i giocatori infetti (" + phyNames.join(", ") + ") a scegliere il bersaglio, l'attacco e a lanciare il dado D20!",
+                monsterInitD20: mD20,
+                monsterInitTotal: mInitTotal,
+                damageDealtByHero: initialDamageMap,
+                initRolls: {},
+                initHeroIndex: 0,
+                phase: diceMode === "manual" ? "initiative" : "battle",
+                turnOrder: [],
+                currentTurnIdx: 0,
+                round: 1,
+                log: ["⚔️🩸 ARENA PVP APERTA! I Giocatori Puri affrontano i compagni corrotti dall'Olio (" + phyNames.join(", ") + ")!"]
+            };
+
+            if (diceMode === "auto") {
+                let autoMap = {};
+                pureHeroes.forEach(h => { autoMap[h.id] = Math.floor(Math.random() * 20) + 1; });
+                let order = [];
+                pureHeroes.forEach(h => {
+                    const st = getFinalStats(h);
+                    const d20 = autoMap[h.id];
+                    const totInit = d20 + Math.floor(st.agi / 2) + (st.keywords.includes("Attacco Improvviso") ? 4 : 0);
+                    order.push({ type: "hero", id: h.id, name: h.name, d20: d20, initTotal: totInit });
+                });
+                order.push({ type: "monster", id: "monster_boss", name: pvpCombatObj.name, d20: mD20, initTotal: mInitTotal });
+                order.sort((a, b) => b.initTotal - a.initTotal);
+                pvpCombatObj.turnOrder = order;
+                pvpCombatObj.phase = "battle";
+                setCombatState(pvpCombatObj);
+            } else {
+                setCombatState(pvpCombatObj);
+            }
+            window.scrollTo(0, 0);
         };
 
+        // Assimila tutta la Compagnia quando i Giocatori Phyrexiani vincono il PvP, così tutti giocano la Campagna Malvagia!
+        const assimilateAllPartyOnPhyrexianPvpWin = (loseNode, lastLogLine) => {
+            let fullRestored = party.length > 0 ? party.slice() : [character];
+            try {
+                const rawBkp = localStorage.getItem('rpg_pvp_full_party_backup');
+                if (rawBkp) {
+                    fullRestored = JSON.parse(rawBkp);
+                    localStorage.removeItem('rpg_pvp_full_party_backup');
+                }
+            } catch (e) {}
+
+            const assimilatedParty = fullRestored.map(h => {
+                const kws = (h.mtgKeywords || []).slice();
+                if (kws.indexOf("Infettare") === -1) kws.push("Infettare");
+                const bStats = h.baseStats || { str: 12, agi: 12, mag: 12, con: 20 };
+                // Se era un giocatore Puro sconfitto, viene Completato dall'Olio ricevendo il potenziamento Phyrexiano!
+                const newBaseStats = h.isPhyrexian ? bStats : {
+                    str: bStats.str + 3,
+                    agi: bStats.agi + 3,
+                    mag: bStats.mag + 3,
+                    con: bStats.con + 6
+                };
+                return Object.assign({}, h, {
+                    status: "alive",
+                    isPhyrexian: true,
+                    hasPhyrexianMana: true,
+                    phyrexianBonusPct: h.phyrexianBonusPct || 30,
+                    baseStats: newBaseStats,
+                    currentHP: Math.max(30, (h.currentHP || 20) + 25),
+                    deathFailures: 0,
+                    deathSuccesses: 0,
+                    mtgKeywords: kws,
+                    currentNode: loseNode || "phyrexian_pvp_game_over"
+                });
+            });
+
+            savePartyState(assimilatedParty);
+            setCombatState(null);
+            applyRewardsAndMove(
+                assimilatedParty[0],
+                null,
+                loseNode || "phyrexian_pvp_game_over",
+                (lastLogLine ? lastLogLine + "\n" : "") + "☣️🏆 VITTORIA DEI GIOCATORI PHYREXIANI! I compagni Puri caduti vengono assimilati dall'Olio Scintillante: ora potete guidare insieme l'invasione di Dominaria!"
+            );
+        };
+
+        // ESECUZIONE DELL'ATTACCO CONTROLLATO DAI GIOCATORI PHYREXIANI NEL LORO TURNO PVP!
+        const executePvpPlayerBossTurn = (chosenStat, rawD20Val) => {
+            if (!combatState || !combatState.isPvpBoss) return;
+            const currentPartyList = party.length > 0 ? party.slice() : [character];
+            const consciousPure = currentPartyList.filter(h => h.status === "alive" && h.currentHP > 0);
+
+            if (consciousPure.length === 0) {
+                assimilateAllPartyOnPhyrexianPvpWin(combatState.pvpLoseNode, "");
+                return;
+            }
+
+            const targetHero = consciousPure.find(h => h.id === pvpTargetHeroId) || consciousPure[0];
+            const targetStats = getFinalStats(targetHero);
+            const targetDefenseDC = 10 + Math.floor((targetStats.agi + targetStats.con) / 2);
+
+            let turnLog = combatState.log.slice();
+            setPendingPvpBossStat(null);
+
+            if (teferiPhaseOut) {
+                setTeferiPhaseOut(false);
+                turnLog.unshift("☀️⏳ I Giocatori Phyrexiani attaccano, ma i Puri sono Fuori Fase (Protezione di Teferi)!");
+                advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), currentPartyList);
+                return;
+            }
+            if (counterspellShield) {
+                setCounterspellShield(false);
+                turnLog.unshift("💧🛡️ Difesa/Contromagia attiva! L'attacco dei Giocatori Phyrexiani viene neutralizzato!");
+                advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), currentPartyList);
+                return;
+            }
+
+            const d20 = Math.max(1, Math.min(20, parseInt(rawD20Val, 10) || 10));
+            const phyStats = combatState.pvpPhyrexianStats || { str: 16, agi: 16, mag: 16 };
+            const isPhyManaStrike = chosenStat === "phy_mana";
+            const statVal = isPhyManaStrike ? Math.max(phyStats.str, phyStats.mag) : (phyStats[chosenStat] || 15);
+            const totalRoll = d20 + statVal;
+            const isCrit = d20 === 20;
+            const isHit = isPhyManaStrike || isCrit || (d20 > 1 && totalRoll >= targetDefenseDC);
+
+            let nextBossHP = combatState.currentHP;
+            if (isPhyManaStrike) {
+                nextBossHP = Math.max(1, nextBossHP - 6);
+            }
+
+            if (!isHit) {
+                turnLog.unshift(`🛡️ ${combatState.name} attacca **${targetHero.name}** [Dado ${d20} + ${statVal} = ${totalRoll} vs Difesa ${targetDefenseDC}], ma **${targetHero.name}** schiva il colpo!`);
+                advanceToNextTurn(Object.assign({}, combatState, { currentHP: nextBossHP, log: turnLog }), currentPartyList);
+                return;
+            }
+
+            let dmg = Math.max(6, Math.round(statVal * 0.55) + Math.floor(d20 / 4));
+            if (isPhyManaStrike) dmg += 6;
+            if (isCrit) dmg = Math.round(dmg * 1.5);
+            if (targetHero.raceId === "nano") dmg = Math.max(1, dmg - 2);
+            if (targetStats.keywords.includes("Cautela")) {
+                dmg = Math.max(2, Math.floor(dmg / 2));
+            }
+
+            const newHeroHP = Math.max(0, targetHero.currentHP - dmg);
+            const fellDown = newHeroHP === 0;
+
+            const updatedPureParty = currentPartyList.map(h => {
+                if (h.id !== targetHero.id) return h;
+                return Object.assign({}, h, {
+                    currentHP: newHeroHP,
+                    status: fellDown ? "unconscious" : "alive",
+                    deathSuccesses: 0,
+                    deathFailures: 0
+                });
+            });
+
+            savePartyState(updatedPureParty);
+
+            turnLog.unshift(`☣️⚔️ ${combatState.name} colpisce **${targetHero.name}** [Dado ${d20} + ${statVal} = ${totalRoll} vs Difesa ${targetDefenseDC}${isPhyManaStrike ? " • Colpo Mana Φ (-6 PV)" : ""}]: infligge **${dmg} danni**! (${targetHero.name}: ${newHeroHP} PV)${fellDown ? " 🩸 CADE A 0 PV!" : ""}`);
+
+            // Se tutti i Giocatori Puri sono caduti a 0 PV, i Phyrexiani vincono e assimilano i compagni per la Campagna Malvagia!
+            const anyPureStillStanding = updatedPureParty.some(h => h.status === "alive" && h.currentHP > 0);
+            if (!anyPureStillStanding) {
+                assimilateAllPartyOnPhyrexianPvpWin(combatState.pvpLoseNode, turnLog[0]);
+                return;
+            }
+
+            advanceToNextTurn(Object.assign({}, combatState, { currentHP: nextBossHP, log: turnLog }), updatedPureParty);
+        };
+      
         const handleChoiceClick = (rawChoice) => {
             if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); setIsSpeaking(false); }
             setLastRollInfo(null);
@@ -8591,39 +8817,6 @@
                         </div>
                     </div>
 
-                    {/* PANNELLO INTERATTIVO SCELTA INDIVIDUALE DELLA SFERA (ZERO SPOILER!) */}
-                    {currentNodeObj && currentNodeObj.isPhyrexianTrialNode && (
-                        <div className="bg-gradient-to-b from-gray-950 via-amber-950/60 to-black border-4 border-amber-400 rounded-2xl p-4 shadow-2xl space-y-3 animate-fade">
-                            <h3 className="text-amber-300 font-black text-base uppercase text-center">
-                                ✨ La Sfera del Nucleo: Chi di voi decide di toccarla?
-                            </h3>
-                            <p className="text-xs text-gray-200 text-center">
-                                Scegliete individualmente per ciascun eroe della Compagnia prima di confermare qui sotto:
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {activePartyList.filter(h => h.status !== "dead").map(h => {
-                                    const willTouch = Boolean(window.__phyrexianSelectionMap && window.__phyrexianSelectionMap[h.id]);
-                                    return (
-                                        <div key={h.id} className={`p-3 rounded-xl border-2 flex justify-between items-center gap-2 ${willTouch ? "bg-amber-950/80 border-amber-400" : "bg-gray-900 border-gray-600"}`}>
-                                            <div>
-                                                <p className="text-white font-black text-xs">{h.name} (LIV {h.level})</p>
-                                                <p className={`text-[10px] font-bold ${willTouch ? "text-amber-300" : "text-gray-400"}`}>
-                                                    {willTouch ? "✋ Tocca la Sfera" : "👣 Resta indietro"}
-                                                </p>
-                                            </div>
-                                            <button
-                                                onClick={() => togglePhyrexianSelection(h.id)}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-black shadow ${willTouch ? "bg-amber-500 text-black" : "bg-gray-700 text-white hover:bg-gray-600"}`}
-                                            >
-                                                {willTouch ? "Fai un passo indietro" : "Tocca la Sfera ✋"}
-                                            </button>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
                     {/* PANNELLO TIRO DADO D8 PER LE CURE DI CHIERICO E SCIAMANO */}
                     {pendingHealSpell && (
                         <div className="bg-emerald-950 border-4 border-emerald-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3 text-center">
@@ -8929,13 +9122,88 @@
                                         </div>
                                     </div>
 
-                                    {/* SE È IL TURNO DEL MOSTRO */}
+                                    {/* SE È IL TURNO DEL MOSTRO (O DEI GIOCATORI PHYREXIANI IN PVP!) */}
                                     {currentTurnCombatant && currentTurnCombatant.type === "monster" && !combatState.monsterFled ? (
                                         <div className="bg-red-950/90 border-2 border-red-400 rounded-xl p-4 text-center space-y-3 animate-fade">
                                             <h4 className="text-base sm:text-lg font-black text-white">
-                                                👹 È IL TURNO DI {combatState.name.toUpperCase()}!
+                                                {combatState.isPvpBoss ? `☣️ TURNO DEI GIOCATORI INFETTI (${combatState.name})!` : `👹 È IL TURNO DI ${combatState.name.toUpperCase()}!`}
                                             </h4>
-                                            {allConsciousDown ? (
+
+                                            {combatState.isPvpBoss ? (
+                                                <div className="space-y-3 text-left">
+                                                    <p className="text-xs text-lime-300 font-bold text-center">
+                                                        🎮 Giocatori Phyrexiani: scegliete quale compagno Puro colpire e con quale attacco!
+                                                    </p>
+
+                                                    {/* 1. Scelta del bersaglio Puro */}
+                                                    <div className="bg-black/50 p-2.5 rounded-xl border border-lime-500/50">
+                                                        <span className="text-[10px] font-black uppercase text-lime-300 block mb-1.5">🎯 1. Scegli Bersaglio Puro:</span>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {activePartyList.filter(h => h.status === "alive" && h.currentHP > 0).map(pureH => {
+                                                                const pSt = getFinalStats(pureH);
+                                                                const defDC = 10 + Math.floor((pSt.agi + pSt.con) / 2);
+                                                                return (
+                                                                    <button
+                                                                        key={pureH.id}
+                                                                        onClick={() => setPvpTargetHeroId(pureH.id)}
+                                                                        className={`px-3 py-1.5 rounded-lg text-xs font-black border ${pvpTargetHeroId === pureH.id ? "bg-lime-500 text-black border-white shadow" : "bg-gray-900 text-gray-300 border-gray-700"}`}
+                                                                    >
+                                                                        🛡️ {pureH.name} (❤️{pureH.currentHP} • Difesa CD {defDC})
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 2. Se Dado Reale è attivo e hanno scelto la statistica, mostra la griglia D20 */}
+                                                    {pendingPvpBossStat && diceMode === "manual" && (
+                                                        <div className="bg-indigo-950 border-2 border-lime-400 rounded-xl p-3 text-center space-y-2">
+                                                            <p className="text-xs font-black text-lime-300 uppercase">
+                                                                🎲 Giocatore Phyrexiano: tira il tuo D20 Reale e tocca il risultato!
+                                                            </p>
+                                                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1">
+                                                                {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(n => (
+                                                                    <button
+                                                                        key={n}
+                                                                        onClick={() => executePvpPlayerBossTurn(pendingPvpBossStat, n)}
+                                                                        className="bg-gray-900 hover:bg-lime-500 hover:text-black text-white font-black text-xs py-2 rounded border border-gray-600"
+                                                                    >
+                                                                        {n}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* 3. Pulsanti Attacco dei Giocatori Phyrexiani */}
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        <button
+                                                            onClick={() => diceMode === "manual" ? setPendingPvpBossStat("str") : executePvpPlayerBossTurn("str", Math.floor(Math.random()*20)+1)}
+                                                            className="bg-red-900 hover:bg-red-800 border-2 border-red-400 p-2.5 rounded-xl text-white font-black text-xs"
+                                                        >
+                                                            ⚔️ Assalto Brutale (FOR {combatState.pvpPhyrexianStats ? combatState.pvpPhyrexianStats.str : 16})
+                                                        </button>
+                                                        <button
+                                                            onClick={() => diceMode === "manual" ? setPendingPvpBossStat("agi") : executePvpPlayerBossTurn("agi", Math.floor(Math.random()*20)+1)}
+                                                            className="bg-emerald-900 hover:bg-emerald-800 border-2 border-emerald-400 p-2.5 rounded-xl text-white font-black text-xs"
+                                                        >
+                                                            🏹 Artigli Rapidi (AGI {combatState.pvpPhyrexianStats ? combatState.pvpPhyrexianStats.agi : 16})
+                                                        </button>
+                                                        <button
+                                                            onClick={() => diceMode === "manual" ? setPendingPvpBossStat("mag") : executePvpPlayerBossTurn("mag", Math.floor(Math.random()*20)+1)}
+                                                            className="bg-indigo-900 hover:bg-indigo-800 border-2 border-indigo-400 p-2.5 rounded-xl text-white font-black text-xs"
+                                                        >
+                                                            🔮 Raggio di Mycosynth (MAG {combatState.pvpPhyrexianStats ? combatState.pvpPhyrexianStats.mag : 16})
+                                                        </button>
+                                                        <button
+                                                            onClick={() => executePvpPlayerBossTurn("phy_mana", 20)}
+                                                            className="bg-lime-950 hover:bg-lime-800 border-2 border-lime-400 p-2.5 rounded-xl text-lime-200 font-black text-xs"
+                                                        >
+                                                            ☣️ Esplosione Mana Φ (Paga -6 PV Boss ➔ Colpo Infallibile!)
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : allConsciousDown ? (
                                                 <div className="space-y-3">
                                                     <p className="text-xs text-amber-200 font-bold">
                                                         🩸 Tutta la Compagnia è a terra a **0 PV**! Lancia il **Dado Comportamento (1d6)** per scoprire cosa fa il nemico:
@@ -8979,6 +9247,7 @@
                                             )}
                                         </div>
                                     ) : (
+                                        
                                         /* SE È IL TURNO DI UN EROE */
                                         <div className="space-y-3">
                                             {character.status === "dead" ? (
@@ -9200,31 +9469,85 @@
                             </p>
 
                             <div className="space-y-3">
-                                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400">
-                                    Scegli la tua azione ({character.name}):
-                                </h4>
-                                {currentNodeObj.choices.map((ch, idx) => {
-                                    if (ch.onlyParty && playMode !== "party") return null;
-                                    if (ch.onlySolo && playMode !== "solo") return null;
-                                    if (ch.reqKeyword && !stats.keywords.includes(ch.reqKeyword)) return null;
-                                    if (ch.reqKeywordAny && !ch.reqKeywordAny.some(k => stats.keywords.includes(k))) return null;
+                                {currentNodeObj.isPhyrexianTrialNode ? (
+                                    <div className="bg-black/80 border-2 border-amber-400 rounded-2xl p-4 space-y-3 shadow-2xl">
+                                        <h4 className="text-sm font-black uppercase text-amber-300 text-center">
+                                            ✋ Scelta Obbligatoria di Squadra (Ogni giocatore deve decidere a turno):
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {activePartyList.filter(h => h.status !== "dead").map(h => {
+                                                const decision = sphereDecisions[h.id] || null;
+                                                return (
+                                                    <div key={h.id} className="bg-gray-900 border border-gray-700 rounded-xl p-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+                                                        <div className="text-center sm:text-left">
+                                                            <p className="text-white font-black text-sm">{h.name} (LIV {h.level})</p>
+                                                            <p className={`text-xs font-bold ${decision === "touch" ? "text-amber-300" : (decision === "refuse" ? "text-cyan-300" : "text-red-400 animate-pulse")}`}>
+                                                                {decision === "touch" ? "✋ Ha scelto: TOCCA LA SFERA" : (decision === "refuse" ? "👣 Ha scelto: RESTA INDIETRO" : "⏳ Deve ancora scegliere...")}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex gap-2 w-full sm:w-auto">
+                                                            <button
+                                                                onClick={() => setHeroSphereDecision(h.id, "touch")}
+                                                                className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-black border transition-all ${decision === "touch" ? "bg-amber-500 text-black border-white scale-105 shadow" : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700"}`}
+                                                            >
+                                                                ✋ Tocca la Sfera
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setHeroSphereDecision(h.id, "refuse")}
+                                                                className={`flex-1 sm:flex-none px-3 py-2 rounded-lg text-xs font-black border transition-all ${decision === "refuse" ? "bg-cyan-600 text-white border-white scale-105 shadow" : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700"}`}
+                                                            >
+                                                                👣 Resta Indietro
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
 
-                                    const scaledChoiceDC = ch.type === 'roll' ? getDynamicStoryDC(ch.dc, character, ch.stat) : 0;
-                                    const isClearedPath = ch.type === 'move' && CLEARED_ARC_REDIRECT[ch.nextNode] && (character.completedArcs || []).includes(ch.nextNode);
+                                        {(() => {
+                                            const aliveHeroes = activePartyList.filter(h => h.status !== "dead");
+                                            const allChosen = aliveHeroes.length > 0 && aliveHeroes.every(h => sphereDecisions[h.id] === "touch" || sphereDecisions[h.id] === "refuse");
+                                            const trialChoice = currentNodeObj.choices[0] || {};
+                                            return (
+                                                <button
+                                                    disabled={!allChosen}
+                                                    onClick={() => confirmPhyrexianOilTrial(trialChoice.pureNode, trialChoice.pvpNode, trialChoice.allCorruptedNode)}
+                                                    className={`w-full py-4 px-6 rounded-xl font-black text-sm uppercase tracking-wider shadow-xl transition-all ${allChosen ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black cursor-pointer active:scale-95" : "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed opacity-60"}`}
+                                                >
+                                                    {allChosen ? "✨ Tutti hanno scelto: Conferma e Prosegui ➔" : "🔒 In attesa che tutti i giocatori scelgano..."}
+                                                </button>
+                                            );
+                                        })()}
+                                    </div>
+                                ) : (
+                                    <React.Fragment>
+                                        <h4 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                                            Scegli la tua azione ({character.name}):
+                                        </h4>
+                                        {currentNodeObj.choices.map((ch, idx) => {
+                                            if (ch.onlyParty && playMode !== "party") return null;
+                                            if (ch.onlySolo && playMode !== "solo") return null;
+                                            if (ch.reqKeyword && !stats.keywords.includes(ch.reqKeyword)) return null;
+                                            if (ch.reqKeywordAny && !ch.reqKeywordAny.some(k => stats.keywords.includes(k))) return null;
 
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleChoiceClick(ch)}
-                                            className="w-full text-left bg-gray-800 hover:bg-indigo-950 border-2 border-gray-600 hover:border-indigo-400 p-4 rounded-xl text-white font-bold text-sm sm:text-base shadow-md transition-all active:scale-95 flex justify-between items-center gap-2"
-                                        >
-                                            <span>{ch.text}</span>
-                                            <span className="text-xs font-black px-2 py-1 rounded bg-black/50 text-amber-400 shrink-0">
-                                                {ch.type === 'combat' ? '⚔️ INIZIATIVA & SCONTRO' : (ch.type === 'roll' ? `🎲 ${ch.stat.toUpperCase()} CD ${scaledChoiceDC}` : (isClearedPath ? '✅ GIÀ COMPLETATO' : '➔'))}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
+                                            const scaledChoiceDC = ch.type === 'roll' ? getDynamicStoryDC(ch.dc, character, ch.stat) : 0;
+                                            const isClearedPath = ch.type === 'move' && CLEARED_ARC_REDIRECT[ch.nextNode] && (character.completedArcs || []).includes(ch.nextNode);
+
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleChoiceClick(ch)}
+                                                    className="w-full text-left bg-gray-800 hover:bg-indigo-950 border-2 border-gray-600 hover:border-indigo-400 p-4 rounded-xl text-white font-bold text-sm sm:text-base shadow-md transition-all active:scale-95 flex justify-between items-center gap-2"
+                                                >
+                                                    <span>{ch.text}</span>
+                                                    <span className="text-xs font-black px-2 py-1 rounded bg-black/50 text-amber-400 shrink-0">
+                                                        {ch.type === 'combat' ? '⚔️ INIZIATIVA & SCONTRO' : (ch.type === 'roll' ? `🎲 ${ch.stat.toUpperCase()} CD ${scaledChoiceDC}` : (isClearedPath ? '✅ GIÀ COMPLETATO' : '➔'))}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </React.Fragment>
+                                )}
                             </div>
                         </div>
                     )}
