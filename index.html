@@ -6417,6 +6417,17 @@
             let allMessages = [];
             if (extraBanner) allMessages.push(extraBanner);
 
+            // Normalizza sempre unlockMana -> addMana e foods -> food
+            let normalizedRewards = rewards ? Object.assign({}, rewards) : null;
+            if (normalizedRewards) {
+                if (normalizedRewards.unlockMana && !normalizedRewards.addMana) {
+                    normalizedRewards.addMana = normalizedRewards.unlockMana;
+                }
+                if (normalizedRewards.foods && !normalizedRewards.food) {
+                    normalizedRewards.food = normalizedRewards.foods;
+                }
+            }
+
             // MAPPA DEI NODI DI FINE ARCO -> SEGNA AUTOMATICAMENTE LA REGIONE COME COMPLETATA!
             const VICTORY_NODE_TO_ARC = {
                 tolaria_victory_vault: "tolaria_gates",
@@ -6445,15 +6456,22 @@
                 allMessages.push("🧭 Avete già sconfitto il Boss e completato la storia principale di questa regione: entrate nella zona pacificata!");
             }
 
-            const alreadyClaimedNode = sharedVisitedNodes.includes(requestedNode);
-            let effectiveRewards = rewards;
-            if (alreadyClaimedNode && rewards && requestedNode !== charState.currentNode) {
+            // FIX BUG HUB: Traccia la transizione (Da Nodo -> A Nodo) così tornare a jaya_squee_camp,
+            // crossroads_wilds o planeswalker_nexus NON cancella mai le ricompense!
+            const transitionKey = (charState.currentNode || "start") + "->" + requestedNode;
+            const hasUniqueLoot = normalizedRewards && (normalizedRewards.loot || normalizedRewards.addMana || normalizedRewards.makeLegendary || normalizedRewards.igniteSpark);
+            const alreadyClaimedTransition = sharedVisitedNodes.includes(transitionKey) && !hasUniqueLoot;
+
+            let effectiveRewards = normalizedRewards;
+            if (alreadyClaimedTransition && normalizedRewards && requestedNode !== charState.currentNode) {
                 effectiveRewards = {
-                    damage: rewards.damage,
-                    partyDamage: rewards.partyDamage
+                    damage: normalizedRewards.damage,
+                    partyDamage: normalizedRewards.partyDamage
                 };
-            } else if (rewards && (rewards.exp || rewards.loot || rewards.gold || rewards.makeLegendary)) {
-                sharedVisitedNodes.push(requestedNode);
+            } else if (normalizedRewards && (normalizedRewards.exp || normalizedRewards.loot || normalizedRewards.gold || normalizedRewards.makeLegendary)) {
+                if (!sharedVisitedNodes.includes(transitionKey)) {
+                    sharedVisitedNodes.push(transitionKey);
+                }
             }
 
             let updatedActiveHero = null;
@@ -6485,7 +6503,7 @@
 
             window.scrollTo(0, 0);
         };
-
+      
         // ============================================================================
         // MOTORE DI COMBATTIMENTO D&D + GESTIONE COMPLETA 0 PV, INFIERIRE, OSTAGGI,
         // CORAZZE PUZZLE DEI BOSS E EREDITÀ ROGUELITE DEI CADUTI
@@ -7441,6 +7459,7 @@
                 log: turnLog
             }, updatedPartyList);
         };
+      
         const executeRollCalculation = (choice, d20Value) => {
             if (character.status !== "alive" || character.currentHP <= 0) {
                 return alert(`${character.name} è a 0 PV! Seleziona un compagno cosciente nella barra in alto.`);
@@ -7519,15 +7538,29 @@
 
             setPendingRollChoice(null);
             const targetNode = passed ? choice.successNode : choice.failNode;
-            applyRewardsAndMove(updatedChar, passed ? choice.rewards : null, targetNode, rollNote);
+
+            // Consegna il premio se la prova è superata (o se è una prova narrativa dove successNode === failNode)
+            const shouldGrantRewards = passed || (choice.successNode && choice.successNode === choice.failNode);
+
+            // SIGILLA LA RICOMPENSA PER TUTTA LA COMPAGNIA SOLO QUANDO VIENE EFFETTIVAMENTE OTTENUTA!
+            if (shouldGrantRewards && choice._pendingLootKey) {
+                markLootKeyClaimed(choice._pendingLootKey);
+            }
+
+            applyRewardsAndMove(updatedChar, shouldGrantRewards ? choice.rewards : null, targetNode, rollNote);
         };
 
         // ====================================================================
-        // HELPER MECCANICHE AVANZATE (ANTI-FARMING, TRAPPOLE, PHYREXIA & VENDITA)
+        // HELPER MECCANICHE AVANZATE (ANTI-FARMING RIGOROSO PER TUTTO IL PARTY)
         // (100% Compatibile con Babel 6 - Zero Optional Chaining)
         // ====================================================================
         const getClaimedLootMap = () => {
             try {
+                // Pulisce una sola volta i blocchi errati del vecchio bug di Jaya/Squee
+                if (!localStorage.getItem('rpg_loot_fix_v2')) {
+                    localStorage.removeItem('rpg_claimed_loot');
+                    localStorage.setItem('rpg_loot_fix_v2', 'true');
+                }
                 const raw = localStorage.getItem('rpg_claimed_loot');
                 return raw ? JSON.parse(raw) : {};
             } catch (e) {
@@ -7550,7 +7583,6 @@
             if (!c.rewards) return c;
 
             const r = Object.assign({}, c.rewards);
-            // Normalizza chiavi tra vecchi e nuovi blocchi
             if (r.unlockMana && !r.addMana) r.addMana = r.unlockMana;
             if (r.foods && !r.food) r.food = r.foods;
 
@@ -7559,17 +7591,19 @@
 
             if (lootKey) {
                 const claimedMap = getClaimedLootMap();
+                // Se un qualsiasi membro della Compagnia ha già riscosso questo premio, è bloccato per TUTTI!
                 if (claimedMap[lootKey]) {
-                    // Oggetto o premio unico già riscosso: blocca il farming!
                     delete r.loot;
                     delete r.treasures;
+                    delete r.food;
+                    delete r.foods;
                     delete r.addMana;
                     delete r.unlockMana;
                     delete r.addKeyword;
                     delete r.makeLegendary;
                     delete r.igniteSpark;
                     if (r.gold && r.gold > 0) r.gold = 0;
-                    if (r.exp && r.exp > 0) r.exp = Math.floor(r.exp * 0.2);
+                    if (r.exp && r.exp > 0) r.exp = 0;
                     r._alreadyClaimed = true;
                 } else if (c.type !== 'roll') {
                     markLootKeyClaimed(lootKey);
@@ -7819,9 +7853,6 @@
             }
 
             // 8. Tiro di Dado D20 (con gestione Trappole di Magic in caso di fallimento)
-            if (choice._pendingLootKey) {
-                markLootKeyClaimed(choice._pendingLootKey);
-            }
             if (choice.trapActiveHeroOnFail && character) {
                 const cNode = RPG_STORY_NODES[character.currentNode];
                 character.trapName = (cNode && cNode.trapName) ? cNode.trapName : "Trappola di Magic";
@@ -8938,62 +8969,110 @@
                         </div>
                     )}
 
-                    {/* CONSOLE DEL DUNGEON MASTER */}
+                    {/* CONSOLE DEL DUNGEON MASTER (FIX MOBILE SENZA ELEMENTI FUORI SCHERMO) */}
                     {playMode === "party" && (
-                        <div className="bg-purple-950/40 border-2 border-purple-500 rounded-2xl p-4 shadow-xl space-y-3 animate-fade">
-                            <h3 className="text-purple-300 font-black text-sm uppercase tracking-wider">
+                        <div className="bg-purple-950/40 border-2 border-purple-500 rounded-2xl p-3.5 shadow-xl space-y-3 animate-fade overflow-hidden w-full max-w-full">
+                            <h3 className="text-purple-300 font-black text-xs sm:text-sm uppercase tracking-wider truncate">
                                 🎭 Console del Master (Eroe attivo: {character.name})
                             </h3>
-                            <div className="flex flex-wrap gap-2 items-center">
-                                <span className="text-[10px] font-black uppercase text-red-300">👹 Evoca Scontro:</span>
-                                <select value={masterMonsterKey} onChange={e => setMasterMonsterKey(e.target.value)} className="bg-gray-900 border border-red-500 rounded px-2 py-1.5 text-white text-xs font-bold flex-1">
+
+                            {/* 1. EVOCA SCONTRO (IMPILATO E CONTENUTO NEI BORDI) */}
+                            <div className="space-y-1.5">
+                                <span className="text-[10px] font-black uppercase text-red-300 block">👹 Evoca Scontro:</span>
+                                <select
+                                    value={masterMonsterKey}
+                                    onChange={e => setMasterMonsterKey(e.target.value)}
+                                    className="w-full max-w-full min-w-0 bg-gray-900 border border-red-500 rounded-lg px-2.5 py-2 text-white text-xs font-bold truncate"
+                                >
                                     {Object.keys(MTG_BESTIARY).map(k => (
-                                        <option key={k} value={k}>{MTG_BESTIARY[k].name} ({MTG_BESTIARY[k].maxHP} PV • 💧{MTG_BESTIARY[k].blueMana})</option>
+                                        <option key={k} value={k}>
+                                            {MTG_BESTIARY[k].name} ({MTG_BESTIARY[k].maxHP} PV • 💧{MTG_BESTIARY[k].blueMana})
+                                        </option>
                                     ))}
                                 </select>
-                                <button onClick={() => startMonsterEncounter(masterMonsterKey, character.currentNode)} className="bg-red-700 hover:bg-red-600 text-white text-xs font-black px-3 py-1.5 rounded shadow">
+                                <button
+                                    onClick={() => startMonsterEncounter(masterMonsterKey, character.currentNode)}
+                                    className="w-full sm:w-auto bg-red-700 hover:bg-red-600 text-white text-xs font-black px-4 py-2 rounded-lg shadow"
+                                >
                                     ⚔️ Avvia Battaglia
                                 </button>
                             </div>
 
-                            <div className="flex flex-wrap gap-2 pt-2 border-t border-purple-800/60">
-                                <button onClick={() => setShowMulticlassModal(true)} className="bg-purple-700 hover:bg-purple-600 text-white text-xs font-black px-2.5 py-1.5 rounded shadow">🏛️ Dai 2ª Classe</button>
-                                <button onClick={() => setShowMercenaryModal(true)} className="bg-teal-700 hover:bg-teal-600 text-white text-xs font-black px-2.5 py-1.5 rounded shadow">🍻 Recluta Mercenario</button>
-                                <button onClick={() => applyRewardsAndMove(character, { heal: 5 }, character.currentNode)} className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-2.5 py-1.5 rounded shadow">+5 PV Gruppo</button>
-                                <select value={masterLootId} onChange={e => setMasterLootId(e.target.value)} className="bg-gray-900 border border-gray-600 rounded px-2 py-1 text-white text-xs flex-1">
-                                    {Object.values(RPG_ITEMS_DB).map(it => <option key={it.id} value={it.id}>{it.name}</option>)}
-                                </select>
-                                <button onClick={() => applyRewardsAndMove(character, { loot: masterLootId }, character.currentNode)} className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-black px-3 py-1.5 rounded shadow">Dai Loot</button>
-                            </div>
+                            {/* 2. AZIONI RAPIDE E CONSEGNA LOOT */}
+                            <div className="pt-2 border-t border-purple-800/60 space-y-2">
+                                <div className="flex flex-wrap gap-1.5">
+                                    <button onClick={() => setShowMulticlassModal(true)} className="bg-purple-700 hover:bg-purple-600 text-white text-xs font-black px-2.5 py-1.5 rounded-lg shadow">🏛️ Dai 2ª Classe</button>
+                                    <button onClick={() => setShowMercenaryModal(true)} className="bg-teal-700 hover:bg-teal-600 text-white text-xs font-black px-2.5 py-1.5 rounded-lg shadow">🍻 Recluta Mercenario</button>
+                                    <button onClick={() => applyRewardsAndMove(character, { heal: 5 }, character.currentNode)} className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">+5 PV Gruppo</button>
+                                </div>
 
-                            <div className="pt-2 border-t border-purple-800/60 space-y-1.5">
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-1.5">
                                     <select
-                                        value={masterNodeJump}
-                                        onChange={e => setMasterNodeJump(e.target.value)}
-                                        className="bg-gray-900 border border-purple-500 rounded-lg px-2 py-1.5 text-white text-xs font-bold flex-1 truncate"
+                                        value={masterLootId}
+                                        onChange={e => setMasterLootId(e.target.value)}
+                                        className="w-full max-w-full min-w-0 bg-gray-900 border border-gray-600 rounded-lg px-2.5 py-2 text-white text-xs font-bold truncate"
                                     >
-                                        {Object.keys(RPG_STORY_NODES).map(nodeKey => {
-                                            const nObj = RPG_STORY_NODES[nodeKey];
-                                            return (
-                                                <option key={nodeKey} value={nodeKey}>
-                                                    [{nObj.act || "Scena"}] {nObj.title} ({nodeKey})
-                                                </option>
-                                            );
-                                        })}
+                                        {Object.values(RPG_ITEMS_DB).map(it => <option key={it.id} value={it.id}>{it.name}</option>)}
                                     </select>
                                     <button
-                                        onClick={() => {
-                                            if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); setIsSpeaking(false); }
-                                            setLastRollInfo(null);
-                                            setCombatState(null);
-                                            applyRewardsAndMove(character, null, masterNodeJump, `🧭 Il Master ha spostato la compagnia!`);
-                                        }}
-                                        className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow shrink-0"
+                                        onClick={() => applyRewardsAndMove(character, { loot: masterLootId }, character.currentNode)}
+                                        className="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-black text-xs font-black px-4 py-2 rounded-lg shadow shrink-0"
                                     >
-                                        🗺️ Salta al Nodo
+                                        🎁 Dai Loot
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* 3. SALTO AI CAPITOLI (VAI SUBITO ALLA SELEZIONE + PULSANTE VISIBILE SOTTO) */}
+                            <div className="pt-2 border-t border-purple-800/60 space-y-1.5">
+                                <span className="text-[10px] font-black uppercase text-purple-300 block">🗺️ Scegli Capitolo / Nodo (Salta Subito):</span>
+                                <select
+                                    value={masterNodeJump}
+                                    onChange={e => {
+                                        const targetKey = e.target.value;
+                                        setMasterNodeJump(targetKey);
+                                        if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); setIsSpeaking(false); }
+                                        setLastRollInfo(null);
+                                        setCombatState(null);
+                                        // Sblocca il salto diretto a qualsiasi nodo anche se già completato
+                                        const currentList = party.length > 0 ? party : (character ? [character] : []);
+                                        const jumpedParty = currentList.map(h => Object.assign({}, h, {
+                                            currentNode: targetKey,
+                                            completedArcs: (h.completedArcs || []).filter(a => a !== targetKey)
+                                        }));
+                                        savePartyState(jumpedParty);
+                                        setEventBanner("🧭 Il Master ha spostato la compagnia al capitolo: " + (RPG_STORY_NODES[targetKey] ? RPG_STORY_NODES[targetKey].title : targetKey) + "!");
+                                        window.scrollTo(0, 0);
+                                    }}
+                                    className="w-full max-w-full min-w-0 bg-gray-900 border border-purple-500 rounded-lg px-2.5 py-2 text-white text-xs font-bold truncate"
+                                >
+                                    {Object.keys(RPG_STORY_NODES).map(nodeKey => {
+                                        const nObj = RPG_STORY_NODES[nodeKey];
+                                        return (
+                                            <option key={nodeKey} value={nodeKey}>
+                                                [{nObj.act || "Scena"}] {nObj.title} ({nodeKey})
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                <button
+                                    onClick={() => {
+                                        if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); setIsSpeaking(false); }
+                                        setLastRollInfo(null);
+                                        setCombatState(null);
+                                        const currentList = party.length > 0 ? party : (character ? [character] : []);
+                                        const jumpedParty = currentList.map(h => Object.assign({}, h, {
+                                            currentNode: masterNodeJump,
+                                            completedArcs: (h.completedArcs || []).filter(a => a !== masterNodeJump)
+                                        }));
+                                        savePartyState(jumpedParty);
+                                        setEventBanner("🧭 Il Master ha spostato la compagnia al capitolo: " + (RPG_STORY_NODES[masterNodeJump] ? RPG_STORY_NODES[masterNodeJump].title : masterNodeJump) + "!");
+                                        window.scrollTo(0, 0);
+                                    }}
+                                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black py-2.5 px-4 rounded-lg shadow"
+                                >
+                                    🗺️ Salta al Capitolo Selezionato
+                                </button>
                             </div>
                         </div>
                     )}
