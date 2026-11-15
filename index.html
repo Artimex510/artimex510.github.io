@@ -5507,7 +5507,7 @@
             let traumaStr = 0; let traumaAgi = 0; let traumaMag = 0; let traumaCon = 0; let traumaCount = 0;
             if (char.inventory && Array.isArray(char.inventory)) {
                 char.inventory.forEach(it => {
-                    if (it && it.isTrauma) {
+                    if (it && (it.isTrauma || it.isDemonicPact)) {
                         traumaStr += (it.str || 0);
                         traumaAgi += (it.agi || 0);
                         traumaMag += (it.mag || 0);
@@ -5990,6 +5990,30 @@
                 manaPool: newPool,
                 usedOneShots: newUsedOneShots
             };
+          // MECCANICA COMBO DI GILDA SULLA PILA: Se 2 eroi lanciano magie di colore diverso nello stesso round!
+            if (combatState && !combatState.monsterFled) {
+                let stackColors = Array.isArray(combatState.spellsCastThisRoundColors) ? combatState.spellsCastThisRoundColors.slice() : [];
+                const prevColor = stackColors.length > 0 ? stackColors[stackColors.length - 1] : null;
+                stackColors.push(effectiveColor);
+                combatState.spellsCastThisRoundColors = stackColors;
+
+                if (prevColor && prevColor !== effectiveColor && !combatState.guildComboTriggeredThisRound) {
+                    combatState.guildComboTriggeredThisRound = true;
+                    const pair = [prevColor, effectiveColor].sort().join("");
+                    let guildName = "Convergenza Prismatica";
+                    let bonusComboDmg = 12;
+                    if (pair === "RW") { guildName = "⚔️☀️ Legione Boros (Elica di Fulmini)"; bonusComboDmg = 14; updatedCaster.currentHP = Math.min(getFinalStats(updatedCaster).maxHP, updatedCaster.currentHP + 8); }
+                    else if (pair === "RU") { guildName = "⚡💧 Lega Izzet (Sovraccarico Nivix)"; bonusComboDmg = 16; combatState.enemyBlueMana = 0; }
+                    else if (pair === "BG") { guildName = "🍄💀 Sciame Golgari (Putrefazione)"; bonusComboDmg = 12; combatState.poisonCounters = (combatState.poisonCounters || 0) + 3; }
+                    else if (pair === "BR") { guildName = "🔥💀 Culto di Rakdos (Carnarium)"; bonusComboDmg = 20; }
+                    else if (pair === "UW") { guildName = "⚖️💧 Senato Azorius (Verdetto)"; bonusComboDmg = 10; combatState.dc = Math.max(15, combatState.dc - 2); }
+
+                    combatState.currentHP = Math.max(1, combatState.currentHP - bonusComboDmg);
+                    combatState.puzzleArmorActive = false;
+                    const comboLog = `🌈⚡ COMBO DI GILDA SULLA PILA [${prevColor}+${effectiveColor} — ${guildName}]! Le due magie si fondono infliggendo **+${bonusComboDmg} Danni Bonus** e infrangendo lo Scudo del Boss!`;
+                    combatState.log.unshift(comboLog);
+                }
+            }
 
             if (spell.effectType === "resurrect") {
                 const deadMate = party.find(p => p.status === "dead" || p.currentHP <= 0);
@@ -6347,6 +6371,25 @@
                 if (nextNodeVal === "serra_blessing_done") {
                     h = learnSpell(h, "path_to_exile");
                     if (isActiveHero) msgs.push(`☀️ L'Angelo di Serra vi insegna **Sentiero dell'Esilio (Path to Exile)**!`);
+                }
+
+                // Conto alla rovescia del Patto Demoniaco nello Zaino (4 Rintocchi!)
+                if (Array.isArray(h.inventory) && h.status !== "dead") {
+                    let pactExpired = false;
+                    h.inventory = h.inventory.map(it => {
+                        if (!it || !it.isDemonicPact) return it;
+                        const nextTicks = (it.pactTicksLeft || 1) - 1;
+                        if (nextTicks <= 0) pactExpired = true;
+                        return Object.assign({}, it, {
+                            pactTicksLeft: nextTicks,
+                            name: "😈📜 PATTO DEMONIACO (" + Math.max(0, nextTicks) + " Rintocchi rimasti)"
+                        });
+                    });
+                    if (pactExpired) {
+                        h.currentHP = 0;
+                        h.status = "dead";
+                        msgs.push(`😈💀 L'ORA È SCADUTA! I 4 Rintocchi del Patto Demoniaco sono terminati: il Demone riscuote l'anima di **${h.name}**, che MUORE ALL'ISTANTE!`);
+                    }
                 }
             }
 
@@ -7033,6 +7076,265 @@
             setEventBanner(`⚡🔐 CODICE ERRATO ("${val}")! La serratura runica punisce chi tira a indovinare: **${character.name} subisce -8 PV**!`);
         };
 
+        // ============================================================================
+        // --- ESPANSIONE: 2° COLORE LEYLINE, PATTO DEMONIACO (4 RINTOCCHI),
+        // --- ESPLOSIONE DI FRAMMENTI, COMBO DI GILDA E MAZZI/COLLEZIONE REALE! ---
+        // (100% Compatibile con Babel 6 - Zero Optional Chaining)
+        // ============================================================================
+        const [showLeylineModal, setShowLeylineModal] = useState(false);
+        const [showAppBridgeModal, setShowAppBridgeModal] = useState(false);
+
+        // 1. SBLOCCO DEL 2° COLORE DI MANA PERSONALIZZATO PER OGNI EROE (Dal Livello 2+)
+        const unlockSecondManaColor = (colorId) => {
+            if (!character) return;
+            if (combatState) return alert("⛔ Non puoi sintonizzare una nuova Leyline durante il combattimento!");
+            if ((character.manaIdentity || []).indexOf(colorId) !== -1) {
+                return alert(character.name + " possiede già il Mana " + colorId + "!");
+            }
+
+            let newIdentity = (character.manaIdentity || []).concat([colorId]);
+            let newPool = Object.assign({}, character.manaPool || { W: 0, U: 0, B: 0, R: 0, G: 0 });
+            newPool[colorId] = (newPool[colorId] || 0) + 2;
+
+            // Impara automaticamente nel Grimorio anche la Stregoneria/Magia del nuovo colore per la sua classe!
+            const newSpellsToLearn = getInitialSpellsForClass(character.classId, colorId);
+            let updatedHero = Object.assign({}, character, {
+                manaIdentity: newIdentity,
+                manaPool: newPool
+            });
+            if (newSpellsToLearn && newSpellsToLearn.length > 0) {
+                updatedHero = learnSpell(updatedHero, newSpellsToLearn[0]);
+            }
+
+            saveCharState(updatedHero);
+            setShowLeylineModal(false);
+            const learnedName = (newSpellsToLearn && newSpellsToLearn[0] && MTG_SPELLS_DB[newSpellsToLearn[0]])
+                ? MTG_SPELLS_DB[newSpellsToLearn[0]].name
+                : "Nuova Magia";
+            setEventBanner(`🌈✨ LEYLINE ARMONIZZATA! **${updatedHero.name}** sblocca il **Mana ${colorId}** (+2 in riserva) e aggiunge al suo Grimorio **${learnedName}**!`);
+        };
+
+        // 2. PATTO DEMONIACO A OROLOGERIA (+5 a tutte le Stat, +50 Oro, Cura Totale, ma Morte dopo 4 Rintocchi!)
+        const signDemonicPact = () => {
+            if (!character || character.status === "dead") return;
+            const inv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
+            const alreadySigned = inv.some(it => it && it.isDemonicPact);
+            if (alreadySigned) {
+                return alert(character.name + " ha già un Patto Demoniaco attivo nello zaino!");
+            }
+            if (!window.confirm("😈 PATTO DEMONIACO (Demonic Pact):\n\nRiceverai SUBITO:\n• +5 FOR, +5 AGI, +5 MAG, +5 COS\n• +50 Monete d'Oro 🪙\n• Guarigione Totale dei Punti Vita ❤️\n\n⚠️ MA ATTENZIONE: Il Contratto di Sangue occuperà 1 Slot del tuo Zaino con un conto alla rovescia di 4 RINTOCCHI (4 spostamenti tra i nodi). Se non lo spezzi pagando 80 Oro e 2 Tesori prima che scada il 4° Rintocco, IL DEMONE PRENDERÀ LA TUA ANIMA UCCIDENDOTI ALL'ISTANTE!\n\nAccetti di firmare col sangue?")) {
+                return;
+            }
+
+            const pactItem = {
+                id: "demonic_pact_" + Date.now(),
+                name: "😈📜 PATTO DEMONIACO (4 Rintocchi rimasti)",
+                isDemonicPact: true,
+                pactTicksLeft: 4,
+                slot: "artifact",
+                str: 5, agi: 5, mag: 5, con: 5,
+                desc: "Contratto Abissale (+5 a tutte le Statistiche! Spezzalo per 80🪙 e 2💎 prima di 0 Rintocchi o MUORI!)"
+            };
+
+            if (inv.length >= MAX_BACKPACK_SLOTS) {
+                inv.pop();
+            }
+            inv.push(pactItem);
+
+            const st = getFinalStats(character);
+            const newMaxHP = st.maxHP + 15;
+            const updated = Object.assign({}, character, {
+                inventory: inv,
+                gold: (character.gold || 0) + 50,
+                currentHP: newMaxHP,
+                status: "alive",
+                deathFailures: 0,
+                deathSuccesses: 0
+            });
+            saveCharState(updated);
+            setEventBanner(`😈🩸 PATTO DEMONIACO FIRMATO! **${character.name}** ottiene +5 a tutte le Statistiche, +50 Oro e Salute Massima... ma restano solo **4 Rintocchi** prima della riscossione dell'anima!`);
+        };
+
+        const breakDemonicPactInBackpack = (invIdx) => {
+            if (!character || !character.inventory || !character.inventory[invIdx]) return;
+            const pactObj = character.inventory[invIdx];
+            if (!pactObj.isDemonicPact) return;
+
+            if ((character.gold || 0) < 80 || (character.treasures || 0) < 2) {
+                return alert("⛔ Per spezzare la clausola mortale del Patto Demoniaco ti servono 80 Monete d'Oro (🪙) e 2 Pedine Tesoro (💎)!");
+            }
+
+            const newInv = character.inventory.slice();
+            newInv.splice(invIdx, 1);
+            const freedHero = Object.assign({}, character, {
+                inventory: newInv,
+                gold: character.gold - 80,
+                treasures: character.treasures - 2
+            });
+            saveCharState(freedHero);
+            setEventBanner(`⛓️🔥 CONTRATTO INFRANTO! **${character.name}** paga 80 Oro e 2 Tesori per bruciare il Patto Demoniaco e salvare la propria anima!`);
+        };
+
+        // 3. ESPLOSIONE DI FRAMMENTI (SHRAPNEL BLAST): Distrugge per sempre l'arma o armatura per 40 Danni Puri!
+        const executeShrapnelBlast = () => {
+            if (!combatState || !character || character.status !== "alive" || character.currentHP <= 0) return;
+            const eq = character.equipped || {};
+            const targetSlot = eq.weapon ? "weapon" : (eq.body ? "body" : (eq.artifact ? "artifact" : null));
+            if (!targetSlot || !eq[targetSlot]) {
+                return alert("Non hai un'Arma, un'Armatura o un Artefatto equipaggiato da far esplodere!");
+            }
+            const sacrificedItem = eq[targetSlot];
+            if (!window.confirm(`💥 ESPLOSIONE DI FRAMMENTI (Shrapnel Blast):\n\nVuoi DISTRUGGERE PER SEMPRE il tuo oggetto equipaggiato "${sacrificedItem.name}" per scagliare **40 DANNI PURI** (che ignorano Scudi Puzzle e Contromagie) contro ${combatState.name}?`)) {
+                return;
+            }
+
+            const newEq = Object.assign({}, eq);
+            newEq[targetSlot] = null;
+            const updatedHero = Object.assign({}, character, { equipped: newEq });
+            saveCharState(updatedHero);
+
+            const blastDmg = 40;
+            const nextMHP = Math.max(0, combatState.currentHP - blastDmg);
+            let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
+            dmgMap[updatedHero.id] = (dmgMap[updatedHero.id] || 0) + blastDmg;
+
+            const blastMsg = `💥🗡️ ESPLOSIONE DI FRAMMENTI (SHRAPNEL BLAST)! **${updatedHero.name}** fa detonare per sempre **${sacrificedItem.name}** infliggendo **40 DANNI PURI** a ${combatState.name} e frantumando ogni sua barriera!`;
+            setEventBanner(blastMsg);
+
+            if (nextMHP <= 0) {
+                finishCombatVictory(updatedHero, dmgMap, blastMsg);
+            } else {
+                setCombatState(Object.assign({}, combatState, {
+                    currentHP: nextMHP,
+                    puzzleArmorActive: false,
+                    puzzleCoreActive: false,
+                    damageDealtByHero: dmgMap,
+                    log: [blastMsg].concat(combatState.log).slice(0, 8)
+                }));
+            }
+        };
+
+        // 4. INTEGRAZIONE CON I VERI MAZZI COMMANDER (`mtg_decks`) E IL RACCOGLITORE (`mtg_collection`) DELL'APP!
+        const getSavedAppCommanders = () => {
+            try {
+                const rawDecks = JSON.parse(localStorage.getItem('mtg_decks') || "[]");
+                if (!Array.isArray(rawDecks)) return [];
+                let cmdrs = [];
+                rawDecks.forEach(d => {
+                    if (!d || !Array.isArray(d.cards) || d.cards.length === 0) return;
+                    const foundCmd = d.cards.find(c => c && c.isCommander) || d.cards[0];
+                    if (foundCmd && foundCmd.name) {
+                        cmdrs.push({
+                            deckName: d.name || "Mazzo Commander",
+                            name: foundCmd.name,
+                            img: foundCmd.proxyImage || foundCmd.image || "mtg-bg.jpg",
+                            colors: Array.isArray(foundCmd.colors) ? foundCmd.colors : ["W"],
+                            cmc: Number(foundCmd.cmc) || 4,
+                            type: foundCmd.type || "Legendary Creature"
+                        });
+                    }
+                });
+                return cmdrs;
+            } catch (e) {
+                return [];
+            }
+        };
+
+        const summonRealCommanderInBattle = (cmdObj) => {
+            if (!character || !cmdObj) return;
+            const claimed = getClaimedLootMap();
+            if (claimed["real_commander_summoned"]) {
+                return alert("Hai già evocato il tuo Vero Comandante in questa campagna (Abilità Suprema 1 volta per partita)!");
+            }
+            if (!combatState) {
+                return alert("Puoi evocare il tuo Vero Comandante solo durante una battaglia nell'Arena!");
+            }
+
+            markLootKeyClaimed("real_commander_summoned");
+            setShowAppBridgeModal(false);
+
+            const cmdDmg = 35 + Math.min(15, (cmdObj.cmc || 4) * 2);
+            const nextMHP = Math.max(0, combatState.currentHP - cmdDmg);
+            let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
+            dmgMap[character.id] = (dmgMap[character.id] || 0) + cmdDmg;
+
+            // Cura il party di +20 PV e dona i colori del Comandante all'eroe attivo!
+            let updatedId = (character.manaIdentity || []).slice();
+            (cmdObj.colors || []).forEach(c => {
+                if (updatedId.indexOf(c) === -1 && ["W","U","B","R","G"].indexOf(c) !== -1) updatedId.push(c);
+            });
+            const maxHp = getFinalStats(character).maxHP;
+            const updatedHero = Object.assign({}, character, {
+                manaIdentity: updatedId,
+                currentHP: Math.min(maxHp, character.currentHP + 20)
+            });
+            saveCharState(updatedHero);
+
+            const cmdMsg = `🌌👑 RICHIAMO DEL VERO COMANDANTE! Dal tuo mazzo reale **"${cmdObj.deckName}"** scende in campo **${cmdObj.name}**: infligge **${cmdDmg} danni divini**, spezza lo Scudo Puzzle, cura +20 PV e infonde i suoi colori di Mana!`;
+            setEventBanner(cmdMsg);
+
+            if (nextMHP <= 0) {
+                finishCombatVictory(updatedHero, dmgMap, cmdMsg);
+            } else {
+                setCombatState(Object.assign({}, combatState, {
+                    currentHP: nextMHP,
+                    puzzleArmorActive: false,
+                    damageDealtByHero: dmgMap,
+                    log: [cmdMsg].concat(combatState.log).slice(0, 8)
+                }));
+            }
+        };
+
+        const getSavedAppCollectionCards = () => {
+            try {
+                const rawColl = JSON.parse(localStorage.getItem('mtg_collection') || "[]");
+                return Array.isArray(rawColl) ? rawColl.slice(0, 12) : [];
+            } catch (e) {
+                return [];
+            }
+        };
+
+        const forgeCollectionCardIntoRelic = (cardObj) => {
+            if (!character || !cardObj) return;
+            if (combatState) return alert("Non puoi forgiare reliquie durante il combattimento!");
+            const claimed = getClaimedLootMap();
+            if (claimed["collection_relic_forged"]) {
+                return alert("Hai già forgiato una Reliquia dal tuo Raccoglitore in questa campagna!");
+            }
+
+            markLootKeyClaimed("collection_relic_forged");
+            setShowAppBridgeModal(false);
+
+            const tLower = String(cardObj.type || "").toLowerCase();
+            const isRare = cardObj.rarity === "mythic" || cardObj.rarity === "rare";
+            const statBoost = isRare ? 5 : 3;
+
+            let forgedKws = [];
+            if (cardObj.colors && cardObj.colors.indexOf("W") !== -1) forgedKws.push("Cautela");
+            if (cardObj.colors && cardObj.colors.indexOf("U") !== -1) forgedKws.push("Volare");
+            if (cardObj.colors && cardObj.colors.indexOf("B") !== -1) forgedKws.push("Tocco Letale");
+            if (cardObj.colors && cardObj.colors.indexOf("R") !== -1) forgedKws.push("Attacco Improvviso");
+            if (cardObj.colors && cardObj.colors.indexOf("G") !== -1) forgedKws.push("Travolgere");
+            if (forgedKws.length === 0) forgedKws.push("Indistruttibile");
+
+            const forgedRelic = {
+                id: "forged_coll_" + Date.now(),
+                name: "✨ Reliquia del Raccoglitore: " + cardObj.name,
+                slot: tLower.indexOf("equipment") !== -1 || tLower.indexOf("creature") !== -1 ? "weapon" : "artifact",
+                str: statBoost,
+                agi: 2,
+                mag: statBoost,
+                con: 4,
+                keywords: forgedKws.slice(0, 2)
+            };
+
+            const inv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
+            inv.push(forgedRelic);
+            const updated = Object.assign({}, character, { inventory: inv });
+            saveCharState(updated);
+            setEventBanner(`⚒️📚 FORGIA DAL RACCOGLITORE COMPLETATA! La tua carta reale **${cardObj.name}** è stata trasformata nella reliquia equipaggiabile **${forgedRelic.name}** (+${statBoost} FOR/MAG, +4 COS, ${forgedRelic.keywords.join(", ")})!`);
+        };
+      
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
             const activeParty = party.length > 0 ? party : [character];
@@ -7222,6 +7524,8 @@
 
             const handleNewRoundEffects = () => {
                 actedList = [];
+                updatedCombatState.spellsCastThisRoundColors = [];
+                updatedCombatState.guildComboTriggeredThisRound = false;
                 if (!updatedCombatState.monsterFled && updatedCombatState.currentHP > 0) {
                     if ((updatedCombatState.poisonCounters || 0) > 0) {
                         const poisonDmg = updatedCombatState.poisonCounters * 3;
@@ -8588,6 +8892,26 @@
                                     🏛️ 2ª Classe
                                 </button>
                             )}
+                            {character.level >= 2 && (character.manaIdentity || []).length < 3 && (
+                                <button
+                                    onClick={() => setShowLeylineModal(!showLeylineModal)}
+                                    className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                                >
+                                    🌈 +Colore Mana
+                                </button>
+                            )}
+                            <button
+                                onClick={signDemonicPact}
+                                className="bg-red-950 hover:bg-red-800 text-red-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-red-500"
+                            >
+                                😈 Patto Demoniaco
+                            </button>
+                            <button
+                                onClick={() => setShowAppBridgeModal(!showAppBridgeModal)}
+                                className="bg-amber-600 hover:bg-amber-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                🃏 Mazzi & Collezione
+                            </button>
                             {partyHasPlaneswalker && (
                                 <button
                                     onClick={() => applyRewardsAndMove(character, null, "planeswalker_nexus", "🌌 Viaggio Planare attivato!")}
@@ -8733,6 +9057,99 @@
                                         <p className="text-gray-300 text-[10px]">{c.ability}</p>
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODALE SBLOCCO 2° / 3° COLORE DI MANA PERSONALIZZATO PER OGNI EROE */}
+                    {showLeylineModal && (
+                        <div className="bg-gray-900 border-4 border-cyan-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-cyan-300 font-black text-sm uppercase">
+                                    🌈 Santuario delle Leyline: Scegli un Nuovo Colore di Mana per {character.name}
+                                </h3>
+                                <button onClick={() => setShowLeylineModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Sintonizza l'anima di <b>{character.name}</b> su un nuovo Colore di Mana: sbloccherai quel colore per usare gli Artefatti dedicati, riceverai <b>+2 Mana subito in riserva</b> e imparerai nel Grimorio la <b>Stregoneria di Classe di quel colore</b>!
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                {MANA_COLORS.filter(m => (character.manaIdentity || []).indexOf(m.id) === -1).map(m => (
+                                    <button
+                                        key={m.id}
+                                        onClick={() => unlockSecondManaColor(m.id)}
+                                        className="bg-gray-950 hover:bg-cyan-950 border-2 border-cyan-500/60 p-3 rounded-xl text-left transition-all"
+                                    >
+                                        <p className="text-white font-black text-xs">{m.icon} Sblocca {m.name}</p>
+                                        <p className="text-cyan-300 text-[10px] mt-0.5">+2 Mana {m.id} & Nuova Magia nel Grimorio</p>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODALE PONTE CON I VERI MAZZI COMMANDER E IL RACCOGLITORE DELL'APP */}
+                    {showAppBridgeModal && (
+                        <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-4">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-amber-400 font-black text-sm uppercase">
+                                    🃏 Ponte Planare con i Tuoi Mazzi Commander & Raccoglitore Reale
+                                </h3>
+                                <button onClick={() => setShowAppBridgeModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+
+                            {/* SEZIONE A: RICHIAMO DEL VERO COMANDANTE IN BATTAGLIA */}
+                            <div className="space-y-2">
+                                <p className="text-xs font-black text-orange-300 uppercase">
+                                    👑 1. Evoca il Comandante di un tuo Mazzo Salvato (1 volta per Campagna, in Battaglia):
+                                </p>
+                                {getSavedAppCommanders().length === 0 ? (
+                                    <p className="text-xs text-gray-400 italic">Nessun mazzo trovato in "I Miei Mazzi". Crea un mazzo nel Deckbuilder per evocare il tuo Comandante nel GDR!</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                                        {getSavedAppCommanders().map((cmd, idx) => (
+                                            <div key={idx} className="bg-gray-950 border border-orange-500/60 rounded-xl p-2 flex items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="text-white font-black text-xs truncate">{cmd.name}</p>
+                                                    <p className="text-gray-400 text-[10px] truncate">Mazzo: {cmd.deckName}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => summonRealCommanderInBattle(cmd)}
+                                                    className="bg-orange-500 hover:bg-orange-400 text-black font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
+                                                >
+                                                    ⚡ Evoca!
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* SEZIONE B: FORGIA UNA CARTA DEL RACCOGLITORE IN RELIQUIA GDR */}
+                            <div className="border-t border-gray-700 pt-3 space-y-2">
+                                <p className="text-xs font-black text-emerald-300 uppercase">
+                                    ⚒️ 2. Forgia una Carta del tuo Raccoglitore in Reliquia Equipaggiabile (1 volta per Campagna):
+                                </p>
+                                {getSavedAppCollectionCards().length === 0 ? (
+                                    <p className="text-xs text-gray-400 italic">Nessuna carta nel Raccoglitore dell'App. Aggiungi carte alla tua Collezione per forgiarle nel GDR!</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                                        {getSavedAppCollectionCards().map((cObj, idx) => (
+                                            <div key={idx} className="bg-gray-950 border border-emerald-500/60 rounded-xl p-2 flex items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="text-white font-bold text-xs truncate">{cObj.name}</p>
+                                                    <p className="text-emerald-300 text-[10px] truncate">{cObj.type || "Carta Collezione"}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => forgeCollectionCardIntoRelic(cObj)}
+                                                    className="bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
+                                                >
+                                                    ⚒️ Forgia
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -9561,6 +9978,12 @@
                                                                     <span className="text-gray-300 text-[11px]">Stat MAG: {stats.mag}</span>
                                                                 </button>
                                                             </div>
+                                                            <button
+                                                                onClick={executeShrapnelBlast}
+                                                                className="w-full bg-gradient-to-r from-red-950 via-orange-900 to-red-950 hover:from-red-800 hover:to-orange-700 border border-orange-400 text-orange-200 font-black py-2 px-3 rounded-xl text-xs shadow mt-1"
+                                                            >
+                                                                💥 Esplosione di Frammenti (Distruggi per sempre un tuo Oggetto Equipaggiato ➔ 40 Danni Puri!)
+                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -9569,6 +9992,8 @@
                                     )}
                                 </div>
                             )}
+
+                            {/* DIARIO DEI TURNI */}
 
                             {/* DIARIO DEI TURNI */}
                             <div className="bg-black/60 border border-gray-700 rounded-xl p-3 space-y-1 max-h-44 overflow-y-auto">
@@ -9874,16 +10299,35 @@
                                         const rSlot = detectRealSlot(it);
                                         const slObj = EQUIP_SLOTS.find(s => s.key === rSlot);
                                         return (
-                                            <div key={idx} className="bg-gray-900 border border-gray-700 p-2 rounded-lg flex flex-wrap justify-between items-center gap-2">
-                                                <span className="text-xs font-bold text-white">
-                                                    {slObj ? slObj.icon : "🎒"} {it.name} <span className="text-amber-400">{formatItemBonuses(it)}</span>
-                                                </span>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    <button onClick={() => equipItem(it)} className="bg-indigo-700 hover:bg-indigo-600 border border-indigo-400 text-white text-[11px] font-black px-2.5 py-1 rounded shadow">
-                                                        ⬆️ Equipaggia
-                                                    </button>
-                                                    {party.length > 1 && party.filter(p => p.id !== character.id).map(mate => (
-                                                        <button
+                                           <div key={idx} className="bg-gray-900 border border-gray-700 p-2 rounded-lg flex flex-wrap justify-between items-center gap-2">
+                                                    <span className="text-xs font-bold text-white">
+                                                        {slObj ? slObj.icon : "🎒"} {it.name} <span className="text-amber-400">{formatItemBonuses(it)}</span>
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {it.isDemonicPact ? (
+                                                            <button
+                                                                onClick={() => breakDemonicPactInBackpack(idx)}
+                                                                className="bg-purple-800 hover:bg-purple-600 border border-purple-300 text-white text-[11px] font-black px-2.5 py-1 rounded shadow animate-pulse"
+                                                            >
+                                                                ⛓️ Spezza Patto (-80🪙 e -2💎)
+                                                            </button>
+                                                        ) : it.isTrauma ? (
+                                                            <button
+                                                                onClick={() => cureTraumaInBackpack(idx)}
+                                                                className="bg-red-700 hover:bg-red-600 border border-red-300 text-white text-[11px] font-black px-2.5 py-1 rounded shadow animate-pulse"
+                                                            >
+                                                                🩹 Cura Trauma (-1🍖 e -20🪙)
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => equipItem(it)}
+                                                                className="bg-indigo-700 hover:bg-indigo-600 border border-indigo-400 text-white text-[11px] font-black px-2.5 py-1 rounded shadow"
+                                                            >
+                                                                ⬆️ Equipaggia
+                                                            </button>
+                                                        )}
+                                                        {!it.isTrauma && !it.isDemonicPact && party.length > 1 && party.filter(p => p.id !== character.id).map(mate => (
+                                                            <button
                                                             key={mate.id}
                                                             onClick={() => tradeItemToHero(it, idx, mate.id)}
                                                             className="bg-purple-800 hover:bg-purple-700 border border-purple-400 text-purple-100 text-[11px] font-bold px-2.5 py-1 rounded shadow"
