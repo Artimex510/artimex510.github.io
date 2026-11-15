@@ -7818,6 +7818,9 @@
 
             const partyWithMvp = currentPartyList.map(h => {
                 let updatedH = h.id === lastActiveHero.id ? { ...lastActiveHero } : { ...h };
+                // Sconfitto il mostro custode, spezza qualsiasi trappola (es. Anello dell'Oblio, Ponte Intrappolante, ecc.)!
+                updatedH.isTrapped = false;
+                updatedH.trapName = null;
                 if (restoredPvpParty) {
                     updatedH.isPhyrexian = false;
                     updatedH.status = "alive";
@@ -8177,6 +8180,14 @@
                 } else {
                     rollNote += ` Subisci ${dmg} danni!`;
                 }
+            }
+
+            // SE IL NODO È UNA TRAPPOLA E IL TIRO FALLISCE, INTRAPPOLA L'EROE ATTIVO!
+            if (!passed && choice.trapActiveHeroOnFail) {
+                const cNodeObj = RPG_STORY_NODES[character.currentNode];
+                updatedChar.isTrapped = true;
+                updatedChar.trapName = (cNodeObj && cNodeObj.trapName) ? cNodeObj.trapName : "Trappola di Magic";
+                rollNote += ` 🪤 ${updatedChar.name} rimane INTRAPPOLATO in [${updatedChar.trapName}] (in battaglia potrà aiutare solo con le Magie del Grimorio o tentare di liberarsi)!`;
             }
 
             setLastRollInfo({
@@ -8730,14 +8741,8 @@
                 }
             }
 
-            // 6. Combattimento (con eventuale sblocco trappola a fine scontro)
+            // 6. Combattimento (la trappola verrà rimossa solo a vittoria ottenuta in finishCombatVictory!)
             if (choice.type === 'combat' && choice.monster) {
-                if (choice.clearTrapOnWin && party.length > 0) {
-                    const freed = party.map(h => Object.assign({}, h, { isTrapped: false, trapName: null }));
-                    setParty(freed);
-                    localStorage.setItem('rpg_party', JSON.stringify(freed));
-                    if (character) character.isTrapped = false;
-                }
                 startMonsterEncounter(choice.monster, choice.winNode || choice.nextNode);
                 return;
             }
@@ -8749,20 +8754,12 @@
                 return;
             }
 
-            // 8. Tiro di Dado D20 (con gestione Trappole di Magic in caso di fallimento)
-            if (choice.trapActiveHeroOnFail && character) {
-                const cNode = RPG_STORY_NODES[character.currentNode];
-                character.trapName = (cNode && cNode.trapName) ? cNode.trapName : "Trappola di Magic";
-            }
-
+            // 8. Tiro di Dado D20
             if (diceMode === "manual") {
                 setPendingRollChoice(choice);
                 window.scrollTo(0, 0);
             } else {
                 const randomD20 = Math.floor(Math.random() * 20) + 1;
-                if (choice.trapActiveHeroOnFail && randomD20 < 10 && character) {
-                    character.isTrapped = true;
-                }
                 executeRollCalculation(choice, randomD20);
             }
         };
@@ -9956,35 +9953,80 @@
                                                                 {stats.keywords.length > 0 ? ` — Attive: [${stats.keywords.join(", ")}]` : ""}:
                                                             </p>
 
-                                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                                <button
-                                                                    onClick={() => diceMode === "manual" ? setPendingCombatAction("str") : resolveCombatTurn("str", Math.floor(Math.random()*20)+1)}
-                                                                    className="bg-red-900/80 hover:bg-red-800 border-2 border-red-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
-                                                                >
-                                                                    <span className="text-sm font-black block">⚔️ Assalto col Ferro (FOR)</span>
-                                                                    <span className="text-gray-300 text-[11px]">Stat FOR: {stats.str}</span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => diceMode === "manual" ? setPendingCombatAction("agi") : resolveCombatTurn("agi", Math.floor(Math.random()*20)+1)}
-                                                                    className="bg-emerald-900/80 hover:bg-emerald-800 border-2 border-emerald-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
-                                                                >
-                                                                    <span className="text-sm font-black block">🏹 Colpo Mirato (AGI)</span>
-                                                                    <span className="text-gray-300 text-[11px]">Stat AGI: {stats.agi}</span>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => diceMode === "manual" ? setPendingCombatAction("mag") : resolveCombatTurn("mag", Math.floor(Math.random()*20)+1)}
-                                                                    className="bg-indigo-900/80 hover:bg-indigo-800 border-2 border-indigo-400 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
-                                                                >
-                                                                    <span className="text-sm font-black block">🔮 Attacco Magico Base (MAG)</span>
-                                                                    <span className="text-gray-300 text-[11px]">Stat MAG: {stats.mag}</span>
-                                                                </button>
-                                                            </div>
-                                                            <button
-                                                                onClick={executeShrapnelBlast}
-                                                                className="w-full bg-gradient-to-r from-red-950 via-orange-900 to-red-950 hover:from-red-800 hover:to-orange-700 border border-orange-400 text-orange-200 font-black py-2 px-3 rounded-xl text-xs shadow mt-1"
-                                                            >
-                                                                💥 Esplosione di Frammenti (Distruggi per sempre un tuo Oggetto Equipaggiato ➔ 40 Danni Puri!)
-                                                            </button>
+                                                            {character.isTrapped ? (
+                                                                <div className="bg-red-950/90 border-2 border-amber-500 rounded-xl p-3.5 text-center space-y-2.5 animate-fade">
+                                                                    <p className="text-xs sm:text-sm font-black text-amber-300 uppercase">
+                                                                        🪤 {character.name} è imprigionato in: {character.trapName || "Trappola di Magic"}!
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-200 leading-relaxed">
+                                                                        Essendo intrappolato **non può attaccare fisicamente il nemico**, ma può **✨ lanciare Magie di supporto o d'attacco dal Grimorio qui sopra** e poi passare il turno, oppure usare il turno per tentare di forzare la trappola!
+                                                                    </p>
+                                                                    <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const d20 = Math.floor(Math.random() * 20) + 1;
+                                                                                const bestStat = Math.max(stats.str, stats.agi, stats.mag);
+                                                                                const total = d20 + bestStat;
+                                                                                let turnLog = combatState.log.slice();
+                                                                                if (d20 === 20 || total >= 24) {
+                                                                                    const freedHero = Object.assign({}, character, { isTrapped: false, trapName: null });
+                                                                                    const newP = (party.length > 0 ? party : [freedHero]).map(p => p.id === freedHero.id ? freedHero : p);
+                                                                                    savePartyState(newP);
+                                                                                    turnLog.unshift(`🔓✨ **${character.name}** spezza **${character.trapName || "la Trappola"}** [Dado ${d20} + Stat ${bestStat} = ${total} vs CD 24] e torna libero!`);
+                                                                                    advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), newP);
+                                                                                } else {
+                                                                                    turnLog.unshift(`⛓️❌ **${character.name}** tenta di liberarsi da **${character.trapName || "la Trappola"}** [Dado ${d20} + Stat ${bestStat} = ${total} vs CD 24], ma non ci riesce e passa il turno!`);
+                                                                                    advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), party.length > 0 ? party : [character]);
+                                                                                }
+                                                                            }}
+                                                                            className="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs px-4 py-2.5 rounded-xl shadow"
+                                                                        >
+                                                                            🔓 Tenta di Liberarti (Prova CD 24 — Usa il Turno)
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const turnLog = [`🪤 ${character.name} è intrappolato: passa il turno d'attacco ai compagni.`, ...combatState.log].slice(0, 8);
+                                                                                advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), party.length > 0 ? party : [character]);
+                                                                            }}
+                                                                            className="bg-gray-800 hover:bg-gray-700 border border-gray-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl"
+                                                                        >
+                                                                            ⏭️ Passa il Turno (Dopo aver usato Magie)
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <React.Fragment>
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                                        <button
+                                                                            onClick={() => diceMode === "manual" ? setPendingCombatAction("str") : resolveCombatTurn("str", Math.floor(Math.random()*20)+1)}
+                                                                            className="bg-red-900/80 hover:bg-red-800 border-2 border-red-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
+                                                                        >
+                                                                            <span className="text-sm font-black block">⚔️ Assalto col Ferro (FOR)</span>
+                                                                            <span className="text-gray-300 text-[11px]">Stat FOR: {stats.str}</span>
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => diceMode === "manual" ? setPendingCombatAction("agi") : resolveCombatTurn("agi", Math.floor(Math.random()*20)+1)}
+                                                                            className="bg-emerald-900/80 hover:bg-emerald-800 border-2 border-emerald-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
+                                                                        >
+                                                                            <span className="text-sm font-black block">🏹 Colpo Mirato (AGI)</span>
+                                                                            <span className="text-gray-300 text-[11px]">Stat AGI: {stats.agi}</span>
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => diceMode === "manual" ? setPendingCombatAction("mag") : resolveCombatTurn("mag", Math.floor(Math.random()*20)+1)}
+                                                                            className="bg-indigo-900/80 hover:bg-indigo-800 border-2 border-indigo-400 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
+                                                                        >
+                                                                            <span className="text-sm font-black block">🔮 Attacco Magico Base (MAG)</span>
+                                                                            <span className="text-gray-300 text-[11px]">Stat MAG: {stats.mag}</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={executeShrapnelBlast}
+                                                                        className="w-full bg-gradient-to-r from-red-950 via-orange-900 to-red-950 hover:from-red-800 hover:to-orange-700 border border-orange-400 text-orange-200 font-black py-2 px-3 rounded-xl text-xs shadow mt-1"
+                                                                    >
+                                                                        💥 Esplosione di Frammenti (Distruggi per sempre un tuo Oggetto Equipaggiato ➔ 40 Danni Puri!)
+                                                                    </button>
+                                                                </React.Fragment>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -9993,8 +10035,6 @@
                                     )}
                                 </div>
                             )}
-
-                            {/* DIARIO DEI TURNI */}
 
                             {/* DIARIO DEI TURNI */}
                             <div className="bg-black/60 border border-gray-700 rounded-xl p-3 space-y-1 max-h-44 overflow-y-auto">
