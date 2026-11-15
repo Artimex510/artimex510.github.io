@@ -5313,6 +5313,12 @@
             const defaultPool = { W: 0, U: 0, B: 0, R: 0, G: 0 };
             defaultPool[mainM] = 2;
 
+            const activeSpells = Array.isArray(char.spells) ? char.spells.slice(0, 3) : getInitialSpellsForClass(char.classId, mainM).slice(0, 3);
+            let knownBook = Array.isArray(char.spellbook) ? char.spellbook.slice() : getInitialSpellsForClass(char.classId, mainM).slice();
+            activeSpells.forEach(spId => {
+                if (spId && knownBook.indexOf(spId) === -1) knownBook.push(spId);
+            });
+
             return {
                 ...char,
                 status: char.status || (char.currentHP <= 0 ? "unconscious" : "alive"),
@@ -5323,7 +5329,8 @@
                 secondaryLevel: char.secondaryLevel || 0,
                 manaPool: char.manaPool || defaultPool,
                 nodeTickCounter: char.nodeTickCounter || 0,
-                spells: Array.isArray(char.spells) ? char.spells : getInitialSpellsForClass(char.classId, mainM),
+                spells: activeSpells,
+                spellbook: knownBook,
                 usedOneShots: Array.isArray(char.usedOneShots) ? char.usedOneShots : [],
                 completedArcs: Array.isArray(char.completedArcs) ? char.completedArcs : [],
                 visitedNodes: Array.isArray(char.visitedNodes) ? char.visitedNodes : [],
@@ -5340,6 +5347,7 @@
                 }
             };
         };
+      
         const isHeroHealer = (char) => {
             if (!char) return false;
             return char.classId === "chierico" || char.classId === "sciamano" || char.secondaryClassId === "chierico" || char.secondaryClassId === "sciamano";
@@ -5811,13 +5819,54 @@
         const learnSpell = (hero, spellId) => {
             if (!MTG_SPELLS_DB[spellId]) return hero;
             let currentSpells = Array.isArray(hero.spells) ? [...hero.spells] : [];
-            if (currentSpells.includes(spellId)) return hero;
-            if (currentSpells.length < 3) {
-                currentSpells.push(spellId);
-            } else {
-                currentSpells[2] = spellId;
+            let currentBook = Array.isArray(hero.spellbook) ? [...hero.spellbook] : [...currentSpells];
+
+            if (currentBook.indexOf(spellId) === -1) {
+                currentBook.push(spellId);
             }
-            return { ...hero, spells: currentSpells };
+            // Se c'è uno slot attivo libero (meno di 3 magie preparate) e non siamo in combattimento, la prepara subito
+            if (currentSpells.indexOf(spellId) === -1 && currentSpells.length < 3 && !combatState) {
+                currentSpells.push(spellId);
+            }
+            return { ...hero, spells: currentSpells, spellbook: currentBook };
+        };
+
+        // Prepara una magia dall'Archivio del Grimorio in uno dei 3 Slot Attivi (SOLO FUORI DAL COMBATTIMENTO!)
+        const equipSpellFromGrimorio = (spellId) => {
+            if (combatState) {
+                return alert("⛔ ARSENALE BLOCCATO: Non puoi cambiare le magie preparate durante il combattimento! Prepara il tuo Grimorio prima della battaglia.");
+            }
+            if (!character || !MTG_SPELLS_DB[spellId]) return;
+            let activeSpells = Array.isArray(character.spells) ? [...character.spells] : [];
+            if (activeSpells.indexOf(spellId) !== -1) {
+                return alert("Questa magia è già preparata in uno dei tuoi 3 Slot Attivi!");
+            }
+            if (activeSpells.length >= 3) {
+                return alert("Hai già tutti e 3 gli Slot Magia occupati! Clicca prima su '⬇️ Riponi' su una delle magie attive per liberare uno slot.");
+            }
+            activeSpells.push(spellId);
+            const updated = Object.assign({}, character, { spells: activeSpells });
+            saveCharState(updated);
+            setEventBanner(`📖 Hai preparato **${MTG_SPELLS_DB[spellId].name}** nello Slot Magia ${activeSpells.length}!`);
+        };
+
+        // Ripone una magia da uno dei 3 Slot Attivi nell'Archivio del Grimorio (SOLO FUORI DAL COMBATTIMENTO!)
+        const unequipSpellFromSlot = (slotIdx) => {
+            if (combatState) {
+                return alert("⛔ ARSENALE BLOCCATO: Non puoi modificare gli slot del Grimorio durante il combattimento!");
+            }
+            if (!character || !Array.isArray(character.spells) || slotIdx < 0 || slotIdx >= character.spells.length) return;
+            const removedId = character.spells[slotIdx];
+            const removedObj = MTG_SPELLS_DB[removedId];
+            let activeSpells = character.spells.slice();
+            activeSpells.splice(slotIdx, 1);
+
+            let book = Array.isArray(character.spellbook) ? character.spellbook.slice() : [];
+            if (removedId && book.indexOf(removedId) === -1) book.push(removedId);
+
+            const updated = Object.assign({}, character, { spells: activeSpells, spellbook: book });
+            saveCharState(updated);
+            setEventBanner(`📚 Hai riposto **${removedObj ? removedObj.name : "la magia"}** nell'Archivio del Grimorio (Slot liberato).`);
         };
 
         const unlockSecondaryClass = (newClassId) => {
@@ -6164,6 +6213,9 @@
         };
 
         const equipItem = (rawItem) => {
+            if (combatState) {
+                return alert("⛔ ARSENALE BLOCCATO: Non puoi cambiare equipaggiamento durante il combattimento! Prepara le tue armi e armature prima della battaglia.");
+            }
             const realSlot = detectRealSlot(rawItem);
             const item = { ...rawItem, slot: realSlot };
 
@@ -6208,6 +6260,9 @@
         };
 
         const unequipSlot = (slotKey) => {
+            if (combatState) {
+                return alert("⛔ ARSENALE BLOCCATO: Non puoi rimuovere equipaggiamento durante il combattimento!");
+            }
             let updated = normalizeCharacterSlots(character);
             const itemInSlot = updated.equipped[slotKey];
             if (!itemInSlot) return;
@@ -6223,6 +6278,9 @@
         };
 
         const tradeItemToHero = (itemToTrade, itemIndex, targetHeroId) => {
+            if (combatState) {
+                return alert("⛔ ARSENALE BLOCCATO: Non puoi scambiare oggetti con i compagni durante il combattimento!");
+            }
             if (!character || party.length < 2) return;
             const targetHero = party.find(p => p.id === targetHeroId);
             if (!targetHero) return;
@@ -6246,7 +6304,7 @@
             savePartyState(newParty);
             setEventBanner(`🤝 Scambio completato: ${character.name} ha ceduto "${adaptedForTarget.name}" a ${targetHero.name}!`);
         };
-
+      
         const tradeGoldToHero = (targetHeroId, amount) => {
             if (!character || (character.gold || 0) < amount) {
                 return alert(`Non hai abbastanza Monete d'Oro per inviarne ${amount}!`);
@@ -6427,7 +6485,7 @@
             return { hero: h, msgs: msgs };
         };
 
-        const applyRewardsAndMove = (charState, rewards, targetNodeId, extraBanner = "") => {
+        const applyRewardsAndMove = (charState, rewards, targetNodeId, extraBanner = "", customPartyOverride = null) => {
             let requestedNode = targetNodeId || charState.currentNode;
             let allMessages = [];
             if (extraBanner) allMessages.push(extraBanner);
@@ -6468,7 +6526,11 @@
                 zendikar_ch2: "zendikar_ch1"
             };
 
-            const currentPartyList = party.length > 0 ? party : [charState];
+            // FIX RIUNIONE PARTY PVP: Usa customPartyOverride se passato, così non legge mai il party parziale dell'Arena!
+            const currentPartyList = (customPartyOverride && customPartyOverride.length > 0)
+                ? customPartyOverride
+                : (party.length > 0 ? party : [charState]);
+
             let sharedCompletedArcs = Array.isArray(charState.completedArcs) ? [...charState.completedArcs] : [];
             let sharedVisitedNodes = Array.isArray(charState.visitedNodes) ? [...charState.visitedNodes] : [];
 
@@ -6481,7 +6543,6 @@
                 allMessages.push("🧭 Avete già sconfitto il Boss e completato la storia principale di questa regione: entrate nella zona pacificata!");
             }
 
-            // Traccia la transizione (Da Nodo -> A Nodo) così tornare a un Hub (es. jaya_squee_camp o crossroads_wilds) non blocca i premi!
             const transitionKey = (charState.currentNode || "start") + "->" + requestedNode;
             const hasUniqueLoot = normalizedRewards && (normalizedRewards.loot || normalizedRewards.addMana || normalizedRewards.makeLegendary || normalizedRewards.igniteSpark);
             const alreadyClaimedTransition = sharedVisitedNodes.includes(transitionKey) && !hasUniqueLoot;
@@ -6489,8 +6550,8 @@
             let effectiveRewards = normalizedRewards;
             if (alreadyClaimedTransition && normalizedRewards && requestedNode !== charState.currentNode) {
                 effectiveRewards = {
-                    damage: normalizedRewards.damage,
-                    partyDamage: normalizedRewards.partyDamage
+                    damage: rewards.damage,
+                    partyDamage: rewards.partyDamage
                 };
             } else if (normalizedRewards && (normalizedRewards.exp || normalizedRewards.loot || normalizedRewards.gold || normalizedRewards.makeLegendary)) {
                 if (!sharedVisitedNodes.includes(transitionKey)) {
@@ -7394,7 +7455,27 @@
         };
 
         const finishCombatVictory = (lastActiveHero, dmgMap, finalBlowMsg) => {
-            const currentPartyList = party.length > 0 ? party : [lastActiveHero];
+            // Se era il Duello PvP tra compagni e hanno vinto i Puri, riunisce e purifica tutta la Compagnia!
+            let restoredPvpParty = null;
+            if (combatState && combatState.isPvpBoss) {
+                try {
+                    const baseFull = (combatState.pvpFullParty && combatState.pvpFullParty.length > 0)
+                        ? combatState.pvpFullParty
+                        : JSON.parse(localStorage.getItem('rpg_pvp_full_party_backup') || "null");
+                    if (baseFull && Array.isArray(baseFull)) {
+                        restoredPvpParty = baseFull.map(h => Object.assign({}, h, {
+                            isPhyrexian: false,
+                            status: "alive",
+                            currentHP: Math.max(15, h.currentHP || 20),
+                            deathFailures: 0,
+                            deathSuccesses: 0
+                        }));
+                    }
+                    localStorage.removeItem('rpg_pvp_full_party_backup');
+                } catch (e) {}
+            }
+
+            const currentPartyList = restoredPvpParty || (party.length > 0 ? party : [lastActiveHero]);
             let mvpHeroId = lastActiveHero.id;
             let maxDmgDealt = -1;
             let dmgReportLines = [];
@@ -7433,6 +7514,11 @@
 
             const partyWithMvp = currentPartyList.map(h => {
                 let updatedH = h.id === lastActiveHero.id ? { ...lastActiveHero } : { ...h };
+                if (restoredPvpParty) {
+                    updatedH.isPhyrexian = false;
+                    updatedH.status = "alive";
+                    updatedH.currentHP = Math.max(15, updatedH.currentHP || 20);
+                }
                 if (updatedH.id === mvpHeroId && updatedH.status !== "dead") {
                     updatedH.exp = (updatedH.exp || 0) + bonusMvpExp;
                     updatedH.gold = (updatedH.gold || 0) + bonusMvpGold;
@@ -7460,7 +7546,7 @@
                 ? `\n🗡️💰 BOTTINO EXTRA STREGONERIA FURTIVA: **+${plunderGold} Oro 🪙, +${plunderTreasures} Tesori 💎, +${plunderFood} Cibi 🍖**!`
                 : "";
 
-            // --- PASSO 2: REGISTRAZIONE MEMORIA STORICA PER IL BOSS TELEPATE (PSYCHO MANTIS EFFECT) ---
+            // REGISTRAZIONE MEMORIA STORICA PER IL BOSS TELEPATE (PSYCHO MANTIS EFFECT)
             try {
                 const rawChronicle = localStorage.getItem('rpg_chronicle');
                 let chronicle = rawChronicle ? JSON.parse(rawChronicle) : { kills: [], totalBattles: 0 };
@@ -7478,7 +7564,6 @@
                 chronicle.kills = chronicle.kills.slice(0, 15);
                 localStorage.setItem('rpg_chronicle', JSON.stringify(chronicle));
             } catch (e) {}
-            // ------------------------------------------------------------------------------------------
 
             setCombatState(null);
 
@@ -7487,7 +7572,8 @@
                 currentUpdatedActive,
                 winRewards,
                 targetWinNode,
-                `${finalBlowMsg}\n🏆 VITTORIA CONTRO ${monsterName.toUpperCase()}!\n📊 Danni: ${dmgReportLines.join(" | ")}\n🥇 MVP: **${mvpHeroObj.name}** (+${bonusMvpExp} EXP, +${bonusMvpGold} 🪙 e +1 💎!)${plunderBanner}${rogueliteRecoveryBanner}`
+                `${finalBlowMsg}\n🏆 VITTORIA CONTRO ${monsterName.toUpperCase()}!\n📊 Danni: ${dmgReportLines.join(" | ")}\n🥇 MVP: **${mvpHeroObj.name}** (+${bonusMvpExp} EXP, +${bonusMvpGold} 🪙 e +1 💎!)${plunderBanner}${rogueliteRecoveryBanner}`,
+                partyWithMvp
             );
         };
       
@@ -7918,7 +8004,6 @@
             const list = party.length > 0 ? party.slice() : (character ? [Object.assign({}, character)] : []);
             const aliveList = list.filter(h => h.status !== "dead");
 
-            // Controllo di sicurezza: tutti i giocatori vivi devono aver scelto!
             const allDecided = aliveList.every(h => sphereDecisions[h.id] === "touch" || sphereDecisions[h.id] === "refuse");
             if (!allDecided) {
                 return alert("⚠️ Ogni giocatore della Compagnia deve prima cliccare su 'Tocca la Sfera' o 'Resta Indietro'!");
@@ -7971,45 +8056,61 @@
                 });
             });
 
-            if (party.length > 0) {
-                setParty(updatedParty);
-                localStorage.setItem('rpg_party', JSON.stringify(updatedParty));
-            }
+            // Salva subito il backup di TUTTA la Compagnia (sia Infetti che Puri) prima ancora che inizi il PvP!
+            try {
+                localStorage.setItem('rpg_pvp_full_party_backup', JSON.stringify(updatedParty));
+            } catch (e) {}
 
             // CASO 2: TUTTI TOCCANO LA SFERA -> SCELTA FINE PARTITA O CAMPAGNA MALVAGIA PHYREXIANA!
             if (pureCount === 0) {
                 const firstCorrupted = updatedParty[0];
-                setCharacter(firstCorrupted);
-                localStorage.setItem('rpg_character', JSON.stringify(firstCorrupted));
-                setEventBanner("☣️ L'Olio Scintillante ha assimilato l'intera Compagnia (+35% Stat e Mana Φ)!");
-                applyRewardsAndMove(firstCorrupted, null, allCorruptedNode || "phyrexian_all_corrupted_choice");
+                applyRewardsAndMove(
+                    firstCorrupted,
+                    null,
+                    allCorruptedNode || "phyrexian_all_corrupted_choice",
+                    "☣️ L'Olio Scintillante ha assimilato l'intera Compagnia (+35% Stat e Mana Φ)!",
+                    updatedParty
+                );
                 return;
             }
 
-            // CASO 3: GRUPPO DIVISO -> VAI AL NODO PRE-ARENA PVP!
+            // CASO 3: GRUPPO DIVISO -> VAI AL NODO PRE-ARENA PVP PASSANDO TUTTO IL PARTY!
             const firstPure = updatedParty.find(h => h.status !== "dead" && !h.isPhyrexian) || updatedParty[0];
-            setCharacter(firstPure);
-            localStorage.setItem('rpg_character', JSON.stringify(firstPure));
-            setEventBanner("⚔️🩸 COLPO DI SCENA! La Sfera conteneva l'Olio di Phyrexia: chi l'ha toccata ottiene +" + bonusPct + "% alle Statistiche e si rivolta contro i compagni!");
-            applyRewardsAndMove(firstPure, null, pvpNode || "mirrodin_pvp_betrayal_arena");
+            applyRewardsAndMove(
+                firstPure,
+                null,
+                pvpNode || "mirrodin_pvp_betrayal_arena",
+                "⚔️🩸 COLPO DI SCENA! La Sfera conteneva l'Olio di Phyrexia: chi l'ha toccata ottiene +" + bonusPct + "% alle Statistiche e si rivolta contro i compagni!",
+                updatedParty
+            );
         };
 
         // AVVIA LA VERA BATTAGLIA PVP NELL'ARENA A TURNI (EROI PURI CONTRO EROI PHYREXIANI GIOCABILI!)
         const resolvePvpClashRound = (pureWinNode, phyrexianWinNode) => {
-            const fullList = party.length > 0 ? party.slice() : (character ? [character] : []);
+            let fullList = party.length > 0 ? party.slice() : (character ? [character] : []);
+            try {
+                const rawSaved = localStorage.getItem('rpg_pvp_full_party_backup');
+                if (rawSaved) {
+                    const parsedSaved = JSON.parse(rawSaved);
+                    if (Array.isArray(parsedSaved) && parsedSaved.length > fullList.length) {
+                        fullList = parsedSaved;
+                    }
+                }
+            } catch (e) {}
+
             const pureHeroes = fullList.filter(h => h.status !== "dead" && !h.isPhyrexian);
             const phyrexianHeroes = fullList.filter(h => h.status !== "dead" && h.isPhyrexian);
 
             if (pureHeroes.length === 0) {
-                applyRewardsAndMove(character, null, phyrexianWinNode || "phyrexian_pvp_game_over");
+                applyRewardsAndMove(fullList[0], null, phyrexianWinNode || "phyrexian_pvp_game_over", "", fullList);
                 return;
             }
             if (phyrexianHeroes.length === 0) {
-                applyRewardsAndMove(character, null, pureWinNode || "mirrodin_purification_shrine");
+                applyRewardsAndMove(fullList[0], null, pureWinNode || "mirrodin_purification_shrine", "", fullList);
                 return;
             }
 
-            // Salva l'intera compagnia in backup così da ripristinare tutti i membri a fine scontro PvP!
+            // Aggiorna il backup completo con tutti gli eroi (sia Puri che Infetti)
             try {
                 localStorage.setItem('rpg_pvp_full_party_backup', JSON.stringify(fullList));
             } catch (e) {}
@@ -8051,6 +8152,7 @@
                 key: "pvp_phyrexian_players",
                 name: "☣️ Compagni Corrotti: " + phyNames.join(" & "),
                 isPvpBoss: true,
+                pvpFullParty: fullList,
                 pvpPhyrexianStats: { str: bestPhyStr, agi: bestPhyAgi, mag: bestPhyMag },
                 pvpLoseNode: phyrexianWinNode || "phyrexian_pvp_game_over",
                 isHumanoid: false,
@@ -8111,13 +8213,19 @@
             window.scrollTo(0, 0);
         };
 
-        // Assimila tutta la Compagnia quando i Giocatori Phyrexiani vincono il PvP, così tutti giocano la Campagna Malvagia!
+        // RIUNISCE E ASSIMILA TUTTI GLI EROI (SIA I VINCITORI INFETTI SIA I PURI SCONFITTI) QUANDO VINCE PHYREXIA!
         const assimilateAllPartyOnPhyrexianPvpWin = (loseNode, lastLogLine) => {
-            let fullRestored = party.length > 0 ? party.slice() : [character];
+            let fullRestored = (combatState && combatState.pvpFullParty && combatState.pvpFullParty.length > 0)
+                ? combatState.pvpFullParty.slice()
+                : (party.length > 0 ? party.slice() : [character]);
+
             try {
                 const rawBkp = localStorage.getItem('rpg_pvp_full_party_backup');
                 if (rawBkp) {
-                    fullRestored = JSON.parse(rawBkp);
+                    const parsedBkp = JSON.parse(rawBkp);
+                    if (Array.isArray(parsedBkp) && parsedBkp.length >= fullRestored.length) {
+                        fullRestored = parsedBkp;
+                    }
                     localStorage.removeItem('rpg_pvp_full_party_backup');
                 }
             } catch (e) {}
@@ -8126,7 +8234,6 @@
                 const kws = (h.mtgKeywords || []).slice();
                 if (kws.indexOf("Infettare") === -1) kws.push("Infettare");
                 const bStats = h.baseStats || { str: 12, agi: 12, mag: 12, con: 20 };
-                // Se era un giocatore Puro sconfitto, viene Completato dall'Olio ricevendo il potenziamento Phyrexiano!
                 const newBaseStats = h.isPhyrexian ? bStats : {
                     str: bStats.str + 3,
                     agi: bStats.agi + 3,
@@ -8147,13 +8254,14 @@
                 });
             });
 
-            savePartyState(assimilatedParty);
             setCombatState(null);
+            // Passa assimilatedParty come 5° parametro così TUTTI i membri (incluso chi aveva toccato la sfera!) restano nel Party!
             applyRewardsAndMove(
                 assimilatedParty[0],
                 null,
                 loseNode || "phyrexian_pvp_game_over",
-                (lastLogLine ? lastLogLine + "\n" : "") + "☣️🏆 VITTORIA DEI GIOCATORI PHYREXIANI! I compagni Puri caduti vengono assimilati dall'Olio Scintillante: ora potete guidare insieme l'invasione di Dominaria!"
+                (lastLogLine ? lastLogLine + "\n" : "") + "☣️🏆 VITTORIA DEI GIOCATORI PHYREXIANI! Tutta la Compagnia è ora riunita e completata sotto l'Olio Scintillante!",
+                assimilatedParty
             );
         };
 
@@ -8232,7 +8340,6 @@
 
             turnLog.unshift(`☣️⚔️ ${combatState.name} colpisce **${targetHero.name}** [Dado ${d20} + ${statVal} = ${totalRoll} vs Difesa ${targetDefenseDC}${isPhyManaStrike ? " • Colpo Mana Φ (-6 PV)" : ""}]: infligge **${dmg} danni**! (${targetHero.name}: ${newHeroHP} PV)${fellDown ? " 🩸 CADE A 0 PV!" : ""}`);
 
-            // Se tutti i Giocatori Puri sono caduti a 0 PV, i Phyrexiani vincono e assimilano i compagni per la Campagna Malvagia!
             const anyPureStillStanding = updatedPureParty.some(h => h.status === "alive" && h.currentHP > 0);
             if (!anyPureStillStanding) {
                 assimilateAllPartyOnPhyrexianPvpWin(combatState.pvpLoseNode, turnLog[0]);
@@ -8745,10 +8852,19 @@
                         </div>
 
                         {/* GRIMORIO A 3 SLOT ABILITÀ / MAGIE DI MAGIC (+ SUPPORTO MANA DI PHYREXIA Φ!) */}
-                        <div className="space-y-1.5">
-                            <p className="text-[10px] font-black uppercase text-indigo-300 tracking-wider">
-                                📖 Grimorio Abilità & Magie (3 Slot — ⚡ Istantanei anche fuori turno | 🔥 Stregonerie nel tuo turno{(character.isPhyrexian || character.hasPhyrexianMana) ? " | ☣️ Mana Φ Attivo (-4 PV per Mana mancante)" : ""}):
-                            </p>
+                        {/* GRIMORIO A 3 SLOT ATTIVI + ARCHIVIO MAGIE CONOSCIUTE (BLOCCATO IN COMBATTIMENTO!) */}
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap justify-between items-center gap-1">
+                                <p className="text-[10px] font-black uppercase text-indigo-300 tracking-wider">
+                                    📖 Magie Preparate (3 Slot Attivi — ⚡ Istantanei | 🔥 Stregonerie{(character.isPhyrexian || character.hasPhyrexianMana) ? " | ☣️ Mana Φ" : ""}):
+                                </p>
+                                {combatState && (
+                                    <span className="text-[9px] font-black uppercase bg-red-950 text-red-300 border border-red-500 px-2 py-0.5 rounded">
+                                        🔒 Grimorio & Equip Bloccati in Battaglia
+                                    </span>
+                                )}
+                            </div>
+
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {[0, 1, 2].map(slotIdx => {
                                     const spId = (character.spells || [])[slotIdx];
@@ -8756,7 +8872,7 @@
                                     if (!spObj) {
                                         return (
                                             <div key={slotIdx} className="bg-gray-950/60 border border-dashed border-gray-700 rounded-xl p-2.5 flex items-center justify-center text-gray-500 text-[11px] font-bold">
-                                                Slot Magia {slotIdx + 1} Vuoto
+                                                Slot Magia {slotIdx + 1} Vuoto (Scegli dal Grimorio sotto)
                                             </div>
                                         );
                                     }
@@ -8769,23 +8885,13 @@
                                     const canPayPhyrexian = (character.isPhyrexian || character.hasPhyrexianMana) && !hasEnoughMana && character.currentHP > phyHpCost;
 
                                     return (
-                                        <button
+                                        <div
                                             key={slotIdx}
-                                            onClick={() => {
-                                                if (canPayPhyrexian) {
-                                                    character.currentHP = Math.max(1, character.currentHP - phyHpCost);
-                                                    if (!character.manaPool) character.manaPool = {};
-                                                    character.manaPool[spObj.costColor] = currentColorMana + missingMana;
-                                                    saveCharState(Object.assign({}, character));
-                                                }
-                                                castSpellFromSlot(spObj.id);
-                                            }}
-                                            disabled={isUsedOneShot}
                                             className={`p-2.5 rounded-xl border-2 text-left transition-all flex flex-col justify-between ${
-                                                isUsedOneShot ? "bg-gray-950 border-gray-800 opacity-40 cursor-not-allowed" :
-                                                hasEnoughMana ? "bg-indigo-950/90 hover:bg-indigo-900 border-indigo-400 shadow-md active:scale-95" :
-                                                canPayPhyrexian ? "bg-lime-950/90 hover:bg-lime-900 border-lime-400 shadow-md active:scale-95" :
-                                                "bg-gray-900 border-gray-700 opacity-75"
+                                                isUsedOneShot ? "bg-gray-950 border-gray-800 opacity-50" :
+                                                hasEnoughMana ? "bg-indigo-950/90 border-indigo-400 shadow-md" :
+                                                canPayPhyrexian ? "bg-lime-950/90 border-lime-400 shadow-md" :
+                                                "bg-gray-900 border-gray-700 opacity-85"
                                             }`}
                                         >
                                             <div>
@@ -8805,17 +8911,81 @@
                                                     </p>
                                                 )}
                                             </div>
-                                            {spObj.oneShot && (
-                                                <span className="mt-1.5 inline-block text-[9px] font-black uppercase text-amber-300">
-                                                    {isUsedOneShot ? "🚫 ONE-SHOT ESAURITA" : "🌟 ONE-SHOT (1 VOLTA IN PARTITA)"}
-                                                </span>
-                                            )}
-                                        </button>
+
+                                            <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between gap-1">
+                                                <button
+                                                    onClick={() => {
+                                                        if (canPayPhyrexian) {
+                                                            character.currentHP = Math.max(1, character.currentHP - phyHpCost);
+                                                            if (!character.manaPool) character.manaPool = {};
+                                                            character.manaPool[spObj.costColor] = currentColorMana + missingMana;
+                                                            saveCharState(Object.assign({}, character));
+                                                        }
+                                                        castSpellFromSlot(spObj.id);
+                                                    }}
+                                                    disabled={isUsedOneShot}
+                                                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 text-white font-black text-[10px] py-1 px-2 rounded shadow active:scale-95"
+                                                >
+                                                    {isUsedOneShot ? "🚫 Esaurita" : "✨ Lancia Magia"}
+                                                </button>
+                                                {!combatState && (
+                                                    <button
+                                                        onClick={() => unequipSpellFromSlot(slotIdx)}
+                                                        className="bg-gray-800 hover:bg-red-900 text-gray-300 hover:text-white font-bold text-[10px] py-1 px-2 rounded border border-gray-600"
+                                                        title="Riponi nell'Archivio del Grimorio"
+                                                    >
+                                                        ⬇️ Riponi
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
                                     );
                                 })}
                             </div>
+
+                            {/* ARCHIVIO DEL GRIMORIO (MAGIE CONOSCIUTE IN RISERVA - PREPARABILI SOLO FUORI DAL COMBATTIMENTO!) */}
+                            {(() => {
+                                const allKnown = Array.isArray(character.spellbook) ? character.spellbook : (character.spells || []);
+                                const activeIds = character.spells || [];
+                                const reserveSpells = allKnown.filter(id => activeIds.indexOf(id) === -1 && MTG_SPELLS_DB[id]);
+                                if (reserveSpells.length === 0) return null;
+                                return (
+                                    <div className="bg-gray-950/90 border border-indigo-500/50 rounded-xl p-2.5 space-y-1.5">
+                                        <p className="text-[10px] font-black uppercase text-indigo-300">
+                                            📚 Archivio del Grimorio — Magie in Riserva ({reserveSpells.length}):
+                                            {combatState ? <span className="text-red-400 ml-1">(🔒 Non modificabili durante lo scontro!)</span> : <span className="text-gray-400 ml-1">(Prepara fino a 3 magie prima della battaglia)</span>}
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                            {reserveSpells.map(spId => {
+                                                const spObj = MTG_SPELLS_DB[spId];
+                                                const manaObj = MANA_COLORS.find(m => m.id === spObj.costColor);
+                                                return (
+                                                    <div key={spId} className="bg-gray-900 border border-gray-700 rounded-lg p-2 flex justify-between items-center gap-2">
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-bold text-xs truncate">
+                                                                {spObj.name} <span className="text-indigo-300">({spObj.costAmount}{manaObj ? manaObj.icon : spObj.costColor})</span>
+                                                            </p>
+                                                            <p className="text-gray-400 text-[10px] truncate">{spObj.desc}</p>
+                                                        </div>
+                                                        <button
+                                                            disabled={Boolean(combatState) || activeIds.length >= 3}
+                                                            onClick={() => equipSpellFromGrimorio(spId)}
+                                                            className={`px-2.5 py-1 rounded text-[10px] font-black shrink-0 shadow ${
+                                                                combatState || activeIds.length >= 3
+                                                                    ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                                                                    : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                                                            }`}
+                                                        >
+                                                            {combatState ? "🔒 Bloccato" : (activeIds.length >= 3 ? "Slot Pieni (3/3)" : "⬆️ Prepara")}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
-                    </div>
 
                     {/* PANNELLO TIRO DADO D8 PER LE CURE DI CHIERICO E SCIAMANO */}
                     {pendingHealSpell && (
