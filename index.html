@@ -7435,6 +7435,133 @@
             saveCharState(updated);
             setEventBanner(`⚒️📚 FORGIA DAL RACCOGLITORE COMPLETATA! La tua carta reale **${cardObj.name}** è stata trasformata nella reliquia equipaggiabile **${forgedRelic.name}** (+${statBoost} FOR/MAG, +4 COS, ${forgedRelic.keywords.join(", ")})!`);
         };
+
+      // ============================================================================
+        // --- FINESTRA ILLUSTRAZIONE PURA (ART CROP SCRYFALL + FALLBACK GITHUB) ---
+        // ============================================================================
+        const DEFAULT_MONSTER_FALLBACK_IMG = "./rpg_monster_default.png";
+        const [monsterArtUrl, setMonsterArtUrl] = useState(DEFAULT_MONSTER_FALLBACK_IMG);
+        const [loadingMonsterArt, setLoadingMonsterArt] = useState(false);
+
+        // Tutti i 55+ mostri e Boss mappati alle carte ufficiali di Magic su Scryfall!
+        const MONSTER_SCRYFALL_MAP = {
+            storm_crow: "Storm Crow",
+            fblthp_guards: "Fblthp, the Lost",
+            goblin_pack: "Goblin Rabblemaster",
+            goblin_piledriver: "Goblin Piledriver",
+            bandit_rogues: "Nightveil Predator",
+            brushwagg_mutant: "Brushwagg",
+            llanowar_troll: "Thrun, the Last Troll",
+            tarmogoyf: "Tarmogoyf",
+            lhurgoyf_alpha: "Lhurgoyf",
+            colossal_dreadmaw: "Colossal Dreadmaw",
+            craw_wurm: "Craw Wurm",
+            urza_lotus_guardian: "Colossus of Sardia",
+            sliver_swarm: "Sliver Swarm",
+            sliver_queen: "Sliver Queen",
+            juzam_djinn: "Juzam Djinn",
+            phyrexian_negator: "Phyrexian Negator",
+            undead_lord: "Lord of the Undead",
+            sengir_vampire: "Sengir Vampire",
+            phage_untouchable: "Phage the Untouchable",
+            akroma_angel: "Akroma, Angel of Wrath",
+            serra_griffin: "Razorfoot Griffin",
+            phyrexian_obliterator: "Phyrexian Obliterator",
+            shivan_dragon: "Shivan Dragon",
+            blightsteel_colossus: "Blightsteel Colossus",
+            marit_lage: "Dark Depths",
+            obzedat_council: "Obzedat, Ghost Council",
+            borborygmos_enraged: "Borborygmos Enraged",
+            krasis_hydroid: "Hydroid Krasis",
+            rakdos_defiler: "Rakdos the Defiler",
+            lazav_multifarious: "Lazav, the Multifarious",
+            vraska_gorgon_queen: "Vraska, Golgari Queen",
+            nezumi_reckoners: "Nezumi Prowler",
+            kokusho_dragon: "Kokusho, the Evening Star",
+            hidetsugu_chaos: "Heartless Hidetsugu",
+            konda_lord: "Konda, Lord of Eiganjo",
+            jin_gitaxias_augur: "Jin-Gitaxias, Core Augur",
+            o_kagachi_kami: "O-Kagachi, Vengeful Kami",
+            kalitas_bloodchief: "Kalitas, Traitor of Ghet",
+            bane_bala_ged: "Bane of Bala Ged",
+            omnath_roil: "Omnath, Locus of Creation",
+            ob_nixilis_reignited: "Ob Nixilis Reignited",
+            kozilek_distortion: "Kozilek, the Great Distortion",
+            ulamog_ceaseless: "Ulamog, the Ceaseless Hunger",
+            tezzeret_bridge_master: "Tezzeret, Master of the Bridge",
+            vorinclex_sheoldred_duo: "Vorinclex, Monstrous Raider",
+            atraxa_grand_unifier: "Atraxa, Grand Unifier",
+            elesh_norn_mother: "Elesh Norn, Mother of Machines",
+            scarab_god_eternals: "The Scarab God",
+            nicol_bolas_dragon_god: "Nicol Bolas, Dragon-God",
+            thran_golem: "Thran Golem",
+            maraxus_keld: "Maraxus of Keld",
+            nemata_grove_guardian: "Nemata, Grove Guardian",
+            molimo_maro_sorcerer: "Molimo, Maro-Sorcerer",
+            mishra_dragon_engine: "Dragon Engine",
+            titania_argoth_protector: "Titania, Protector of Argoth",
+            morphling_shapeshifter: "Morphling",
+            dauthi_shadow_lord: "Dauthi Voidwalker",
+            greven_il_vec: "Commander Greven il-Vec",
+            volrath_the_fallen: "Volrath the Fallen",
+            crovax_ascendant: "Ascendant Evincar",
+            chainer_nightmare: "Chainer, Dementia Master",
+            ixidor_sculptor: "Ixidor, Reality Sculptor",
+            karona_false_god: "Karona, False God",
+            leveler_eater: "Leveler",
+            darksteel_gargoyle: "Darksteel Gargoyle",
+            memnarch_mad_warden: "Memnarch",
+            hero_radha_multani: "Radha, Heir to Keld",
+            hero_barrin_jodah: "Barrin, Master Wizard",
+            hero_danitha_lyra: "Lyra Dawnbringer",
+            hero_kamahl_mirari: "Kamahl, Fist of Krosa",
+            hero_weatherlight_crew: "Teferi, Hero of Dominaria",
+            gix_yawgmoth_praetor: "Gix, Yawgmoth Praetor",
+            kaldra_avatar: "Sword of Kaldra",
+            viashino_heretic_lord: "Viashino Heretic",
+            darigaaz_reincarnated: "Darigaaz Reincarnated",
+            mind_flayer_nghathrod: "Captain N'ghathrod",
+            pvp_phyrexian_players: "Phyrexian Rebirth"
+        };
+
+        useEffect(() => {
+            if (!combatState || !combatState.key) {
+                setMonsterArtUrl(DEFAULT_MONSTER_FALLBACK_IMG);
+                return;
+            }
+            const mKey = combatState.key;
+            const scryfallQueryName = MONSTER_SCRYFALL_MAP[mKey];
+
+            if (!scryfallQueryName) {
+                setMonsterArtUrl(DEFAULT_MONSTER_FALLBACK_IMG);
+                return;
+            }
+
+            let isCancelled = false;
+            setLoadingMonsterArt(true);
+
+            fetch("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(scryfallQueryName))
+                .then(res => res.json())
+                .then(data => {
+                    if (isCancelled) return;
+                    let artCrop = "";
+                    if (data && data.image_uris && data.image_uris.art_crop) {
+                        artCrop = data.image_uris.art_crop;
+                    } else if (data && data.card_faces && data.card_faces.length > 0 && data.card_faces[0].image_uris && data.card_faces[0].image_uris.art_crop) {
+                        artCrop = data.card_faces[0].image_uris.art_crop;
+                    }
+                    setMonsterArtUrl(artCrop || DEFAULT_MONSTER_FALLBACK_IMG);
+                    setLoadingMonsterArt(false);
+                })
+                .catch(() => {
+                    if (!isCancelled) {
+                        setMonsterArtUrl(DEFAULT_MONSTER_FALLBACK_IMG);
+                        setLoadingMonsterArt(false);
+                    }
+                });
+
+            return () => { isCancelled = true; };
+        }, [combatState ? combatState.key : null]);
       
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
@@ -9697,6 +9824,29 @@
                                 <h2 className="text-xl sm:text-2xl font-black text-white leading-tight break-words">
                                     {combatState.name}
                                 </h2>
+
+                                {/* FINESTRA ILLUSTRAZIONE NEMICO / BOSS (ART CROP SCRYFALL + FALLBACK rpg_monster_default.png) */}
+                                <div className="w-full h-44 sm:h-56 bg-black/90 border-2 border-red-500/80 rounded-xl overflow-hidden relative shadow-[inset_0_0_25px_rgba(0,0,0,0.9)] flex items-center justify-center my-1">
+                                    <img
+                                        src={monsterArtUrl || "./rpg_monster_default.png"}
+                                        alt={combatState.name}
+                                        onError={(e) => {
+                                            const cur = e.target.getAttribute("src");
+                                            if (cur !== "./rpg_monster_default.png" && cur !== "./mtg-bg.jpg") {
+                                                e.target.src = "./rpg_monster_default.png";
+                                            } else if (cur !== "./mtg-bg.jpg") {
+                                                e.target.src = "./mtg-bg.jpg";
+                                            }
+                                        }}
+                                        className="w-full h-full object-cover object-center animate-fade"
+                                    />
+                                    {loadingMonsterArt && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                            <span className="text-xs text-red-300 font-black animate-pulse">🎨 Evocazione illustrazione...</span>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <p className="text-xs text-gray-300 italic leading-snug">
                                     {combatState.desc}
                                 </p>
