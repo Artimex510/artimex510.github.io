@@ -4896,6 +4896,48 @@
         // DATABASE INCANTESIMI E ABILITÀ DI MAGIC
         // DATABASE INCANTESIMI E STREGONERIE DI CLASSE/COLORE (100% COMPATIBILE BABEL 6)
         const MTG_SPELLS_DB = {
+          const MTG_SPELLS_DB = {
+            // --- NUOVE CURE IBRIDE PER COLORE DI CHIERICO E SCIAMANO (1 MANA & 2 MANA) ---
+            healer_helix_R: {
+                id: "healer_helix_R", name: "Elica Sacra (Lightning Helix 1d8)", timing: "instant", costColor: "R", costAmount: 1, oneShot: false,
+                onlyHealers: true, effectType: "heal_d8", diceCount: 1, bonusDmgToEnemy: 8,
+                desc: "Istantaneo (1🔥): Scaglia fuoco sacro che infligge 8 danni al nemico e cura 1d8 + Livello a un alleato (o lo rianima da 0 PV)!"
+            },
+            healer_phoenix_R: {
+                id: "healer_phoenix_R", name: "Fiamma della Fenice (2d8 & Rianima)", timing: "sorcery", costColor: "R", costAmount: 2, oneShot: false,
+                onlyHealers: true, effectType: "heal_party_2d8", diceCount: 2, bonusDmgToEnemy: 12,
+                desc: "Stregoneria (2🔥): Infligge 12 danni di fuoco al mostro e cura TUTTA la compagnia di 2d8 + Livello (rianimando i caduti a 0 PV)!"
+            },
+            healer_aegis_U: {
+                id: "healer_aegis_U", name: "Egida Marina & Contromagia (1d8)", timing: "instant", costColor: "U", costAmount: 1, oneShot: false,
+                onlyHealers: true, effectType: "heal_d8", diceCount: 1, grantCounterShield: true,
+                desc: "Istantaneo (1💧): Cura 1d8 + Livello a un alleato E attiva uno Scudo Contromagia che annulla il prossimo attacco del mostro!"
+            },
+            healer_reversal_U: {
+                id: "healer_reversal_U", name: "Inversione Temporale di Narset (2d8)", timing: "instant", costColor: "U", costAmount: 2, oneShot: false,
+                onlyHealers: true, effectType: "heal_party_2d8", diceCount: 2, grantCounterShield: true,
+                desc: "Istantaneo (2💧): Annulla il prossimo attacco nemico e cura TUTTA la compagnia di 2d8 + Livello!"
+            },
+            healer_drain_B: {
+                id: "healer_drain_B", name: "Trasfusione Vampirica (1d8 + Drain)", timing: "instant", costColor: "B", costAmount: 1, oneShot: false,
+                onlyHealers: true, effectType: "heal_d8", diceCount: 1, bonusDmgToEnemy: 9,
+                desc: "Istantaneo (1💀): Drena 9 PV dal nemico e trasferisce 1d8 + Livello Punti Vita a un alleato (o lo rianima da 0 PV)!"
+            },
+            healer_reanimate_B: {
+                id: "healer_reanimate_B", name: "Rianimazione del Velo (2d8 + Drain)", timing: "sorcery", costColor: "B", costAmount: 2, oneShot: false,
+                onlyHealers: true, effectType: "heal_party_2d8", diceCount: 2, bonusDmgToEnemy: 14,
+                desc: "Stregoneria (2💀): Prosciuga 14 PV dal mostro e cura tutta la compagnia di 2d8 + Livello rianimando i caduti!"
+            },
+            mage_wrath_W: {
+                id: "mage_wrath_W", name: "Giudizio di Serra (2☀️)", timing: "sorcery", costColor: "W", costAmount: 2, oneShot: false,
+                effectType: "class_tactical", dmg: 18, healSelf: 8, shieldSelf: true,
+                desc: "Stregoneria Arcana (2☀️): Colonna di luce che infligge 18 danni, ti cura di +8 PV e para il prossimo attacco!"
+            },
+            mage_hydra_G: {
+                id: "mage_hydra_G", name: "Morso dell'Idra Primordiale (2🌳)", timing: "sorcery", costColor: "G", costAmount: 2, oneShot: false,
+                effectType: "class_tactical", dmg: 18, healSelf: 6, addPoison: 2,
+                desc: "Stregoneria Arcana (2🌳): Infligge 18 danni selvaggi, applica +2 Veleno e rigenera +6 PV!"
+            },
             cure_wounds_d8: {
                 id: "cure_wounds_d8", name: "Parola Guaritrice (1d8)", timing: "instant", costColor: "W", costAmount: 1, oneShot: false,
                 onlyHealers: true, effectType: "heal_d8", diceCount: 1,
@@ -5178,36 +5220,42 @@
             { id: "artefice", name: "Artefice", isCaster: true, strBonus: 1, agiBonus: 2, magBonus: 4, conBonus: 5, ability: "Mastro Forgiatore: Oggetti indistruttibili sull'1 critico e rapido accumulo Mana." }
         ];
 
-        // ASSEGNAZIONE GRIMORIO IN BASE A CLASSE E COLORE DI MANA SCELTO!
+        // ASSEGNAZIONE GRIMORIO IN BASE A CLASSE E COLORE DI MANA SCELTO (100% FEDELE AL COLORE!)
         const getInitialSpellsForClass = (classId, manaId) => {
-            const col = ["W", "U", "B", "R", "G"].includes(manaId) ? manaId : "R";
+            const col = ["W", "U", "B", "R", "G"].indexOf(manaId) !== -1 ? manaId : "R";
 
-            // 1. Guaritori (Chierico / Sciamano)
-            if (classId === "chierico") return ["cure_wounds_d8", "angelic_resurrection"];
-            if (classId === "sciamano") return ["shaman_regen_d8"];
+            // 1. GUARITORI (Chierico & Sciamano) -> Magie di Cura + Effetto del proprio Colore!
+            if (classId === "chierico" || classId === "sciamano") {
+                if (col === "R") return ["healer_helix_R", "healer_phoenix_R"];
+                if (col === "U") return ["healer_aegis_U", "healer_reversal_U"];
+                if (col === "B") return ["healer_drain_B", "healer_reanimate_B"];
+                if (col === "G") return ["shaman_regen_d8", "giant_growth"];
+                return ["cure_wounds_d8", "angelic_resurrection"];
+            }
 
-            // 2. Incantatori puri (Mago, Necromante, Artefice)
+            // 2. INCANTATORI PURI (Mago, Necromante, Artefice) -> 2 Magie offensive/controllo del proprio Colore!
             if (classId === "mago" || classId === "necromante" || classId === "artefice") {
                 if (col === "R") return ["lightning_bolt", "fireball_sorcery"];
                 if (col === "U") return ["opt_cantrip", "counterspell_blue"];
                 if (col === "B") return ["dark_drain", "doom_blade"];
-                if (col === "G") return ["giant_growth"];
-                return ["path_to_exile", "swords_to_plowshares"];
+                if (col === "G") return ["giant_growth", "mage_hydra_G"];
+                return ["swords_to_plowshares", "mage_wrath_W"];
             }
 
-            // 3. Furtivi (Farabutto, Assassino, Ninja) -> Stregoneria Furtiva del proprio Colore (2 Mana)
+            // 3. FURTIVI (Farabutto, Assassino, Ninja) -> Stregoneria Furtiva del proprio Colore
             if (classId === "farabutto" || classId === "assassino" || classId === "ninja") {
                 return ["rogue_sorcery_" + col];
             }
 
-            // 4. Berserker (Barbaro) -> Stregoneria Furia del proprio Colore (2 Mana)
+            // 4. BERSERKER (Barbaro) -> Stregoneria Furia del proprio Colore
             if (classId === "barbaro") {
                 return ["barbarian_sorcery_" + col];
             }
 
-            // 5. Milizia & Tattici (Guerriero, Soldato, Cavaliere, Standard) -> Stregoneria Milizia del proprio Colore (2 Mana)
+            // 5. MILIZIA (Guerriero, Soldato, Cavaliere, Standard) -> Stregoneria Milizia del proprio Colore
             return ["militia_sorcery_" + col];
         };
+      
         const getStartingEquipment = (classId) => {
             const body = { id: "start_body", name: "Veste da Viaggio Rinforzata (+2 COS)", slot: "body", str: 0, agi: 0, mag: 0, con: 2 };
             const feet = { id: "start_feet", name: "Stivali di Cuoio (+1 AGI)", slot: "feet", str: 0, agi: 1, mag: 0, con: 0 };
@@ -5958,14 +6006,14 @@
         const executeHealingSpellD8 = (spellObj, targetHeroId, d8RollValue) => {
             const caster = character;
             const classLvl = (caster.classId === "chierico" || caster.classId === "sciamano") ? caster.level : (caster.secondaryLevel || 1);
-            const pool = { ...(caster.manaPool || {}) };
+            const pool = Object.assign({}, caster.manaPool || {});
             pool[spellObj.costColor] = Math.max(0, (pool[spellObj.costColor] || 0) - spellObj.costAmount);
 
             const healAmount = d8RollValue + classLvl;
             let logMsg = "";
 
             const newParty = (party.length > 0 ? party : [caster]).map(h => {
-                let updatedH = h.id === caster.id ? { ...h, manaPool: pool } : { ...h };
+                let updatedH = h.id === caster.id ? Object.assign({}, h, { manaPool: pool }) : Object.assign({}, h);
                 if (spellObj.effectType === "heal_party_2d8" || updatedH.id === targetHeroId) {
                     if (updatedH.status !== "dead") {
                         const max = getFinalStats(updatedH).maxHP;
@@ -5974,7 +6022,7 @@
                         updatedH.status = "alive";
                         updatedH.deathSuccesses = 0;
                         updatedH.deathFailures = 0;
-                        if (wasDown) logMsg += ` 🌟 ${updatedH.name} si risveglia dallo stato di incoscienza!`;
+                        if (wasDown) logMsg += ` 🌟 ${updatedH.name} si risveglia da 0 PV!`;
                     }
                 }
                 return updatedH;
@@ -5983,13 +6031,42 @@
             savePartyState(newParty);
             setPendingHealSpell(null);
 
+            // Effetto Blu del Chierico/Sciamano: Attiva lo Scudo Contromagia!
+            if (spellObj.grantCounterShield) {
+                setCounterspellShield(true);
+                logMsg += ` 💧🛡️ [Scudo Contromagia Attivo: il prossimo attacco nemico è annullato!]`;
+            }
+
+            // Effetto Rosso/Nero del Chierico/Sciamano: Infligge danni diretti al mostro mentre cura!
+            if (combatState && spellObj.bonusDmgToEnemy) {
+                const enemyDmg = spellObj.bonusDmgToEnemy + Math.floor(classLvl / 2);
+                const nextMHP = Math.max(0, combatState.currentHP - enemyDmg);
+                let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
+                dmgMap[caster.id] = (dmgMap[caster.id] || 0) + enemyDmg;
+                logMsg += ` 🔥⚔️ [Infligge anche **${enemyDmg} danni** a ${combatState.name}!]`;
+
+                const fullBanner = `💚⚡ ${caster.name} lancia **${spellObj.name}** (+${healAmount} PV)!${logMsg}`;
+                setEventBanner(fullBanner);
+
+                if (nextMHP <= 0) {
+                    const updatedCasterRef = newParty.find(p => p.id === caster.id) || caster;
+                    finishCombatVictory(updatedCasterRef, dmgMap, fullBanner);
+                    return;
+                }
+                setCombatState(Object.assign({}, combatState, {
+                    currentHP: nextMHP,
+                    damageDealtByHero: dmgMap,
+                    log: [fullBanner].concat(combatState.log).slice(0, 8)
+                }));
+                return;
+            }
+
             const bannerText = `💚 ${caster.name} lancia **${spellObj.name}** (Dado D8: ${d8RollValue} + Liv.${classLvl} = **+${healAmount} PV**)!${logMsg}`;
             setEventBanner(bannerText);
             if (combatState) {
-                setCombatState({
-                    ...combatState,
-                    log: [bannerText, ...combatState.log].slice(0, 8)
-                });
+                setCombatState(Object.assign({}, combatState, {
+                    log: [bannerText].concat(combatState.log).slice(0, 8)
+                }));
             }
         };
 
@@ -7562,6 +7639,216 @@
 
             return () => { isCancelled = true; };
         }, [combatState ? combatState.key : null]);
+
+        // ============================================================================
+        // --- 15 PEDINE FAMIGLIO (CLASSE x COLORE), FORGIA DEL FABBRO (+1/+2/+3),
+        // --- BACHECA DELLE TAGLIE (CON TITOLI A4) E BIVACCO DI GRUPPO! ---
+        // ============================================================================
+        const [showBlacksmithModal, setShowBlacksmithModal] = useState(false);
+        const [showBountyModal, setShowBountyModal] = useState(false);
+        const [showCampfireModal, setShowCampfireModal] = useState(false);
+        const [tokenArtUrl, setTokenArtUrl] = useState("");
+        const [summonedCommanderBannerArt, setSummonedCommanderBannerArt] = useState(null);
+
+        // 15 PEDINE FAMIGLIO DIVISE PER ARCHETIPO (MILIZIA, MAGIA, FURTIVI) E COLORE (W, U, B, R, G)
+        const RPG_TOKENS_DB = {
+            // MILIZIA (Guerriero, Cavaliere, Soldato, Barbaro, Standard)
+            militia_W: { name: "🛡️ Scudiero di Benalia (Pedina 2/2)", dmg: 5, scryfall: "Knight Exemplar", desc: "Attacca a fine round (+5 danni) o si sacrifica per parare un colpo mortale!" },
+            militia_U: { name: "🦅 Vedetta Alata Azorius (Pedina 2/2 Volare)", dmg: 5, scryfall: "Judge's Familiar", desc: "Colpisce dall'alto (+5 danni) o intercetta un attacco nemico!" },
+            militia_B: { name: "💀 Lanciere Scheletro di Urborg (Pedina 2/2)", dmg: 6, scryfall: "Reassembling Skeleton", desc: "Assalta (+6 danni) e fa da scudo d'ossa per l'eroe!" },
+            militia_R: { name: "🔥 Segugio Magmatico di Keld (Pedina 3/1)", dmg: 7, scryfall: "Chandra's Pyreling", desc: "Azzanna col fuoco (+7 danni) o assorbe un attacco!" },
+            militia_G: { name: "🐺 Lupo da Guerra di Llanowar (Pedina 2/2)", dmg: 6, scryfall: "Timber Wolf", desc: " combatte in branco (+6 danni) e protegge il padrone!" },
+            // MAGIA (Mago, Chierico, Necromante, Sciamano, Artefice)
+            caster_W: { name: "👼 Spirito Custode di Serra (Pedina 2/2 Volare)", dmg: 5, scryfall: "Serra Avenger", desc: "Irradia luce sacra (+5 danni) e sacrifica le ali per salvarti!" },
+            caster_U: { name: "⚙️ Costrutto Tottero d'Etere (Pedina 2/2)", dmg: 5, scryfall: "Thopter Assembly", desc: "Spara dardi d'etere (+5 danni) e proietta barriere!" },
+            caster_B: { name: "🧟 Ghoul del Velo di Catena (Pedina 2/2)", dmg: 6, scryfall: "Cryptbreaker", desc: "Artiglia i nemici (+6 danni) e assorbe i colpi mortali!" },
+            caster_R: { name: "🐦‍🔥 Elementale Scintilla della Fenice (Pedina 3/1)", dmg: 7, scryfall: "Young Pyromancer", desc: "Esplode di plasma (+7 danni) o intercetta i colpi!" },
+            caster_G: { name: "🌱 Saprolingio Antico di Yavimaya (Pedina 2/3)", dmg: 5, scryfall: "Verdeloth the Ancient", desc: "Avvolge con le radici (+5 danni) e protegge come corteccia!" },
+            // FURTIVI (Farabutto, Assassino, Ninja)
+            rogue_W: { name: "🦅 Falco Esploratore Kor (Pedina 2/1 Legame Vitale)", dmg: 5, scryfall: "Healer's Hawk", desc: "Picchiata precisa (+5 danni) e devia i colpi nemici!" },
+            rogue_U: { name: "👤 Clone d'Ombra Dimir (Pedina 2/2 Imbloccabile)", dmg: 6, scryfall: "Slither Blade", desc: "Colpisce nell'ombra (+6 danni) o prende il colpo al posto tuo!" },
+            rogue_B: { name: "🐀 Ratto Velenoso Nezumi (Pedina 2/1 Tocco Letale)", dmg: 6, scryfall: "Typhoid Rats", desc: "Morde col veleno (+6 danni) o si sacrifica!" },
+            rogue_R: { name: "🐒 Scimmia Pirata di Ragavan (Pedina 2/1)", dmg: 6, scryfall: "Ragavan, Nimble Pilferer", desc: "Colpisce (+6 danni), distrae il Boss e trova monete!" },
+            rogue_G: { name: "🐍 Vipera del Groviglio (Pedina 2/1 Tocco Letale)", dmg: 6, scryfall: "Ohran Frostfang", desc: "Spire letali (+6 danni) e scudo istantaneo!" }
+        };
+
+        const getHeroTokenTemplate = (heroObj) => {
+            if (!heroObj) return RPG_TOKENS_DB.militia_W;
+            const col = (heroObj.manaIdentity && heroObj.manaIdentity[0]) ? heroObj.manaIdentity[0] : "W";
+            const arch = getHeroArchetypes(heroObj);
+            let prefix = "militia";
+            if (arch.isCaster) prefix = "caster";
+            else if (arch.isRogue) prefix = "rogue";
+            return RPG_TOKENS_DB[prefix + "_" + col] || RPG_TOKENS_DB.militia_W;
+        };
+
+        // Carica automaticamente da Scryfall l'illustrazione art_crop del Famiglio attivo!
+        useEffect(() => {
+            if (!character || !character.activeToken || !character.activeToken.scryfall) {
+                setTokenArtUrl("");
+                return;
+            }
+            let isCancelled = false;
+            fetch("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(character.activeToken.scryfall))
+                .then(res => res.json())
+                .then(data => {
+                    if (isCancelled) return;
+                    let crop = "";
+                    if (data && data.image_uris && data.image_uris.art_crop) crop = data.image_uris.art_crop;
+                    else if (data && data.card_faces && data.card_faces[0] && data.card_faces[0].image_uris) crop = data.card_faces[0].image_uris.art_crop;
+                    setTokenArtUrl(crop || "");
+                })
+                .catch(() => {});
+            return () => { isCancelled = true; };
+        }, [character && character.activeToken ? character.activeToken.scryfall : null]);
+
+        // Evoca la Pedina Famiglio di Classe e Colore (Costa 1 Mana del proprio colore principale)
+        const summonClassFamiliarToken = () => {
+            if (!character || character.status !== "alive" || character.currentHP <= 0) return;
+            if (character.activeToken) {
+                return alert(character.name + " ha già il suo Famiglio (" + character.activeToken.name + ") schierato al suo fianco!");
+            }
+            const mainCol = (character.manaIdentity && character.manaIdentity[0]) ? character.manaIdentity[0] : "W";
+            const curMana = (character.manaPool && character.manaPool[mainCol]) ? character.manaPool[mainCol] : 0;
+            if (curMana < 1 && !character.isPhyrexian) {
+                return alert("Ti serve 1 Mana " + mainCol + " per evocare il tuo Famiglio di Classe!");
+            }
+            const tTemplate = getHeroTokenTemplate(character);
+            let newPool = Object.assign({}, character.manaPool || {});
+            if (curMana >= 1) newPool[mainCol] = curMana - 1;
+
+            const updated = Object.assign({}, character, {
+                manaPool: newPool,
+                activeToken: Object.assign({}, tTemplate, { bonusDmg: Math.floor((character.level || 1) / 2) })
+            });
+            saveCharState(updated);
+            const msg = `🐾✨ EVOCAZIONE PEDINA! **${character.name}** schiera al suo fianco **${tTemplate.name}** (+${tTemplate.dmg + Math.floor((character.level || 1) / 2)} danni automatici a ogni round o Sacrificio Scudo)!`;
+            setEventBanner(msg);
+            if (combatState) {
+                setCombatState(Object.assign({}, combatState, { log: [msg].concat(combatState.log).slice(0, 8) }));
+            }
+        };
+
+        // Sacrifica volontariamente il Famiglio per bloccare il prossimo attacco del mostro e curarsi di +6 PV!
+        const sacrificeTokenForShield = () => {
+            if (!character || !character.activeToken) return;
+            const tokName = character.activeToken.name;
+            const maxHp = getFinalStats(character).maxHP;
+            const updated = Object.assign({}, character, {
+                activeToken: null,
+                currentHP: Math.min(maxHp, character.currentHP + 6)
+            });
+            saveCharState(updated);
+            setCounterspellShield(true);
+            const msg = `🐾🛡️ SACRIFICIO DEL FAMIGLIO! **${tokName}** si lancia davanti a **${character.name}**, annullando il prossimo attacco nemico e curandolo di +6 PV!`;
+            setEventBanner(msg);
+            if (combatState) {
+                setCombatState(Object.assign({}, combatState, { log: [msg].concat(combatState.log).slice(0, 8) }));
+            }
+        };
+
+        // 2. LA FORGIA DEL FABBRO RUNICO (+1 / +2 / +3 sulle Armi e Armature equipaggiate)
+        const upgradeEquippedItemAtSmith = (slotKey) => {
+            if (!character || !character.equipped || !character.equipped[slotKey]) return;
+            if (combatState) return alert("⛔ Non puoi usare la Forgia del Fabbro durante il combattimento!");
+            const item = Object.assign({}, character.equipped[slotKey]);
+            const currentPlus = item.upgradeLevel || 0;
+            if (currentPlus >= 3) {
+                return alert("⚒️ Questo equipaggiamento ha già raggiunto la forgiatura massima (+3)!");
+            }
+            const nextPlus = currentPlus + 1;
+            const goldCost = nextPlus * 45;
+            if ((character.gold || 0) < goldCost || (character.treasures || 0) < 1) {
+                return alert(`⚒️ Per forgiare "${item.name}" a +${nextPlus} ti servono ${goldCost} Monete d'Oro (🪙) e 1 Pedina Tesoro (💎)!`);
+            }
+
+            const baseCleanName = item.name.replace(/\s*\+\d+$/, "");
+            item.upgradeLevel = nextPlus;
+            item.name = baseCleanName + " +" + nextPlus;
+
+            // Aumenta di +2 la statistica principale dell'oggetto e +2 COS!
+            if ((item.mag || 0) > (item.str || 0) && (item.mag || 0) > (item.agi || 0)) {
+                item.mag = (item.mag || 0) + 2;
+            } else if ((item.agi || 0) > (item.str || 0)) {
+                item.agi = (item.agi || 0) + 2;
+            } else {
+                item.str = (item.str || 0) + 2;
+            }
+            item.con = (item.con || 0) + 2;
+
+            const newEq = Object.assign({}, character.equipped);
+            newEq[slotKey] = item;
+            const updated = Object.assign({}, character, {
+                equipped: newEq,
+                gold: character.gold - goldCost,
+                treasures: character.treasures - 1,
+                currentHP: character.currentHP + 2
+            });
+            saveCharState(updated);
+            setEventBanner(`⚒️🔥 FORGIATURA COMPLETATA! **${item.name}** ora brilla di potere runico (+2 Stat Principale e +2 COS)!`);
+        };
+
+        // 3. BACHECA DELLE TAGLIE (Missioni con Vincolo + Titoli Onorifici sulla Scheda A4!)
+        const BOUNTIES_DB = [
+            { id: "bounty_no_spells", title: "⚔️ Legge del Ferro Puro", conditionText: "Sconfiggi un Mostro o Boss senza lanciare Magie dal Grimorio", rewardGold: 70, rewardExp: 100, honorTitle: "Spezzamagie di ferro" },
+            { id: "bounty_blitz_3", title: "⚡ Fulmine di Guerra", conditionText: "Vinci uno scontro nell'Arena entro massimo 2 Round", rewardGold: 80, rewardExp: 110, honorTitle: "Fulmine di Dominaria" },
+            { id: "bounty_boss_slayer", title: "👑 Cacciatore di Titani", conditionText: "Abbatti un Boss principale mantenendo l'eroe attivo sopra i 10 PV", rewardGold: 110, rewardExp: 150, honorTitle: "Uccisore di Titani" }
+        ];
+
+        const acceptBountyContract = (bountyObj) => {
+            if (!character) return;
+            const updated = Object.assign({}, character, { activeBounty: bountyObj });
+            saveCharState(updated);
+            setShowBountyModal(false);
+            setEventBanner(`🎯📜 TAGLIA ACCETTATA: **${bountyObj.title}** (${bountyObj.conditionText})! Completala in battaglia per ottenere **+${bountyObj.rewardGold}🪙, +${bountyObj.rewardExp} EXP** e il Titolo A4 **"${bountyObj.honorTitle}"**!`);
+        };
+
+        // 4. BIVACCO / FUOCO DA CAMPO DI GRUPPO (Fuori dal combattimento)
+        const executeCampfireAction = (actionType) => {
+            if (combatState) return alert("⛔ Non potete accendere un Bivacco nel mezzo di un combattimento!");
+            const currentList = party.length > 0 ? party.slice() : [character];
+
+            if (actionType === "cook") {
+                if ((character.food || 0) < 1) return alert("Serve almeno 1 Pedina Cibo (🍖) per cucinare il banchetto da campo!");
+                const cookedParty = currentList.map(h => {
+                    if (h.status === "dead") return h;
+                    const newBaseCon = (h.baseStats ? h.baseStats.con : 18) + 2;
+                    const max = getFinalStats(h).maxHP + 2;
+                    return Object.assign({}, h, {
+                        food: h.id === character.id ? (h.food - 1) : h.food,
+                        baseStats: Object.assign({}, h.baseStats, { con: newBaseCon }),
+                        currentHP: Math.min(max, h.currentHP + 20),
+                        status: "alive"
+                    });
+                });
+                savePartyState(cookedParty);
+                setShowCampfireModal(false);
+                setEventBanner("⛺🍲 BANCHETTO DEL BIVACCO! La Compagnia consuma 1 razione cucinata sul fuoco: **+20 PV a tutti** e **+2 COS permanente**!");
+                return;
+            }
+
+            if (actionType === "sharpen") {
+                setGiantGrowthActive(true);
+                setTreasureBoostActive(true);
+                setShowCampfireModal(false);
+                setEventBanner("⛺🗡️ LAME AFFILATE E RUNE CARICHE! Nel prossimo scontro o prova avrete **+11 al Tiro D20 e +16 Danni Bonus** al primo assalto!");
+                return;
+            }
+
+            if (actionType === "watch") {
+                const restedParty = currentList.map(h => {
+                    if (h.status === "dead") return h;
+                    let pool = Object.assign({}, h.manaPool || {});
+                    (h.manaIdentity || ["W"]).forEach(col => {
+                        pool[col] = Math.min(12, (pool[col] || 0) + 2);
+                    });
+                    return Object.assign({}, h, { manaPool: pool });
+                });
+                savePartyState(restedParty);
+                setShowCampfireModal(false);
+                setEventBanner("⛺🔥 MEDITAZIONE E TURNO DI GUARDIA! Tutti i membri della Compagnia rigenerano **+2 Mana per ciascuno dei propri colori**!");
+            }
+        };
       
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
@@ -7760,6 +8047,16 @@
                         updatedCombatState.currentHP = Math.max(1, updatedCombatState.currentHP - poisonDmg);
                         extraLog.push(`☣️ INFETTARE / VELENO (${updatedCombatState.poisonCounters} segnalini): ${updatedCombatState.name} perde **${poisonDmg} PV** per il veleno a inizio Round ${nextRound}!`);
                     }
+
+                    // ATTACCO AUTOMATICO DELLE PEDINE FAMIGLIO SCHIERATE DALLA COMPAGNIA!
+                    updatedPartyList.forEach(h => {
+                        if (h.status === "alive" && h.currentHP > 0 && h.activeToken && updatedCombatState.currentHP > 1) {
+                            const tokDmg = (h.activeToken.dmg || 5) + (h.activeToken.bonusDmg || 0);
+                            updatedCombatState.currentHP = Math.max(1, updatedCombatState.currentHP - tokDmg);
+                            extraLog.push(`🐾⚔️ **${h.activeToken.name}** di ${h.name} attacca automaticamente infliggendo **${tokDmg} danni**!`);
+                        }
+                    });
+
                     if (updatedCombatState.key === "llanowar_troll") {
                         updatedCombatState.currentHP = Math.min(updatedCombatState.maxHP, updatedCombatState.currentHP + 4);
                         extraLog.push(`🌿 Rigenerazione del Troll: ${updatedCombatState.name} recupera +4 PV a inizio Round ${nextRound}!`);
@@ -7963,6 +8260,16 @@
                 vigilanceNote = ` 🛡️ [CAUTELA dimezza i danni da ${rawDmg} a ${finalDmg}!]`;
             }
 
+            // SE IL COLPO DEL MOSTRO MANDEREBBE A 0 PV L'EROE E L'EROE HA UN FAMIGLIO ATTIVO, IL FAMIGLIO SI SACRIFICA SALVANDOLO!
+         if (chosenTarget.currentHP - finalDmg <= 0 && chosenTarget.activeToken) {
+             const savedByTokenName = chosenTarget.activeToken.name;
+             const savedParty = currentPartyList.map(h => h.id === chosenTarget.id ? Object.assign({}, h, { activeToken: null }) : h);
+             savePartyState(savedParty);
+             turnLog.unshift(`🐾🛡️ EROICO SACRIFICIO (CHUMP BLOCK)! Il colpo mortale di ${combatState.name} (${finalDmg} danni) stava per abbattere **${chosenTarget.name}**, ma **${savedByTokenName}** si sacrifica assorbendo il 100% del danno!`);
+             advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), savedParty);
+             return;
+         }
+          
             const newHP = Math.max(0, chosenTarget.currentHP - finalDmg);
             const fellUnconscious = newHP === 0;
 
@@ -8045,27 +8352,49 @@
             } catch (e) {}
 
             const partyWithMvp = currentPartyList.map(h => {
-                let updatedH = h.id === lastActiveHero.id ? { ...lastActiveHero } : { ...h };
-                // Sconfitto il mostro custode, spezza qualsiasi trappola (es. Anello dell'Oblio, Ponte Intrappolante, ecc.)!
-                updatedH.isTrapped = false;
-                updatedH.trapName = null;
-                if (restoredPvpParty) {
-                    updatedH.isPhyrexian = false;
-                    updatedH.status = "alive";
-                    updatedH.currentHP = Math.max(15, updatedH.currentHP || 20);
-                }
-                if (updatedH.id === mvpHeroId && updatedH.status !== "dead") {
-                    updatedH.exp = (updatedH.exp || 0) + bonusMvpExp;
-                    updatedH.gold = (updatedH.gold || 0) + bonusMvpGold;
-                    updatedH.treasures = (updatedH.treasures || 0) + 1;
-                }
-                if (updatedH.id === lastActiveHero.id && (plunderGold > 0 || plunderTreasures > 0 || plunderFood > 0)) {
-                    updatedH.gold = (updatedH.gold || 0) + plunderGold;
-                    updatedH.treasures = (updatedH.treasures || 0) + plunderTreasures;
-                    updatedH.food = (updatedH.food || 0) + plunderFood;
-                }
-                return updatedH;
-            });
+    let updatedH = h.id === lastActiveHero.id ? { ...lastActiveHero } : { ...h };
+    
+    // Sconfitto il mostro custode, spezza qualsiasi trappola (es. Anello dell'Oblio, Ponte Intrappolante, ecc.)!
+    updatedH.isTrapped = false;
+    updatedH.trapName = null;
+    
+    if (restoredPvpParty) {
+        updatedH.isPhyrexian = false;
+        updatedH.status = "alive";
+        updatedH.currentHP = Math.max(15, updatedH.currentHP || 20);
+    }
+    
+    if (updatedH.id === mvpHeroId && updatedH.status !== "dead") {
+        updatedH.exp = (updatedH.exp || 0) + bonusMvpExp;
+        updatedH.gold = (updatedH.gold || 0) + bonusMvpGold;
+        updatedH.treasures = (updatedH.treasures || 0) + 1;
+    }
+    
+    if (updatedH.id === lastActiveHero.id && (plunderGold > 0 || plunderTreasures > 0 || plunderFood > 0)) {
+        updatedH.gold = (updatedH.gold || 0) + plunderGold;
+        updatedH.treasures = (updatedH.treasures || 0) + plunderTreasures;
+        updatedH.food = (updatedH.food || 0) + plunderFood;
+    }
+
+    // --- VERIFICA AUTOMATICA DELLE TAGLIE (BOUNTY) ---
+    if (updatedH.activeBounty) {
+        const b = updatedH.activeBounty;
+        const passedBlitz = b.id === "bounty_blitz_3" && (combatState.round || 1) <= 2;
+        const passedNoSpells = b.id === "bounty_no_spells" && !(combatState.spellsCastThisRoundColors && combatState.spellsCastThisRoundColors.length > 0);
+        const passedBoss = b.id === "bounty_boss_slayer" && combatState.isBoss && updatedH.currentHP >= 10;
+        
+        if (passedBlitz || passedNoSpells || passedBoss) {
+            updatedH.gold = (updatedH.gold || 0) + b.rewardGold;
+            updatedH.exp = (updatedH.exp || 0) + b.rewardExp;
+            updatedH.treasures = (updatedH.treasures || 0) + 1;
+            updatedH.honorTitle = b.honorTitle;
+            updatedH.activeBounty = null;
+            rogueliteRecoveryBanner += `\n🎯🏆 TAGLIA COMPLETATA (${b.title}): **${updatedH.name}** ottiene +${b.rewardGold}🪙, +${b.rewardExp} EXP, +1💎 e il Titolo A4 **"${b.honorTitle}"**!`;
+        }
+    }
+
+    return updatedH;
+});
             setParty(partyWithMvp);
 
             const winRewards = {
@@ -9089,6 +9418,24 @@
                             >
                                 ⚔️ Caccia Mostri
                             </button>
+                          <button
+                                onClick={() => setShowBlacksmithModal(!showBlacksmithModal)}
+                                className="bg-orange-700 hover:bg-orange-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                ⚒️ Fabbro (+1/+3)
+                            </button>
+                            <button
+                                onClick={() => setShowBountyModal(!showBountyModal)}
+                                className="bg-amber-700 hover:bg-amber-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                🎯 Taglie
+                            </button>
+                            <button
+                                onClick={() => setShowCampfireModal(!showCampfireModal)}
+                                className="bg-emerald-800 hover:bg-emerald-700 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                ⛺ Bivacco
+                            </button>
                             <button
                                 onClick={() => setShowMerchant(!showMerchant)}
                                 className="bg-yellow-600 hover:bg-yellow-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
@@ -9338,20 +9685,23 @@
                                     <p className="text-xs text-gray-400 italic">Nessun mazzo trovato in "I Miei Mazzi". Crea un mazzo nel Deckbuilder per evocare il tuo Comandante nel GDR!</p>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                                        {getSavedAppCommanders().map((cmd, idx) => (
-                                            <div key={idx} className="bg-gray-950 border border-orange-500/60 rounded-xl p-2 flex items-center justify-between gap-2">
-                                                <div className="min-w-0">
-                                                    <p className="text-white font-black text-xs truncate">{cmd.name}</p>
-                                                    <p className="text-gray-400 text-[10px] truncate">Mazzo: {cmd.deckName}</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => summonRealCommanderInBattle(cmd)}
-                                                    className="bg-orange-500 hover:bg-orange-400 text-black font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
-                                                >
-                                                    ⚡ Evoca!
-                                                </button>
+                                       {getSavedAppCommanders().map((cmd, idx) => (
+                                    <div key={idx} className="bg-gray-950 border border-orange-500/60 rounded-xl p-2 flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <img src={cmd.img} className="w-12 h-12 rounded-lg object-cover object-top border border-orange-400 shrink-0" alt={cmd.name} />
+                                            <div className="min-w-0">
+                                                <p className="text-white font-black text-xs truncate">{cmd.name}</p>
+                                                <p className="text-gray-400 text-[10px] truncate">Mazzo: {cmd.deckName}</p>
                                             </div>
-                                        ))}
+                                        </div>
+                                        <button
+                                            onClick={() => summonRealCommanderInBattle(cmd)}
+                                            className="bg-orange-500 hover:bg-orange-400 text-black font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
+                                        >
+                                            ⚡ Evoca!
+                                        </button>
+                                    </div>
+                                ))}
                                     </div>
                                 )}
                             </div>
@@ -9381,6 +9731,107 @@
                                         ))}
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODALE FORGIA DEL FABBRO RUNICO (+1 / +2 / +3 SULLE ARMI PREFERITE) */}
+                    {showBlacksmithModal && (
+                        <div className="bg-gray-900 border-4 border-orange-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-orange-400 font-black text-sm uppercase">
+                                    ⚒️ Forgia del Fabbro Runico — Potenzia l'Arsenale di {character.name} (+1 / +2 / +3)
+                                </h3>
+                                <button onClick={() => setShowBlacksmithModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Riforgia i tuoi oggetti equipaggiati con Oro e 1 Pedina Tesoro (💎): ogni grado aggiunge <b>+2 alla Statistica principale e +2 COS</b>, così puoi portare la tua arma preferita fino a fine gioco!
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {EQUIP_SLOTS.map(sl => {
+                                    const eqIt = character.equipped ? character.equipped[sl.key] : null;
+                                    if (!eqIt) return null;
+                                    const curP = eqIt.upgradeLevel || 0;
+                                    const nextCost = (curP + 1) * 45;
+                                    return (
+                                        <div key={sl.key} className="bg-gray-950 border border-orange-500/50 rounded-xl p-2.5 flex justify-between items-center gap-2">
+                                            <div className="min-w-0">
+                                                <p className="text-white font-black text-xs truncate">{sl.icon} {eqIt.name}</p>
+                                                <p className="text-amber-400 text-[10px] truncate">{formatItemBonuses(eqIt)}</p>
+                                            </div>
+                                            <button
+                                                disabled={curP >= 3}
+                                                onClick={() => upgradeEquippedItemAtSmith(sl.key)}
+                                                className="bg-orange-500 hover:bg-orange-400 disabled:bg-gray-800 text-black disabled:text-gray-500 font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
+                                            >
+                                                {curP >= 3 ? "MAX (+3)" : `⚒️ Forgia +${curP + 1} (${nextCost}🪙 + 1💎)`}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODALE BACHECA DELLE TAGLIE (CON TITOLI ONORIFICI STAMPABILI A4) */}
+                    {showBountyModal && (
+                        <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-amber-400 font-black text-sm uppercase">
+                                    🎯 Bacheca delle Taglie della Locanda ({character.name})
+                                </h3>
+                                <button onClick={() => setShowBountyModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            {character.honorTitle && (
+                                <p className="text-xs font-black text-emerald-300 bg-emerald-950/60 border border-emerald-500 p-2 rounded-lg text-center">
+                                    👑 Titolo Onorifico Attuale su Scheda A4: «{character.honorTitle}»
+                                </p>
+                            )}
+                            <div className="space-y-2">
+                                {BOUNTIES_DB.map(b => {
+                                    const isActive = character.activeBounty && character.activeBounty.id === b.id;
+                                    return (
+                                        <div key={b.id} className="bg-gray-950 border border-amber-500/50 rounded-xl p-3 flex justify-between items-center gap-2">
+                                            <div>
+                                                <p className="text-white font-black text-xs">{b.title} <span className="text-amber-300">➔ Titolo: «{b.honorTitle}»</span></p>
+                                                <p className="text-gray-300 text-[11px]">{b.conditionText}</p>
+                                                <p className="text-emerald-400 text-[10px] font-bold">Premio: +{b.rewardGold}🪙, +{b.rewardExp} EXP e +1💎</p>
+                                            </div>
+                                            <button
+                                                onClick={() => acceptBountyContract(b)}
+                                                className={`px-3 py-1.5 rounded-lg font-black text-xs shrink-0 ${isActive ? "bg-emerald-500 text-black" : "bg-amber-500 hover:bg-amber-400 text-black"}`}
+                                            >
+                                                {isActive ? "✅ Attiva" : "📜 Accetta"}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODALE BIVACCO / FUOCO DA CAMPO DI GRUPPO */}
+                    {showCampfireModal && (
+                        <div className="bg-gray-900 border-4 border-emerald-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-emerald-400 font-black text-sm uppercase">
+                                    ⛺ Bivacco della Compagnia — Scegli l'Attività da Campo
+                                </h3>
+                                <button onClick={() => setShowCampfireModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <button onClick={() => executeCampfireAction("cook")} className="bg-gray-950 hover:bg-emerald-950 border border-emerald-500 p-3 rounded-xl text-left">
+                                    <p className="text-emerald-300 font-black text-xs">🍲 1. Cucina Banchetto (-1🍖)</p>
+                                    <p className="text-gray-300 text-[10px] mt-1">Cura +20 PV a tutta la Compagnia e dona +2 COS permanente!</p>
+                                </button>
+                                <button onClick={() => executeCampfireAction("sharpen")} className="bg-gray-950 hover:bg-orange-950 border border-orange-500 p-3 rounded-xl text-left">
+                                    <p className="text-orange-300 font-black text-xs">🗡️ 2. Affila le Armi</p>
+                                    <p className="text-gray-300 text-[10px] mt-1">Conferisce +11 al Tiro D20 e +16 Danni al primo assalto del prossimo scontro!</p>
+                                </button>
+                                <button onClick={() => executeCampfireAction("watch")} className="bg-gray-950 hover:bg-cyan-950 border border-cyan-500 p-3 rounded-xl text-left">
+                                    <p className="text-cyan-300 font-black text-xs">🔥 3. Turno di Guardia</p>
+                                    <p className="text-gray-300 text-[10px] mt-1">Tutta la Compagnia rigenera +2 Mana per ciascuno dei propri colori!</p>
+                                </button>
                             </div>
                         </div>
                     )}
@@ -9496,6 +9947,45 @@
                                         +5 Dado D20
                                     </button>
                                 </div>
+                            )}
+                        </div>
+
+                        {/* SLOT EVOCAZIONE FAMIGLIO / PEDINA DI CLASSE & COLORE (CON ARTWORK SCRYFALL!) */}
+                        <div className="bg-gray-950 border border-emerald-600/60 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2">
+                            {character.activeToken ? (
+                                <React.Fragment>
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="w-16 h-12 rounded-lg overflow-hidden border border-emerald-400 bg-black shrink-0">
+                                            <img
+                                                src={tokenArtUrl || "./mtg-bg.jpg"}
+                                                alt={character.activeToken.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-emerald-300 font-black text-xs truncate">{character.activeToken.name}</p>
+                                            <p className="text-gray-400 text-[10px] truncate">{character.activeToken.desc}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={sacrificeTokenForShield}
+                                        className="bg-emerald-700 hover:bg-emerald-600 text-white font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
+                                    >
+                                        🛡️ Sacrifica per Scudo & +6 PV
+                                    </button>
+                                </React.Fragment>
+                            ) : (
+                                <React.Fragment>
+                                    <span className="text-xs font-bold text-gray-300">
+                                        🐾 Nessun Famiglio schierato ({getHeroTokenTemplate(character).name})
+                                    </span>
+                                    <button
+                                        onClick={summonClassFamiliarToken}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-black font-black text-xs px-3 py-1 rounded-lg shadow"
+                                    >
+                                        🐾 Evoca Famiglio (1 Mana {character.manaIdentity[0] || "W"})
+                                    </button>
+                                </React.Fragment>
                             )}
                         </div>
 
@@ -10729,7 +11219,9 @@
                     <div id="print-area" className={`${mainMana.bgClass} text-black border-[6px] border-gray-900 rounded-2xl p-4 shadow-2xl relative`} style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/aged-paper.png')" }}>
                         
                         <div className="bg-white/90 border-2 border-gray-900 rounded-xl px-4 py-1.5 mb-2.5 flex justify-between items-center shadow-sm">
-                            <h1 className="text-2xl font-black tracking-wide text-gray-900 truncate" style={{ fontFamily: "Georgia, serif" }}>{character.name}</h1>
+                           <h1 className="text-2xl font-black tracking-wide text-gray-900 truncate" style={{ fontFamily: "Georgia, serif" }}>
+    {character.name} {character.honorTitle ? "— «" + character.honorTitle + "»" : ""}
+</h1>
                             <div className="flex gap-1 shrink-0">
                                 {character.manaIdentity.map(mId => {
                                     const mObj = MANA_COLORS.find(mc => mc.id === mId);
