@@ -1665,55 +1665,84 @@
     // ============================================================================
 
     const RPG_ITEMS_DB = {
-        // --- ARMI (slot: "weapon") ---
-        bonesplitter: { id: "bonesplitter", name: "Spaccaossa (Bonesplitter)", slot: "weapon", str: 3, agi: 0, mag: 0, con: 0, keywords: [] },
-        loxodon_warhammer: { id: "loxodon_warhammer", name: "Martello da Guerra Lossodonte", slot: "weapon", str: 4, agi: -1, mag: 0, con: 2, keywords: ["Travolgere", "Legame Vitale"] },
-        umezawa_jitte: { id: "umezawa_jitte", name: "Jitte di Umezawa", slot: "weapon", str: 3, agi: 4, mag: 2, con: 1, keywords: ["Attacco Improvviso", "Legame Vitale"] },
-        isochron_scepter: { id: "isochron_scepter", name: "Scettro Isocrono", slot: "weapon", str: 0, agi: 1, mag: 5, con: 1, keywords: ["Cautela"] },
-        sword_fire_ice: { id: "sword_fire_ice", name: "Spada di Fuoco e Ghiaccio", slot: "weapon", str: 4, agi: 2, mag: 4, con: 2, keywords: ["Attacco Improvviso"] },
-        sword_feast_famine: { id: "sword_feast_famine", name: "Spada di Abbondanza e Carestia", slot: "weapon", str: 4, agi: 3, mag: 3, con: 3, keywords: ["Tocco Letale"] },
-        sword_light_shadow: { id: "sword_light_shadow", name: "Spada di Luce e Ombra", slot: "weapon", str: 4, agi: 2, mag: 3, con: 3, keywords: ["Legame Vitale"] },
-        staff_domination: { id: "staff_domination", name: "Bastone della Dominazione Arcana", slot: "weapon", str: 0, agi: 2, mag: 6, con: 2, keywords: ["Cautela"] },
-        kaldra_sword: { id: "kaldra_sword", name: "Spada di Kaldra", slot: "weapon", str: 6, agi: 2, mag: 2, con: 2, keywords: ["Travolgere", "Attacco Improvviso"] },
-        batterskull: { id: "batterskull", name: "Sfondacranio (Batterskull)", slot: "weapon", str: 5, agi: 0, mag: 2, con: 6, keywords: ["Cautela", "Legame Vitale"] },
-        embercleave: { id: "embercleave", name: "Fenditura Cinerea (Embercleave)", slot: "weapon", reqMana: "R", str: 7, agi: 2, mag: 1, con: 1, keywords: ["Travolgere", "Attacco Improvviso"] },
-        blackblade: { id: "blackblade", name: "Blackblade Riforgiata", slot: "weapon", reqLegendary: true, str: 8, agi: 3, mag: 5, con: 5, keywords: ["Indistruttibile", "Travolgere"] },
+        // ====================================================================
+        // --- ARMI (slot: "weapon") — BILANCIATE TRA MARZIALI, FURTIVI E MAGHI
+        // ====================================================================
+        bonesplitter: { id: "bonesplitter", name: "Spaccaossa (Bonesplitter)", slot: "weapon", minLvl: 1, str: 3, agi: 0, mag: 0, con: 0, keywords: [] },
+        vulshok_morningstar: { id: "vulshok_morningstar", name: "Mazzafrusto Vulshok", slot: "weapon", minLvl: 2, str: 3, agi: 0, mag: 0, con: 2, keywords: [] },
+        whispersilk_dagger: { id: "whispersilk_dagger", name: "Pugnale Bisbigliante Dimir", slot: "weapon", reqClassGroup: "rogue", minLvl: 2, str: 1, agi: 4, mag: 1, con: 0, keywords: ["Imbloccabile"] },
+        isochron_scepter: { id: "isochron_scepter", name: "Scettro Isocrono", slot: "weapon", reqClassGroup: "caster", minLvl: 3, str: 0, agi: 1, mag: 5, con: 1, keywords: ["Cautela"] },
+        o_naginata: { id: "o_naginata", name: "O-Naginata di Kamigawa", slot: "weapon", reqClassGroup: "martial", minLvl: 3, str: 4, agi: 1, mag: 0, con: 1, keywords: ["Travolgere"] },
+        loxodon_warhammer: { id: "loxodon_warhammer", name: "Martello da Guerra Lossodonte", slot: "weapon", reqClassGroup: "martial", minLvl: 4, str: 4, agi: -1, mag: 0, con: 2, keywords: ["Travolgere", "Legame Vitale"] },
+        shadowspear: { id: "shadowspear", name: "Lancia d'Ombra (Shadowspear)", slot: "weapon", reqClassGroup: "martial_rogue", minLvl: 4, str: 4, agi: 2, mag: 0, con: 2, keywords: ["Travolgere", "Legame Vitale"] },
+        umezawa_jitte: { id: "umezawa_jitte", name: "Jitte di Umezawa", slot: "weapon", reqClassGroup: "martial_rogue", minLvl: 5, str: 3, agi: 4, mag: 2, con: 1, keywords: ["Attacco Improvviso", "Legame Vitale"] },
+        quietus_spike: { id: "quietus_spike", name: "Aculeo del Silenzio (Quietus Spike)", slot: "weapon", reqClassGroup: "rogue", minLvl: 5, str: 2, agi: 5, mag: 0, con: 1, keywords: ["Tocco Letale"] },
+        grafted_wargear: { id: "grafted_wargear", name: "Armatura da Guerra Innestata", slot: "weapon", reqClassGroup: "martial", minLvl: 5, str: 5, agi: 0, mag: 0, con: 3, keywords: ["Rapidità"] },
+        maul_skyclaves: { id: "maul_skyclaves", name: "Maglio degli Skyclave", slot: "weapon", reqClassGroup: "martial", minLvl: 6, str: 5, agi: 1, mag: 0, con: 2, keywords: ["Volare", "Attacco Improvviso"] },
+        batterskull: { id: "batterskull", name: "Sfondacranio (Batterskull)", slot: "weapon", reqClassGroup: "martial", minLvl: 6, str: 5, agi: 0, mag: 1, con: 6, keywords: ["Cautela", "Legame Vitale"] },
+        staff_domination: { id: "staff_domination", name: "Bastone della Dominazione Arcana", slot: "weapon", reqClassGroup: "caster", minLvl: 7, str: 0, agi: 2, mag: 6, con: 2, keywords: ["Cautela"] },
+        kaldra_sword: { id: "kaldra_sword", name: "Spada di Kaldra", slot: "weapon", reqClassGroup: "martial", minLvl: 7, str: 6, agi: 2, mag: 1, con: 2, keywords: ["Travolgere", "Attacco Improvviso"] },
+        sword_light_shadow: { id: "sword_light_shadow", name: "Spada di Luce e Ombra", slot: "weapon", minLvl: 7, str: 4, agi: 2, mag: 3, con: 3, keywords: ["Legame Vitale"] },
+        sword_feast_famine: { id: "sword_feast_famine", name: "Spada di Abbondanza e Carestia", slot: "weapon", minLvl: 8, str: 4, agi: 3, mag: 3, con: 3, keywords: ["Tocco Letale"] },
+        sword_fire_ice: { id: "sword_fire_ice", name: "Spada di Fuoco e Ghiaccio", slot: "weapon", minLvl: 8, str: 4, agi: 2, mag: 4, con: 2, keywords: ["Attacco Improvviso"] },
+        sword_sinew_steel: { id: "sword_sinew_steel", name: "Spada di Nervi e Acciaio", slot: "weapon", reqClassGroup: "martial_rogue", minLvl: 9, str: 6, agi: 3, mag: 0, con: 3, keywords: ["Attacco Improvviso", "Indistruttibile"] },
+        godsend: { id: "godsend", name: "Dono Celeste (Godsend di Elspeth)", slot: "weapon", reqClassGroup: "martial", reqLegendary: true, minLvl: 9, str: 6, agi: 2, mag: 2, con: 4, keywords: ["Cautela", "Attacco Improvviso"] },
+        embercleave: { id: "embercleave", name: "Fenditura Cinerea (Embercleave)", slot: "weapon", reqClassGroup: "martial", reqMana: "R", reqLegendary: true, minLvl: 10, str: 7, agi: 2, mag: 0, con: 2, keywords: ["Travolgere", "Attacco Improvviso", "Doppio Attacco"] },
+        blackblade: { id: "blackblade", name: "Blackblade Riforgiata", slot: "weapon", reqLegendary: true, minLvl: 11, str: 8, agi: 3, mag: 5, con: 5, keywords: ["Indistruttibile", "Travolgere"] },
+        colossus_hammer: { id: "colossus_hammer", name: "Martello del Colosso (Colossus Hammer)", slot: "weapon", reqClassGroup: "martial", reqLegendary: true, minLvl: 12, str: 10, agi: -2, mag: 0, con: 6, keywords: ["Travolgere", "Indistruttibile"] },
 
-        // --- TESTA / ELMI (slot: "head") ---
-        champion_helm: { id: "champion_helm", name: "Elmo del Campione di Benalia", slot: "head", str: 1, agi: 0, mag: 1, con: 3, keywords: ["Cautela"] },
-        hood_assassin: { id: "hood_assassin", name: "Cappuccio dell'Ombra Dimir", slot: "head", str: 0, agi: 3, mag: 2, con: 1, keywords: ["Imbloccabile"] },
-        skullclamp: { id: "skullclamp", name: "Morsa Cerebrale (Skullclamp)", slot: "head", str: 2, agi: 1, mag: 5, con: -2, keywords: ["Tocco Letale"] },
-        sensei_top: { id: "sensei_top", name: "Cappa delle Profezie del Sensei", slot: "head", str: 0, agi: 3, mag: 4, con: 2, keywords: ["Cautela"] },
-        helm_of_the_host: { id: "helm_of_the_host", name: "Elmo delle Moltitudini", slot: "head", reqLegendary: true, str: 3, agi: 3, mag: 3, con: 4, keywords: ["Cautela", "Attacco Improvviso"] },
-        kaldra_helm: { id: "kaldra_helm", name: "Elmo di Kaldra", slot: "head", str: 3, agi: 2, mag: 3, con: 5, keywords: ["Attacco Improvviso", "Travolgere"] },
+        // ====================================================================
+        // --- TESTA / ELMI (slot: "head")
+        // ====================================================================
+        champion_helm: { id: "champion_helm", name: "Elmo del Campione di Benalia", slot: "head", minLvl: 1, str: 2, agi: 0, mag: 0, con: 3, keywords: ["Cautela"] },
+        horned_helm: { id: "horned_helm", name: "Elmo Cornuto di Guerra", slot: "head", reqClassGroup: "martial", minLvl: 2, str: 3, agi: 1, mag: 0, con: 2, keywords: ["Travolgere"] },
+        hood_assassin: { id: "hood_assassin", name: "Cappuccio dell'Ombra Dimir", slot: "head", minLvl: 2, str: 0, agi: 3, mag: 2, con: 1, keywords: ["Imbloccabile"] },
+        skullclamp: { id: "skullclamp", name: "Morsa Cerebrale (Skullclamp)", slot: "head", reqClassGroup: "caster", minLvl: 3, str: 1, agi: 1, mag: 5, con: -2, keywords: ["Tocco Letale"] },
+        sensei_top: { id: "sensei_top", name: "Cappa delle Profezie del Sensei", slot: "head", reqClassGroup: "caster", minLvl: 4, str: 0, agi: 3, mag: 4, con: 2, keywords: ["Cautela"] },
+        kaldra_helm: { id: "kaldra_helm", name: "Elmo di Kaldra", slot: "head", minLvl: 7, str: 4, agi: 2, mag: 2, con: 5, keywords: ["Attacco Improvviso", "Travolgere"] },
+        helm_of_the_host: { id: "helm_of_the_host", name: "Elmo delle Moltitudini", slot: "head", reqLegendary: true, minLvl: 10, str: 4, agi: 3, mag: 3, con: 4, keywords: ["Cautela", "Attacco Improvviso", "Doppio Attacco"] },
+        helm_host: { id: "helm_of_the_host", name: "Elmo delle Moltitudini", slot: "head", reqLegendary: true, minLvl: 10, str: 4, agi: 3, mag: 3, con: 4, keywords: ["Cautela", "Attacco Improvviso", "Doppio Attacco"] },
 
-        // --- CORPO / ARMATURE (slot: "body") ---
-        whisper_cloak: { id: "whisper_cloak", name: "Manto Bisbigliante di Seta", slot: "body", str: 0, agi: 3, mag: 2, con: 2, keywords: ["Imbloccabile"] },
-        celestial_armor: { id: "celestial_armor", name: "Corazza Piumata di Serra", slot: "body", reqMana: "W", str: 2, agi: 2, mag: 2, con: 5, keywords: ["Volare", "Cautela"] },
-        urza_robes: { id: "urza_robes", name: "Tunica dell'Arcimago di Tolaria", slot: "body", reqMana: "U", str: 0, agi: 2, mag: 7, con: 4, keywords: ["Cautela"] },
-        darksteel_plate: { id: "darksteel_plate", name: "Corazza di Darksteel", slot: "body", str: 2, agi: 0, mag: 0, con: 7, keywords: ["Indistruttibile"] },
-        akroma_armor: { id: "akroma_armor", name: "Armatura del Memoriale di Akroma", slot: "body", reqLegendary: true, str: 4, agi: 4, mag: 4, con: 6, keywords: ["Volare", "Attacco Improvviso", "Cautela"] },
+        // ====================================================================
+        // --- CORPO / ARMATURE (slot: "body")
+        // ====================================================================
+        whisper_cloak: { id: "whisper_cloak", name: "Manto Bisbigliante di Seta", slot: "body", minLvl: 2, str: 0, agi: 3, mag: 2, con: 2, keywords: ["Imbloccabile"] },
+        celestial_armor: { id: "celestial_armor", name: "Corazza Piumata di Serra", slot: "body", reqMana: "W", minLvl: 3, str: 3, agi: 2, mag: 2, con: 5, keywords: ["Volare", "Cautela"] },
+        assault_suit: { id: "assault_suit", name: "Corazza d'Assalto di Keld", slot: "body", reqClassGroup: "martial", minLvl: 4, str: 4, agi: 1, mag: 0, con: 4, keywords: ["Rapidità", "Cautela"] },
+        urza_robes: { id: "urza_robes", name: "Tunica dell'Arcimago di Tolaria", slot: "body", reqClassGroup: "caster", reqMana: "U", minLvl: 5, str: 0, agi: 2, mag: 7, con: 4, keywords: ["Cautela"] },
+        darksteel_plate: { id: "darksteel_plate", name: "Corazza di Darksteel", slot: "body", reqClassGroup: "martial", minLvl: 6, str: 4, agi: 0, mag: 0, con: 7, keywords: ["Indistruttibile"] },
+        akroma_armor: { id: "akroma_armor", name: "Armatura del Memoriale di Akroma", slot: "body", reqLegendary: true, minLvl: 10, str: 4, agi: 4, mag: 4, con: 6, keywords: ["Volare", "Attacco Improvviso", "Cautela"] },
+        argentum_armor: { id: "argentum_armor", name: "Armatura Suprema di Argentum", slot: "body", reqClassGroup: "martial", reqLegendary: true, minLvl: 12, str: 7, agi: 1, mag: 0, con: 8, keywords: ["Indistruttibile", "Travolgere"] },
 
-        // --- MANI / GUANTI & SCUDI (slot: "hands") ---
-        gauntlets_power: { id: "gauntlets_power", name: "Guanti del Potere (Gauntlet of Might)", slot: "hands", str: 3, agi: 1, mag: 3, con: 2, keywords: [] },
-        venom_bracers: { id: "venom_bracers", name: "Parabraccia del Basilisco", slot: "hands", str: 1, agi: 3, mag: 1, con: 1, keywords: ["Tocco Letale"] },
-        pyromancer_goggles: { id: "pyromancer_goggles", name: "Guanti & Lenti di Jaya Ballard", slot: "hands", reqMana: "R", str: 1, agi: 2, mag: 5, con: 2, keywords: [] },
-        shield_kaldra: { id: "shield_kaldra", name: "Scudo di Kaldra", slot: "hands", str: 2, agi: 0, mag: 1, con: 6, keywords: ["Indistruttibile"] },
+        // ====================================================================
+        // --- MANI / GUANTI & SCUDI (slot: "hands")
+        // ====================================================================
+        venom_bracers: { id: "venom_bracers", name: "Parabraccia del Basilisco", slot: "hands", minLvl: 2, str: 1, agi: 3, mag: 1, con: 1, keywords: ["Tocco Letale"] },
+        brawler_plate: { id: "brawler_plate", name: "Guanti Chiodati da Rissa", slot: "hands", reqClassGroup: "martial", minLvl: 2, str: 4, agi: 0, mag: 0, con: 2, keywords: ["Travolgere"] },
+        gauntlets_power: { id: "gauntlets_power", name: "Guanti del Potere (Gauntlet of Might)", slot: "hands", minLvl: 4, str: 4, agi: 1, mag: 3, con: 2, keywords: [] },
+        pyromancer_goggles: { id: "pyromancer_goggles", name: "Guanti & Lenti di Jaya Ballard", slot: "hands", reqClassGroup: "caster", reqMana: "R", minLvl: 3, str: 0, agi: 2, mag: 5, con: 2, keywords: [] },
+        shield_kaldra: { id: "shield_kaldra", name: "Scudo di Kaldra", slot: "hands", minLvl: 7, str: 3, agi: 0, mag: 1, con: 6, keywords: ["Indistruttibile"] },
+        kaldra_shield: { id: "shield_kaldra", name: "Scudo di Kaldra", slot: "hands", minLvl: 7, str: 3, agi: 0, mag: 1, con: 6, keywords: ["Indistruttibile"] },
 
-        // --- PIEDI / STIVALI (slot: "feet") ---
-        Swiftfoot_boots: { id: "Swiftfoot_boots", name: "Stivali Piedi Veloci", slot: "feet", str: 0, agi: 4, mag: 1, con: 1, keywords: ["Attacco Improvviso"] },
-        trailblazer_boots: { id: "trailblazer_boots", name: "Stivali dell'Esploratore di Zendikar", slot: "feet", str: 1, agi: 4, mag: 1, con: 2, keywords: ["Imbloccabile"] },
-        lightning_greaves: { id: "lightning_greaves", name: "Schinieri dei Fulmini", slot: "feet", str: 1, agi: 5, mag: 1, con: 2, keywords: ["Attacco Improvviso", "Imbloccabile"] },
+        // ====================================================================
+        // --- PIEDI / STIVALI (slot: "feet")
+        // ====================================================================
+        Swiftfoot_boots: { id: "Swiftfoot_boots", name: "Stivali Piedi Veloci", slot: "feet", minLvl: 2, str: 1, agi: 4, mag: 1, con: 1, keywords: ["Attacco Improvviso", "Rapidità"] },
+        berserker_greaves: { id: "berserker_greaves", name: "Schinieri Fiammeggianti del Berserker", slot: "feet", reqClassGroup: "martial", minLvl: 3, str: 3, agi: 2, mag: 0, con: 2, keywords: ["Rapidità", "Travolgere"] },
+        trailblazer_boots: { id: "trailblazer_boots", name: "Stivali dell'Esploratore di Zendikar", slot: "feet", minLvl: 4, str: 2, agi: 4, mag: 1, con: 2, keywords: ["Imbloccabile"] },
+        lightning_greaves: { id: "lightning_greaves", name: "Schinieri dei Fulmini", slot: "feet", minLvl: 5, str: 2, agi: 5, mag: 1, con: 2, keywords: ["Attacco Improvviso", "Imbloccabile", "Rapidità"] },
 
-        // --- ARTEFATTI E POWER NINE (slot: "artifact") ---
-        sol_ring: { id: "sol_ring", name: "Anello Solare (Sol Ring)", slot: "artifact", str: 2, agi: 2, mag: 4, con: 2, keywords: [] },
-        mana_crypt: { id: "mana_crypt", name: "Cripta di Mana (Mana Crypt)", slot: "artifact", str: 3, agi: 3, mag: 6, con: 0, keywords: ["Attacco Improvviso"] },
-        coalition_relic: { id: "coalition_relic", name: "Reliquia della Coalizione di Urza", slot: "artifact", str: 2, agi: 2, mag: 4, con: 3, keywords: ["Cautela"] },
-        chromatic_lantern: { id: "chromatic_lantern", name: "Lanterna Cromatica", slot: "artifact", str: 2, agi: 2, mag: 5, con: 3, keywords: ["Cautela"] },
-        nevinyrral_disk: { id: "nevinyrral_disk", name: "Disco di Nevinyrral", slot: "artifact", str: 3, agi: 0, mag: 5, con: 4, keywords: ["Tocco Letale"] },
-        the_mirari: { id: "the_mirari", name: "Il Mirari (Sfera dei Desideri)", slot: "artifact", reqLegendary: true, str: 4, agi: 3, mag: 7, con: 3, keywords: ["Travolgere"] },
-        mox_diamond: { id: "mox_diamond", name: "Mox di Diamante", slot: "artifact", str: 2, agi: 3, mag: 5, con: 3, keywords: [] },
-        black_lotus: { id: "black_lotus", name: "🌺 Loto Nero (Black Lotus - Alpha 1993)", slot: "artifact", reqLegendary: true, str: 6, agi: 6, mag: 10, con: 8, keywords: ["Volare", "Attacco Improvviso", "Indistruttibile", "Cautela"] }
+        // ====================================================================
+        // --- ARTEFATTI E POWER NINE (slot: "artifact")
+        // ====================================================================
+        sol_ring: { id: "sol_ring", name: "Anello Solare (Sol Ring)", slot: "artifact", minLvl: 1, str: 2, agi: 2, mag: 2, con: 2, keywords: [] },
+        coalition_relic: { id: "coalition_relic", name: "Reliquia della Coalizione di Urza", slot: "artifact", minLvl: 3, str: 3, agi: 2, mag: 3, con: 3, keywords: ["Cautela"] },
+        mox_diamond: { id: "mox_diamond", name: "Mox di Diamante", slot: "artifact", minLvl: 5, str: 3, agi: 3, mag: 4, con: 3, keywords: [] },
+        chromatic_lantern: { id: "chromatic_lantern", name: "Lanterna Cromatica", slot: "artifact", minLvl: 5, str: 2, agi: 2, mag: 4, con: 3, keywords: ["Cautela"] },
+        nevinyrral_disk: { id: "nevinyrral_disk", name: "Disco di Nevinyrral", slot: "artifact", minLvl: 6, str: 3, agi: 0, mag: 4, con: 4, keywords: ["Tocco Letale"] },
+        the_mirari: { id: "the_mirari", name: "Il Mirari (Sfera dei Desideri)", slot: "artifact", reqClassGroup: "caster", reqLegendary: true, minLvl: 8, str: 3, agi: 3, mag: 7, con: 3, keywords: ["Travolgere"] },
+        mana_crypt: { id: "mana_crypt", name: "Cripta di Mana (Mana Crypt)", slot: "artifact", reqLegendary: true, minLvl: 11, str: 4, agi: 4, mag: 6, con: 2, keywords: ["Attacco Improvviso"] },
+        black_lotus: { id: "black_lotus", name: "🌺 Loto Nero (Black Lotus - Alpha 1993)", slot: "artifact", reqLegendary: true, minLvl: 12, str: 7, agi: 7, mag: 10, con: 8, keywords: ["Volare", "Attacco Improvviso", "Indistruttibile", "Cautela"] }
     };
 
     // ============================================================================
@@ -1723,9 +1752,9 @@
         storm_crow: { name: "Corvo della Tempesta (Storm Crow 1/2)", isHumanoid: false, maxHP: 28, initBonus: 8, dc: 22, dmg: 5, blueMana: 2, exp: 50, gold: 15, treasures: 1, loot: "sol_ring", desc: "Il pennuto più temuto e memato del Multiverso! Scende in picchiata avvolto da mana blu (2💧)!" },
         fblthp_guards: { name: "Pattuglia Confusa & Fblthp Smarrito", isHumanoid: true, maxHP: 32, initBonus: 4, dc: 22, dmg: 5, blueMana: 2, exp: 50, gold: 20, treasures: 1, loot: "champion_helm", desc: "Un piccolo homunculus con un occhio solo è finito per sbaglio in mezzo a una ronda armata!" },
         goblin_pack: { name: "Orda di Goblin Predoni", isHumanoid: true, maxHP: 36, initBonus: 5, dc: 23, dmg: 6, blueMana: 0, exp: 55, gold: 20, treasures: 1, loot: "bonesplitter", desc: "Una banda feroce di Goblin pronta a derubarvi o catturarvi!" },
-        goblin_piledriver: { name: "Goblin Battipalo & Predoni di Keld", isHumanoid: true, maxHP: 48, initBonus: 6, dc: 25, dmg: 8, blueMana: 0, exp: 75, gold: 30, treasures: 1, loot: "pyromancer_goggles", desc: "Guidati da un furioso Piledriver, i loro attacchi raddoppiano di ferocia!" },
+        goblin_piledriver: { name: "Goblin Battipalo & Predoni di Keld", isHumanoid: true, maxHP: 48, initBonus: 6, dc: 25, dmg: 8, blueMana: 0, exp: 75, gold: 30, treasures: 1, loot: "brawler_plate", desc: "Guidati da un furioso Piledriver, i loro attacchi raddoppiano di ferocia!" },
         bandit_rogues: { name: "Sicari & Maghi Dimir", isHumanoid: true, maxHP: 44, initBonus: 7, dc: 25, dmg: 7, blueMana: 2, exp: 70, gold: 28, treasures: 1, loot: "hood_assassin", desc: "Assassini e maghi blu: possiedono 2💧 Mana Blu per Counterare e catturano ostaggi!" },
-        brushwagg_mutant: { name: "Brushwagg Mutante Spinato (3/2)", isHumanoid: false, maxHP: 40, initBonus: 4, dc: 24, dmg: 7, blueMana: 0, exp: 65, gold: 18, treasures: 1, loot: "venom_bracers", desc: "Una bizzarra palla di spine e artigli divenuta gigantesca per le radiazioni di mana!" },
+        brushwagg_mutant: { name: "Brushwagg Mutante Spinato (3/2)", isHumanoid: false, maxHP: 40, initBonus: 4, dc: 24, dmg: 7, blueMana: 0, exp: 65, gold: 18, treasures: 1, loot: "horned_helm", desc: "Una bizzarra palla di spine e artigli divenuta gigantesca per le radiazioni di mana!" },
         llanowar_troll: { name: "Troll di Thrun Rigenerante", isHumanoid: false, maxHP: 54, initBonus: 2, dc: 26, dmg: 8, blueMana: 0, exp: 90, gold: 25, treasures: 1, loot: "loxodon_warhammer", desc: "Un colosso muscoloso quasi impossibile da abbattere che rigenera +4 PV a ogni round!" },
         tarmogoyf: { name: "Tarmogoyf Affamato (★/1+★)", isHumanoid: false, maxHP: 68, initBonus: 6, dc: 27, dmg: 11, blueMana: 0, exp: 120, gold: 35, treasures: 2, loot: "skullclamp", desc: "«Ciò che non cresce, muore. E ciò che muore fa crescere il Tarmogoyf!»" },
         lhurgoyf_alpha: { name: "Lhurgoyf Ancestrale («Ach! Hans, Run!»)", isHumanoid: false, maxHP: 74, initBonus: 5, dc: 28, dmg: 11, blueMana: 0, exp: 130, gold: 40, treasures: 2, loot: "gauntlets_power", desc: "Il leggendario divoratore di ossa delle foreste nordiche di Dominaria!" },
@@ -1770,14 +1799,14 @@
         scarab_god_eternals: { name: "Il Dio Scarabeo & Gli Dei-Eterni di Amonkhet", isHumanoid: false, maxHP: 128, initBonus: 8, dc: 31, dmg: 15, blueMana: 4, exp: 270, gold: 120, treasures: 3, loot: "the_mirari", isBoss: true, desc: "Il comandante dell'Orda Infernale affiancato dagli Dei-Zombi ricoperti di Lazotep (4💧 Mana Blu)!" },
         nicol_bolas_dragon_god: { name: "Nicol Bolas, Dio-Drago della Singolarità (BOSS FINALE)", isHumanoid: false, maxHP: 150, initBonus: 9, dc: 33, dmg: 17, blueMana: 4, exp: 400, gold: 200, treasures: 5, loot: "blackblade", isBoss: true, desc: "L'Antico Drago Planeswalker asceso a Dio-Faraone grazie all'Incantesimo degli Antichi: 150 PV e 4💧 Mana Blu!" },
         thran_golem: { name: "Golem Sentinella Thran (Costrutto Antico)", isHumanoid: false, maxHP: 52, initBonus: 4, dc: 24, dmg: 8, blueMana: 2, exp: 80, gold: 35, treasures: 1, loot: "coalition_relic", isBoss: false, desc: "Un automa di pietra e powerstone risalente all'Impero Thran, dotato di scudo di contromagia (2💧)!" },
-        maraxus_keld: { name: "Maraxus di Keld, Signore della Guerra (Boss)", isHumanoid: true, maxHP: 64, initBonus: 6, dc: 26, dmg: 10, blueMana: 0, exp: 110, gold: 50, treasures: 2, loot: "bonesplitter", isBoss: true, desc: "Il colossale signore della guerra barbaro di Keld: più armi impugna, più diventa devastante!" },
+        maraxus_keld: { name: "Maraxus di Keld, Signore della Guerra (Boss)", isHumanoid: true, maxHP: 64, initBonus: 6, dc: 26, dmg: 10, blueMana: 0, exp: 110, gold: 50, treasures: 2, loot: "assault_suit", isBoss: true, desc: "Il colossale signore della guerra barbaro di Keld: più armi impugna, più diventa devastante!" },
         nemata_grove_guardian: { name: "Nemata, Custode del Boschetto & Saprolingi", isHumanoid: false, maxHP: 66, initBonus: 5, dc: 26, dmg: 10, blueMana: 0, exp: 105, gold: 40, treasures: 1, loot: "venom_bracers", isBoss: false, desc: "Un gigantesco Albero Pastore di Skyshroud e Yavimaya circondato da uno sciame infinito di Saprolingi!" },
         molimo_maro_sorcerer: { name: "Molimo, Stregone Maro di Yavimaya (Boss)", isHumanoid: false, maxHP: 84, initBonus: 6, dc: 27, dmg: 12, blueMana: 0, exp: 140, gold: 55, treasures: 2, loot: "loxodon_warhammer", isBoss: true, desc: "L'incarnazione vivente della foresta di Yavimaya: la sua forza cresce con ogni albero di Dominaria!" },
         mishra_dragon_engine: { name: "Drago Meccanico di Mishra & Ashnod (Boss)", isHumanoid: false, maxHP: 90, initBonus: 7, dc: 28, dmg: 13, blueMana: 0, exp: 155, gold: 65, treasures: 2, loot: "gauntlets_power", isBoss: true, desc: "Colossale macchina d'assedio sputafuoco forgiata da Mishra e Ashnod per devastare Argoth!" },
         titania_argoth_protector: { name: "Titania, Protettrice di Argoth (Boss)", isHumanoid: true, maxHP: 96, initBonus: 8, dc: 29, dmg: 13, blueMana: 2, exp: 175, gold: 75, treasures: 3, loot: "Swiftfoot_boots", isBoss: true, desc: "L'arcidruida elementale voce di Gea: difende le foreste sacre di Argoth con 2💧 Mana Blu e furia silvana!" },
         morphling_shapeshifter: { name: "Mutaforma di Tolaria (Morphling 3/3 'Superman')", isHumanoid: false, maxHP: 76, initBonus: 8, dc: 27, dmg: 11, blueMana: 2, exp: 130, gold: 50, treasures: 2, loot: "isochron_scepter", isBoss: false, desc: "La creatura blu più iconica del 1998: muta forma, vola, diventa imbloccabile e possiede 2💧 Mana Blu!" },
         dauthi_shadow_lord: { name: "Signore del Vuoto Dauthi (Guerriero Ombra)", isHumanoid: true, maxHP: 72, initBonus: 8, dc: 27, dmg: 11, blueMana: 0, exp: 120, gold: 45, treasures: 1, loot: "whisper_cloak", isBoss: false, desc: "Letale spettro intrappolato nella dimensione dell'Ombra tra i canyon di Rath: quasi intangibile!" },
-        greven_il_vec: { name: "Comandante Greven il-Vec (Ammiraglio di Rath)", isHumanoid: true, maxHP: 88, initBonus: 6, dc: 28, dmg: 13, blueMana: 0, exp: 150, gold: 65, treasures: 2, loot: "bonesplitter", isBoss: true, desc: "Il brutale comandante della nave volante Predatrice al servizio di Volrath: la sua furia spezza ogni scudo!" },
+        greven_il_vec: { name: "Comandante Greven il-Vec (Ammiraglio di Rath)", isHumanoid: true, maxHP: 88, initBonus: 6, dc: 28, dmg: 13, blueMana: 0, exp: 150, gold: 65, treasures: 2, loot: "grafted_wargear", isBoss: true, desc: "Il brutale comandante della nave volante Predatrice al servizio di Volrath: la sua furia spezza ogni scudo!" },
         volrath_the_fallen: { name: "Volrath il Caduto, Evincaro di Rath (Boss)", isHumanoid: true, maxHP: 98, initBonus: 8, dc: 29, dmg: 14, blueMana: 2, exp: 185, gold: 85, treasures: 3, loot: "staff_domination", isBoss: true, desc: "Il tiranno mutaforma della Fortezza di Rath e fratello oscuro di Gerrard Capashen (2💧 Mana Blu)!" },
         crovax_ascendant: { name: "Crovax, Evincaro Ascendente (Vampiro Maledetto)", isHumanoid: true, maxHP: 86, initBonus: 7, dc: 28, dmg: 12, blueMana: 0, exp: 145, gold: 60, treasures: 2, loot: "sword_light_shadow", isBoss: true, desc: "Il nobile di Urborg maledetto per aver abbattuto l'angelo Selenia: prosciuga la forza vitale di ogni creatura non nera!" },
         chainer_nightmare: { name: "Chainer, Maestro della Dementia & Incubi", isHumanoid: true, maxHP: 84, initBonus: 6, dc: 27, dmg: 12, blueMana: 0, exp: 140, gold: 55, treasures: 2, loot: "skullclamp", isBoss: false, desc: "Il tormentista della Cabala amico di Kamahl: materializza gli incubi più oscuri della mente col potere del Mirari!" },
@@ -5061,22 +5090,38 @@
             { type: "spell", id: "lightning_bolt", name: "📜 Pergamena: Fulmine (Lightning Bolt)", cost: 70, minLvl: 1, desc: "Impara l'Istantaneo Fulmine (1🔥: 12 danni certi)." },
             { type: "spell", id: "swords_to_plowshares", name: "📜 Pergamena: Da Spade a Spighe (One-Shot)", cost: 130, minLvl: 2, desc: "Impara l'Istantaneo One-Shot d'Esilio (1☀️)." },
             { type: "spell", id: "doom_blade", name: "📜 Pergamena: Lama del Fato (One-Shot)", cost: 140, minLvl: 2, desc: "Impara la Stregoneria One-Shot (2💀: Distrugge nemico)." },
+            // Tier 1-2 (Liv. 1-3)
             { type: "item", id: "bonesplitter", cost: 65, minLvl: 1 },
-            { type: "item", id: "champion_helm", cost: 85, minLvl: 1 },
+            { type: "item", id: "champion_helm", cost: 80, minLvl: 1 },
+            { type: "item", id: "vulshok_morningstar", cost: 90, minLvl: 2 },
+            { type: "item", id: "horned_helm", cost: 95, minLvl: 2 },
+            { type: "item", id: "brawler_plate", cost: 105, minLvl: 2 },
+            { type: "item", id: "whispersilk_dagger", cost: 105, minLvl: 2 },
             { type: "item", id: "hood_assassin", cost: 95, minLvl: 2 },
             { type: "item", id: "venom_bracers", cost: 110, minLvl: 2 },
             { type: "item", id: "Swiftfoot_boots", cost: 135, minLvl: 2 },
-            { type: "item", id: "gauntlets_power", cost: 170, minLvl: 3 },
-            { type: "item", id: "whisper_cloak", cost: 190, minLvl: 3 },
-            { type: "item", id: "loxodon_warhammer", cost: 230, minLvl: 3 },
-            { type: "item", id: "sol_ring", cost: 260, minLvl: 3 },
-            { type: "item", id: "lightning_greaves", cost: 310, minLvl: 4 },
-            { type: "item", id: "shield_kaldra", cost: 350, minLvl: 4 },
-            { type: "item", id: "umezawa_jitte", cost: 420, minLvl: 4 },
-            { type: "item", id: "staff_domination", cost: 480, minLvl: 5 },
-            { type: "item", id: "sword_fire_ice", cost: 550, minLvl: 5 },
-            { type: "item", id: "darksteel_plate", cost: 600, minLvl: 5 },
-            { type: "item", id: "chromatic_lantern", cost: 680, minLvl: 5 }
+            // Tier 3 (Liv. 3-5)
+            { type: "item", id: "o_naginata", cost: 155, minLvl: 3 },
+            { type: "item", id: "berserker_greaves", cost: 160, minLvl: 3 },
+            { type: "item", id: "isochron_scepter", cost: 175, minLvl: 3 },
+            { type: "item", id: "loxodon_warhammer", cost: 210, minLvl: 4 },
+            { type: "item", id: "shadowspear", cost: 225, minLvl: 4 },
+            { type: "item", id: "assault_suit", cost: 230, minLvl: 4 },
+            { type: "item", id: "gauntlets_power", cost: 190, minLvl: 4 },
+            { type: "item", id: "quietus_spike", cost: 250, minLvl: 5 },
+            { type: "item", id: "grafted_wargear", cost: 260, minLvl: 5 },
+            { type: "item", id: "umezawa_jitte", cost: 290, minLvl: 5 },
+            { type: "item", id: "lightning_greaves", cost: 280, minLvl: 5 },
+            // Tier 4 — Avanzati (Liv. 6-9)
+            { type: "item", id: "maul_skyclaves", cost: 340, minLvl: 6 },
+            { type: "item", id: "darksteel_plate", cost: 380, minLvl: 6 },
+            { type: "item", id: "staff_domination", cost: 420, minLvl: 7 },
+            { type: "item", id: "sword_fire_ice", cost: 480, minLvl: 8 },
+            { type: "item", id: "sword_sinew_steel", cost: 520, minLvl: 9 },
+            { type: "item", id: "godsend", cost: 560, minLvl: 9 },
+            // Tier 5 — Reliquie Leggendarie (Liv. 10-12+)
+            { type: "item", id: "argentum_armor", cost: 720, minLvl: 11 },
+            { type: "item", id: "colossus_hammer", cost: 850, minLvl: 12 }
         ];
 
         const EQUIP_SLOTS = [
@@ -5385,22 +5430,31 @@
         const adaptLootForCharacter = (baseItem, char) => {
             if (!baseItem) return null;
             const realSlot = detectRealSlot(baseItem);
-            let item = { ...baseItem, slot: realSlot };
-            const isCaster = isHeroCaster(char);
-            const isAgile = ["farabutto", "assassino", "ninja"].includes(char.classId);
+            return Object.assign({}, baseItem, { slot: realSlot });
+        };
 
-            if (item.slot === "weapon" && (item.str || 0) > 0 && (item.mag || 0) === 0 && (item.agi || 0) === 0) {
-                if (isCaster) {
-                    item.mag = item.str;
-                    item.str = 0;
-                    item.name = item.name + " (Infuso di Mana)";
-                } else if (isAgile) {
-                    item.agi = item.str;
-                    item.str = 0;
-                    item.name = item.name + " (Bilanciato)";
-                }
-            }
-            return item;
+        // Determina a quali Archetipi appartiene il personaggio (controlla sia la 1ª Classe sia la 2ª Classe Multiclasse!)
+        const getHeroArchetypes = (char) => {
+            if (!char) return { isMartial: false, isCaster: false, isRogue: false };
+            const classes = [char.classId, char.secondaryClassId];
+            const isMartial = classes.some(c => c === "guerriero" || c === "barbaro" || c === "soldato" || c === "cavaliere");
+            const isCaster = classes.some(c => c === "mago" || c === "necromante" || c === "chierico" || c === "sciamano" || c === "artefice");
+            const isRogue = classes.some(c => c === "farabutto" || c === "assassino" || c === "ninja");
+            return { isMartial: isMartial, isCaster: isCaster, isRogue: isRogue };
+        };
+
+        // Restituisce il requisito di Classe di un oggetto (esplicito oppure automatico se ha +4 FOR / +4 MAG / +4 AGI)
+        const getItemClassRequirement = (it) => {
+            if (!it || it.isTrauma || it.isDemonicPact) return null;
+            if (it.reqClassGroup) return it.reqClassGroup;
+            const s = it.str || 0;
+            const a = it.agi || 0;
+            const m = it.mag || 0;
+            // Se un oggetto non è una reliquia universale (come Black Lotus / Blackblade) e dà +4 o più in una statistica specifica:
+            if (s >= 4 && s > m && s > a) return "martial";
+            if (m >= 4 && m > s && m > a) return "caster";
+            if (a >= 4 && a > s && a > m) return "martial_rogue";
+            return null;
         };
 
         useEffect(() => {
@@ -5555,12 +5609,22 @@
         const formatItemBonuses = (it) => {
             if (!it) return "";
             let b = [];
-            if (it.str) b.push(`+${it.str} FOR`);
-            if (it.agi) b.push(`+${it.agi} AGI`);
-            if (it.mag) b.push(`+${it.mag} MAG`);
-            if (it.con) b.push(`+${it.con} COS`);
+            if (it.str) b.push(`${it.str > 0 ? "+" : ""}${it.str} FOR`);
+            if (it.agi) b.push(`${it.agi > 0 ? "+" : ""}${it.agi} AGI`);
+            if (it.mag) b.push(`${it.mag > 0 ? "+" : ""}${it.mag} MAG`);
+            if (it.con) b.push(`${it.con > 0 ? "+" : ""}${it.con} COS`);
             if (it.keywords && it.keywords.length > 0) b.push(it.keywords.join(", "));
-            return b.length > 0 ? ` [${b.join(", ")}]` : "";
+
+            const reqGroup = getItemClassRequirement(it);
+            if (reqGroup === "martial") b.push("⚔️ Solo Marziali");
+            else if (reqGroup === "caster") b.push("🔮 Solo Incantatori");
+            else if (reqGroup === "rogue") b.push("🗡️ Solo Furtivi");
+            else if (reqGroup === "martial_rogue") b.push("⚔️/🗡️ Marziali o Furtivi");
+
+            if (it.minLvl && it.minLvl > 1) b.push(`Liv.${it.minLvl}+`);
+            if (it.reqLegendary) b.push("👑 Leggendario");
+
+            return b.length > 0 ? ` [${b.join(" • ")}]` : "";
         };
 
         const handleImageUpload = (e, isExistingChar = false) => {
@@ -6241,8 +6305,38 @@
                 return alert("⛔ ARSENALE BLOCCATO: Non puoi cambiare equipaggiamento durante il combattimento! Prepara le tue armi e armature prima della battaglia.");
             }
             const realSlot = detectRealSlot(rawItem);
-            const item = { ...rawItem, slot: realSlot };
+            const dbRef = (rawItem && rawItem.id && RPG_ITEMS_DB[rawItem.id]) ? RPG_ITEMS_DB[rawItem.id] : {};
+            const item = Object.assign({}, dbRef, rawItem, { slot: realSlot });
 
+            // 1. CONTROLLO LIVELLO MINIMO RICHIESTO (Livello 1ª Classe + Livello 2ª Classe)
+            const totalHeroLvl = (character.level || 1) + (character.secondaryLevel || 0);
+            const reqLvl = item.minLvl || 1;
+            if (totalHeroLvl < reqLvl) {
+                return alert(`⛔ LIVELLO INSUFFICIENTE: "${item.name}" richiede almeno il LIVELLO ${reqLvl} (il livello totale di ${character.name} è ${totalHeroLvl}).`);
+            }
+
+            // 2. CONTROLLO STATUS LEGGENDARIO
+            if (item.reqLegendary && !character.isLegendary && !character.sparkIgnited) {
+                return alert(`👑 RELIQUIA LEGGENDARIA: "${item.name}" può essere impugnato solo da chi ha raggiunto il rango di Creatura Leggendaria o Planeswalker!`);
+            }
+
+            // 3. CONTROLLO RESTRIZIONI DI CLASSE (MARZIALI per +4 FOR, INCANTATORI per +4 MAG, FURTIVI per +4 AGI)
+            const reqGroup = getItemClassRequirement(item);
+            const arch = getHeroArchetypes(character);
+            if (reqGroup === "martial" && !arch.isMartial) {
+                return alert(`⚔️ ARMA/CORAZZA PESANTE MARZIALE: "${item.name}" richiede una classe Marziale (Guerriero, Barbaro, Soldato o Cavaliere)!\n\n💡 Consiglio: Passala a un compagno Guerriero con il tasto "🤝 Dai a..." oppure sblocca una 2ª Classe Marziale!`);
+            }
+            if (reqGroup === "caster" && !arch.isCaster) {
+                return alert(`🔮 RELIQUIA PER INCANTATORI (+MAG): "${item.name}" può essere usata solo da classi Magiche (Mago, Necromante, Chierico, Sciamano o Artefice)!\n\n💡 Consiglio: Passala a un compagno Incantatore oppure sblocca una 2ª Classe Magica!`);
+            }
+            if (reqGroup === "rogue" && !arch.isRogue) {
+                return alert(`🗡️ EQUIPAGGIAMENTO FURTIVO: "${item.name}" richiede una classe Furtiva (Farabutto, Assassino o Ninja)!`);
+            }
+            if (reqGroup === "martial_rogue" && !arch.isMartial && !arch.isRogue) {
+                return alert(`⚔️/🗡️ "${item.name}" può essere impugnata solo da classi Marziali o Furtive (non dagli Incantatori puri, a meno che non sblocchino una 2ª Classe fisica)!`);
+            }
+
+            // 4. CONTROLLO IDENTITÀ COLORE DI MANA
             const hasLantern = character.equipped && character.equipped.artifact && character.equipped.artifact.id === 'chromatic_lantern';
             if (item.reqMana && !character.manaIdentity.includes(item.reqMana) && !hasLantern) {
                 if ((character.treasures || 0) >= 2) {
@@ -6259,9 +6353,6 @@
                 } else {
                     return alert(`Non possiedi il Mana ${item.reqMana} richiesto per usare '${item.name}'!`);
                 }
-            }
-            if (item.reqLegendary && !character.isLegendary) {
-                return alert("Questo artefatto può essere impugnato solo da una Creatura Leggendaria!");
             }
 
             const oldStats = getFinalStats(character);
@@ -6476,10 +6567,12 @@
                 }
             }
 
-            if (rewards.addMana && !h.manaIdentity.includes(rewards.addMana)) {
-                h.manaIdentity = [...h.manaIdentity, rewards.addMana];
-                h.manaPool[rewards.addMana] = (h.manaPool[rewards.addMana] || 0) + 2;
-                if (isActiveHero) msgs.push(`🌈 La compagnia sblocca il Mana ${rewards.addMana} (+2 in riserva)!`);
+            if (rewards.addMana) {
+                const targetManaCol = h.manaIdentity.includes(rewards.addMana)
+                    ? rewards.addMana
+                    : (h.manaIdentity[0] || "R");
+                h.manaPool[targetManaCol] = Math.min(12, (h.manaPool[targetManaCol] || 0) + 2);
+                if (isActiveHero) msgs.push(`💧 La Leyline ricarica la vostra riserva di +2 Mana ${targetManaCol}!`);
             }
             if (rewards.addKeyword && !h.mtgKeywords.includes(rewards.addKeyword)) {
                 h.mtgKeywords = [...h.mtgKeywords, rewards.addKeyword];
@@ -6554,7 +6647,7 @@
                 }
             }
 
-            // MAPPA DEI NODI DI FINE ARCO -> SEGNA AUTOMATICAMENTE LA REGIONE COME COMPLETATA!
+            // MAPPA DEI NODI DI FINE ARCO (GRANDI BOSS) -> SBLOCCA 2° COLORE (1 BOSS) E 2ª CLASSE (2 BOSS O KOILOS)!
             const VICTORY_NODE_TO_ARC = {
                 tolaria_victory_vault: "tolaria_gates",
                 llanowar_multani_shrine: "llanowar_entry",
@@ -6562,6 +6655,9 @@
                 otaria_mirari_victory: "urborg_entry",
                 serra_blessing_done: "urborg_entry",
                 otaria_karona_double_victory: "urborg_entry",
+                mirrodin_fifth_dawn_victory: "mirrodin_glimmervoid_entry",
+                phyrexian_evil_campaign_start: "mirrodin_glimmervoid_entry",
+                karn_freed_legendary: "koilos_gates",
                 dark_depths_victory: "dark_depths_entry",
                 innistrad_ch2: "innistrad_ch1",
                 ravnica_ch2: "ravnica_ch1",
@@ -6579,6 +6675,11 @@
 
             if (VICTORY_NODE_TO_ARC[requestedNode] && !sharedCompletedArcs.includes(VICTORY_NODE_TO_ARC[requestedNode])) {
                 sharedCompletedArcs.push(VICTORY_NODE_TO_ARC[requestedNode]);
+                if (sharedCompletedArcs.length === 1) {
+                    allMessages.push("🌈🏆 PRIMO GRANDE BOSS SCONFITTO! Avete sbloccato il pulsante '🌈 +2° Colore Mana' nella barra in alto per tutta la Compagnia!");
+                } else if (sharedCompletedArcs.length === 2 || requestedNode === "karn_freed_legendary") {
+                    allMessages.push("🏛️🏆 SECONDO GRANDE BOSS SCONFITTO! Avete sbloccato il pulsante '🏛️ 2ª Classe' (Multiclasse) nella barra in alto!");
+                }
             }
 
             if (CLEARED_ARC_REDIRECT[requestedNode] && sharedCompletedArcs.includes(requestedNode)) {
@@ -8881,20 +8982,26 @@
                                   🍻 {hasDeadCompanions ? "Sostituisci Caduto (Mercenari)" : "Locanda Mercenari"}
                                 </button>
                             )}
-                            {character.level >= 3 && !character.secondaryClassId && (
+                            {/* 2ª CLASSE: Si sblocca solo dopo 2 Grandi Boss Continentali oppure dopo l'Obliteratore di Koilos! */}
+                            {!character.secondaryClassId && ((character.completedArcs || []).length >= 2 || (character.completedArcs || []).indexOf("koilos_gates") !== -1 || character.sparkIgnited) && (
                                 <button
                                     onClick={() => setShowMulticlassModal(true)}
-                                    className="bg-purple-600 hover:bg-purple-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                                    className="bg-purple-600 hover:bg-purple-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-300 animate-pulse"
                                 >
-                                    🏛️ 2ª Classe
+                                    🏛️ Sblocca 2ª Classe
                                 </button>
                             )}
-                            {character.level >= 2 && (character.manaIdentity || []).length < 3 && (
+
+                            {/* 2° COLORE DI MANA (dopo il 1° Grande Boss) e 3° COLORE DI MANA (dopo aver acceso la Scintilla su Shiv)! */}
+                            {(
+                                ((character.manaIdentity || []).length === 1 && ((character.completedArcs || []).length >= 1 || character.isPhyrexian)) ||
+                                ((character.manaIdentity || []).length === 2 && character.sparkIgnited)
+                            ) && (
                                 <button
                                     onClick={() => setShowLeylineModal(!showLeylineModal)}
-                                    className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                                    className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow border border-cyan-300 animate-pulse"
                                 >
-                                    🌈 +Colore Mana
+                                    🌈 Sblocca {(character.manaIdentity || []).length + 1}° Colore Mana
                                 </button>
                             )}
                             <button
