@@ -5867,6 +5867,9 @@
             if (window.confirm("Vuoi cancellare tutta la compagnia e ricominciare da zero?")) {
                 localStorage.removeItem('rpg_party');
                 localStorage.removeItem('rpg_character');
+                localStorage.removeItem('rpg_claimed_loot');
+                localStorage.removeItem('rpg_world_clock');
+                localStorage.removeItem('rpg_pvp_full_party_backup');
                 setParty([]);
                 setCharacter(null);
                 setCombatState(null);
@@ -5886,6 +5889,9 @@
                 } else {
                     localStorage.removeItem('rpg_party');
                     localStorage.removeItem('rpg_character');
+                    localStorage.removeItem('rpg_claimed_loot');
+                    localStorage.removeItem('rpg_world_clock');
+                    localStorage.removeItem('rpg_pvp_full_party_backup');
                     setParty([]);
                     setCharacter(null);
                     setCustomAvatar(null);
@@ -7419,15 +7425,24 @@
 
         const summonRealCommanderInBattle = (cmdObj) => {
             if (!character || !cmdObj) return;
-            const claimed = getClaimedLootMap();
-            if (claimed["real_commander_summoned"]) {
-                return alert("Hai già evocato il tuo Vero Comandante in questa campagna (Abilità Suprema 1 volta per partita)!");
-            }
+
+            // 1. Deve essere lanciato durante uno scontro nell'Arena
             if (!combatState) {
-                return alert("Puoi evocare il tuo Vero Comandante solo durante una battaglia nell'Arena!");
+                return alert("⚔️ Puoi evocare il tuo Vero Comandante solo durante una battaglia nell'Arena! Entra prima in uno scontro.");
             }
 
-            markLootKeyClaimed("real_commander_summoned");
+            // 2. Controlla se QUESTO specifico eroe ha già evocato il suo Comandante
+            if (character.summonedCommanderName) {
+                return alert(`⛔ ${character.name} ha già evocato il suo Comandante (${character.summonedCommanderName}) in questa campagna!\n\n💡 Seleziona un altro compagno della Compagnia per evocare un Comandante diverso!`);
+            }
+
+            // 3. Controlla se un ALTRO membro della Compagnia ha già evocato QUESTO stesso Comandante
+            const currentPartyList = party.length > 0 ? party : [character];
+            const alreadyUsedByMate = currentPartyList.find(h => h.summonedCommanderName === cmdObj.name);
+            if (alreadyUsedByMate) {
+                return alert(`⛔ "${cmdObj.name}" è già stato evocato in questa campagna da ${alreadyUsedByMate.name}!\n\nOgni eroe della Compagnia deve richiamare un Comandante diverso.`);
+            }
+
             setShowAppBridgeModal(false);
 
             const cmdDmg = 35 + Math.min(15, (cmdObj.cmc || 4) * 2);
@@ -7435,19 +7450,20 @@
             let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
             dmgMap[character.id] = (dmgMap[character.id] || 0) + cmdDmg;
 
-            // Cura il party di +20 PV e dona i colori del Comandante all'eroe attivo!
+            // Cura l'eroe di +20 PV, registra il Comandante evocato su di lui e gli dona i colori del Comandante!
             let updatedId = (character.manaIdentity || []).slice();
             (cmdObj.colors || []).forEach(c => {
                 if (updatedId.indexOf(c) === -1 && ["W","U","B","R","G"].indexOf(c) !== -1) updatedId.push(c);
             });
             const maxHp = getFinalStats(character).maxHP;
             const updatedHero = Object.assign({}, character, {
+                summonedCommanderName: cmdObj.name,
                 manaIdentity: updatedId,
                 currentHP: Math.min(maxHp, character.currentHP + 20)
             });
             saveCharState(updatedHero);
 
-            const cmdMsg = `🌌👑 RICHIAMO DEL VERO COMANDANTE! Dal tuo mazzo reale **"${cmdObj.deckName}"** scende in campo **${cmdObj.name}**: infligge **${cmdDmg} danni divini**, spezza lo Scudo Puzzle, cura +20 PV e infonde i suoi colori di Mana!`;
+            const cmdMsg = `🌌👑 RICHIAMO DEL VERO COMANDANTE! **${character.name}** evoca **${cmdObj.name}** (dal mazzo *"${cmdObj.deckName}"*): infligge **${cmdDmg} danni divini**, spezza lo Scudo Puzzle, cura +20 PV e infonde i suoi colori di Mana!`;
             setEventBanner(cmdMsg);
 
             if (nextMHP <= 0) {
@@ -8336,64 +8352,82 @@
             const plunderTreasures = combatState.bonusPlunderTreasures || 0;
             const plunderFood = combatState.bonusPlunderFood || 0;
 
-            // Recupero Eredità Roguelite se avevate perso una compagnia contro questo stesso Boss!
+            // Recupero Eredità Roguelite (Oro + Tutte le Armi e Reliquie Perdute dai Vecchi Eroi Caduti!)
             let rogueliteRecoveryBanner = "";
+            let recoveredLostItems = [];
             try {
                 const rawLegacy = localStorage.getItem('rpg_roguelite_legacy');
                 if (rawLegacy) {
                     const legacyObj = JSON.parse(rawLegacy);
-                    if (legacyObj && legacyObj.monsterKey === combatState.key) {
+                    if (legacyObj && (combatState.key === "fallen_party_revenants" || legacyObj.monsterKey === combatState.key || legacyObj.fallenNode === character.currentNode)) {
                         plunderGold += (legacyObj.legacyGold || 30);
-                        rogueliteRecoveryBanner = `\n⚰️✨ EREDITÀ DEI CADUTI RECUPERATA: Avete vendicato (${legacyObj.fallenHeroNames}) recuperando **+${legacyObj.legacyGold || 30} Oro 🪙**!`;
+                        if (Array.isArray(legacyObj.lostItems) && legacyObj.lostItems.length > 0) {
+                            recoveredLostItems = legacyObj.lostItems;
+                        }
+                        const gearNames = recoveredLostItems.length > 0
+                            ? ` e le loro reliquie perdute (**${recoveredLostItems.map(i => i.name).join(", ")}**)`
+                            : "";
+                        rogueliteRecoveryBanner = `\n⚰️✨ EREDITÀ DEI CADUTI RICONQUISTATA: Avete sconfitto e liberato le anime di (${legacyObj.fallenHeroNames}), recuperando **+${legacyObj.legacyGold || 30} Oro 🪙**${gearNames}!`;
                         localStorage.removeItem('rpg_roguelite_legacy');
                     }
                 }
             } catch (e) {}
 
             const partyWithMvp = currentPartyList.map(h => {
-    let updatedH = h.id === lastActiveHero.id ? { ...lastActiveHero } : { ...h };
-    
-    // Sconfitto il mostro custode, spezza qualsiasi trappola (es. Anello dell'Oblio, Ponte Intrappolante, ecc.)!
-    updatedH.isTrapped = false;
-    updatedH.trapName = null;
-    
-    if (restoredPvpParty) {
-        updatedH.isPhyrexian = false;
-        updatedH.status = "alive";
-        updatedH.currentHP = Math.max(15, updatedH.currentHP || 20);
-    }
-    
-    if (updatedH.id === mvpHeroId && updatedH.status !== "dead") {
-        updatedH.exp = (updatedH.exp || 0) + bonusMvpExp;
-        updatedH.gold = (updatedH.gold || 0) + bonusMvpGold;
-        updatedH.treasures = (updatedH.treasures || 0) + 1;
-    }
-    
-    if (updatedH.id === lastActiveHero.id && (plunderGold > 0 || plunderTreasures > 0 || plunderFood > 0)) {
-        updatedH.gold = (updatedH.gold || 0) + plunderGold;
-        updatedH.treasures = (updatedH.treasures || 0) + plunderTreasures;
-        updatedH.food = (updatedH.food || 0) + plunderFood;
-    }
+                let updatedH = h.id === lastActiveHero.id ? { ...lastActiveHero } : { ...h };
+                
+                // Sconfitto il mostro custode, spezza qualsiasi trappola (es. Anello dell'Oblio, Ponte Intrappolante, ecc.)!
+                updatedH.isTrapped = false;
+                updatedH.trapName = null;
+                
+                if (restoredPvpParty) {
+                    updatedH.isPhyrexian = false;
+                    updatedH.status = "alive";
+                    updatedH.currentHP = Math.max(15, updatedH.currentHP || 20);
+                }
+                
+                if (updatedH.id === mvpHeroId && updatedH.status !== "dead") {
+                    updatedH.exp = (updatedH.exp || 0) + bonusMvpExp;
+                    updatedH.gold = (updatedH.gold || 0) + bonusMvpGold;
+                    updatedH.treasures = (updatedH.treasures || 0) + 1;
+                }
+                
+                if (updatedH.id === lastActiveHero.id && (plunderGold > 0 || plunderTreasures > 0 || plunderFood > 0)) {
+                    updatedH.gold = (updatedH.gold || 0) + plunderGold;
+                    updatedH.treasures = (updatedH.treasures || 0) + plunderTreasures;
+                    updatedH.food = (updatedH.food || 0) + plunderFood;
+                }
 
-    // --- VERIFICA AUTOMATICA DELLE TAGLIE (BOUNTY) ---
-    if (updatedH.activeBounty) {
-        const b = updatedH.activeBounty;
-        const passedBlitz = b.id === "bounty_blitz_3" && (combatState.round || 1) <= 2;
-        const passedNoSpells = b.id === "bounty_no_spells" && !(combatState.spellsCastThisRoundColors && combatState.spellsCastThisRoundColors.length > 0);
-        const passedBoss = b.id === "bounty_boss_slayer" && combatState.isBoss && updatedH.currentHP >= 10;
-        
-        if (passedBlitz || passedNoSpells || passedBoss) {
-            updatedH.gold = (updatedH.gold || 0) + b.rewardGold;
-            updatedH.exp = (updatedH.exp || 0) + b.rewardExp;
-            updatedH.treasures = (updatedH.treasures || 0) + 1;
-            updatedH.honorTitle = b.honorTitle;
-            updatedH.activeBounty = null;
-            rogueliteRecoveryBanner += `\n🎯🏆 TAGLIA COMPLETATA (${b.title}): **${updatedH.name}** ottiene +${b.rewardGold}🪙, +${b.rewardExp} EXP, +1💎 e il Titolo A4 **"${b.honorTitle}"**!`;
-        }
-    }
+                // --- VERIFICA AUTOMATICA DELLE TAGLIE (BOUNTY) ---
+                if (updatedH.activeBounty) {
+                    const b = updatedH.activeBounty;
+                    const passedBlitz = b.id === "bounty_blitz_3" && (combatState.round || 1) <= 2;
+                    const passedNoSpells = b.id === "bounty_no_spells" && !(combatState.spellsCastThisRoundColors && combatState.spellsCastThisRoundColors.length > 0);
+                    const passedBoss = b.id === "bounty_boss_slayer" && combatState.isBoss && updatedH.currentHP >= 10;
+                    
+                    if (passedBlitz || passedNoSpells || passedBoss) {
+                        updatedH.gold = (updatedH.gold || 0) + b.rewardGold;
+                        updatedH.exp = (updatedH.exp || 0) + b.rewardExp;
+                        updatedH.treasures = (updatedH.treasures || 0) + 1;
+                        updatedH.honorTitle = b.honorTitle;
+                        updatedH.activeBounty = null;
+                        rogueliteRecoveryBanner += `\n🎯🏆 TAGLIA COMPLETATA (${b.title}): **${updatedH.name}** ottiene +${b.rewardGold}🪙, +${b.rewardExp} EXP, +1💎 e il Titolo A4 **"${b.honorTitle}"**!`;
+                    }
+                }
 
-    return updatedH;
-});
+                // --- RICONSEGNA LE ARMI PERDUTE DAI VECCHI EROI CADUTI ---
+                if (updatedH.id === lastActiveHero.id && recoveredLostItems.length > 0) {
+                    let curInv = Array.isArray(updatedH.inventory) ? updatedH.inventory.slice() : [];
+                    recoveredLostItems.forEach(lostIt => {
+                        if (!curInv.some(x => x && x.id === lostIt.id)) {
+                            curInv.push(adaptLootForCharacter(lostIt, updatedH));
+                        }
+                    });
+                    updatedH.inventory = curInv;
+                }
+
+                return updatedH;
+            });
             setParty(partyWithMvp);
 
             const winRewards = {
@@ -9343,7 +9377,7 @@
         const allConsciousDown = activePartyList.length > 0 && activePartyList.every(p => p.status !== "alive" || p.currentHP <= 0);
 
         // ====================================================================
-        // SCHERMATA DRAMMATICA DI GAME OVER TOTALE (SE MUOIONO TUTTI GLI EROI!)
+        // SCHERMATA DRAMMATICA DI GAME OVER TOTALE (SALVA SPETTRI & EQUIP PERDUTI!)
         // ====================================================================
         if (character && isTotalPartyKill) {
             return (
@@ -9353,26 +9387,67 @@
                         La tua Avventura Viandante Finisce Qui
                     </h1>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed italic">
-                        Tutti i membri della Compagnia hanno fallito le prove contro la morte. Le vostre armi giacciono silenziose nella polvere del Multiverso, in attesa che nuovi eroi raccolgano la vostra eredità.
+                        Tutti i membri della Compagnia sono caduti. Ma i vostri corpi e le vostre armi non scompariranno: nella prossima campagna i nuovi eroi potranno ritrovare i vostri **Spettri Caduti** in questo stesso luogo per affrontarli e **recuperare l'equipaggiamento perduto**!
                     </p>
                     <div className="bg-black/70 border border-red-800 rounded-xl p-3 space-y-1">
-                        <p className="text-xs font-black uppercase text-red-400">Eroi Caduti:</p>
+                        <p className="text-xs font-black uppercase text-red-400">Eroi Caduti (Risorgeranno come Spettri Custodi):</p>
                         {activePartyList.map(h => (
                             <p key={h.id} className="text-xs text-gray-300 font-bold">⚰️ {h.name} — {h.race} {h.classType || "Standard"} (Livello {h.level})</p>
                         ))}
                     </div>
                     <button
                         onClick={() => {
+                            try {
+                                // Raccoglie fino a 4 armi/reliquie non-base equipaggiate o nello zaino dei caduti
+                                let lostGear = [];
+                                let maxStr = 12; let maxAgi = 12; let maxMag = 12; let sumHP = 0;
+                                activePartyList.forEach(h => {
+                                    const st = getFinalStats(h);
+                                    if (st.str > maxStr) maxStr = st.str;
+                                    if (st.agi > maxAgi) maxAgi = st.agi;
+                                    if (st.mag > maxMag) maxMag = st.mag;
+                                    sumHP += Math.max(25, st.maxHP);
+                                    if (h.equipped) {
+                                        Object.values(h.equipped).forEach(it => {
+                                            if (it && it.id && it.id.indexOf("start_") === -1 && !it.isTrauma && !it.isDemonicPact && lostGear.length < 4) {
+                                                lostGear.push(it);
+                                            }
+                                        });
+                                    }
+                                    if (Array.isArray(h.inventory)) {
+                                        h.inventory.forEach(it => {
+                                            if (it && it.id && it.id.indexOf("start_") === -1 && !it.isTrauma && !it.isDemonicPact && lostGear.length < 4) {
+                                                lostGear.push(it);
+                                            }
+                                        });
+                                    }
+                                });
+                                const fallenGold = activePartyList.reduce((acc, h) => acc + Math.floor((h.gold || 0) * 0.6), 30);
+                                localStorage.setItem('rpg_roguelite_legacy', JSON.stringify({
+                                    fallenNode: character.currentNode || "start",
+                                    monsterKey: "fallen_party_revenants",
+                                    monsterName: "Spettri Caduti di " + activePartyList.map(h => h.name).join(" & "),
+                                    fallenHeroNames: activePartyList.map(h => h.name).join(", "),
+                                    legacyGold: fallenGold,
+                                    lostItems: lostGear,
+                                    revenantHP: Math.max(45, Math.round(sumHP * 0.85)),
+                                    revenantDC: Math.max(22, Math.max(maxStr, maxAgi, maxMag) + 8),
+                                    revenantDmg: Math.max(7, Math.round(Math.max(maxStr, maxAgi, maxMag) * 0.5))
+                                }));
+                            } catch (e) {}
+
                             localStorage.removeItem('rpg_party');
                             localStorage.removeItem('rpg_character');
                             localStorage.removeItem('rpg_claimed_loot');
+                            localStorage.removeItem('rpg_world_clock');
+                            localStorage.removeItem('rpg_pvp_full_party_backup');
                             setParty([]);
                             setCharacter(null);
                             setCombatState(null);
                             setDormantTimer(0);
                             setRpgView("create");
                             setLastRollInfo(null);
-                            setEventBanner(null);
+                            setEventBanner("⚰️ Gli Spettri della vecchia Compagnia e le loro armi vi attendono nel luogo in cui sono caduti!");
                         }}
                         className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 px-8 rounded-2xl shadow-[0_0_25px_rgba(239,68,68,0.8)] text-lg uppercase tracking-wider transition-all active:scale-95"
                     >
@@ -9675,32 +9750,45 @@
                                 <button onClick={() => setShowAppBridgeModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
                             </div>
 
-                            {/* SEZIONE A: RICHIAMO DEL VERO COMANDANTE IN BATTAGLIA */}
+                            {/* SEZIONE A: RICHIAMO DEL VERO COMANDANTE IN BATTAGLIA (1 DIVERSO PER OGNI EROE!) */}
                             <div className="space-y-2">
                                 <p className="text-xs font-black text-orange-300 uppercase">
-                                    👑 1. Evoca il Comandante di un tuo Mazzo Salvato (1 volta per Campagna, in Battaglia):
+                                    👑 1. Evoca il Comandante per {character.name} (1 diverso per ogni Eroe in Battaglia):
                                 </p>
+                                {character.summonedCommanderName && (
+                                    <p className="text-[11px] font-black text-emerald-300 bg-emerald-950/70 border border-emerald-500 p-2 rounded-lg">
+                                        ✅ {character.name} ha già evocato in questa campagna: «{character.summonedCommanderName}»
+                                    </p>
+                                )}
                                 {getSavedAppCommanders().length === 0 ? (
                                     <p className="text-xs text-gray-400 italic">Nessun mazzo trovato in "I Miei Mazzi". Crea un mazzo nel Deckbuilder per evocare il tuo Comandante nel GDR!</p>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                                       {getSavedAppCommanders().map((cmd, idx) => (
-                                    <div key={idx} className="bg-gray-950 border border-orange-500/60 rounded-xl p-2 flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2.5 min-w-0">
-                                            <img src={cmd.img} className="w-12 h-12 rounded-lg object-cover object-top border border-orange-400 shrink-0" alt={cmd.name} />
-                                            <div className="min-w-0">
-                                                <p className="text-white font-black text-xs truncate">{cmd.name}</p>
-                                                <p className="text-gray-400 text-[10px] truncate">Mazzo: {cmd.deckName}</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => summonRealCommanderInBattle(cmd)}
-                                            className="bg-orange-500 hover:bg-orange-400 text-black font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
-                                        >
-                                            ⚡ Evoca!
-                                        </button>
-                                    </div>
-                                ))}
+                                        {getSavedAppCommanders().map((cmd, idx) => {
+                                            const currentPartyList = party.length > 0 ? party : [character];
+                                            const usedByHero = currentPartyList.find(h => h.summonedCommanderName === cmd.name);
+                                            const isDisabled = Boolean(usedByHero) || Boolean(character.summonedCommanderName);
+                                            return (
+                                                <div key={idx} className={`bg-gray-950 border rounded-xl p-2 flex items-center justify-between gap-2 ${usedByHero ? "border-gray-700 opacity-60" : "border-orange-500/60"}`}>
+                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                        <img src={cmd.img} className="w-12 h-12 rounded-lg object-cover object-top border border-orange-400 shrink-0" alt={cmd.name} />
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-black text-xs truncate">{cmd.name}</p>
+                                                            <p className="text-gray-400 text-[10px] truncate">
+                                                                {usedByHero ? `Già evocato da ${usedByHero.name}` : `Mazzo: ${cmd.deckName}`}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        disabled={isDisabled}
+                                                        onClick={() => summonRealCommanderInBattle(cmd)}
+                                                        className={`font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow ${isDisabled ? "bg-gray-800 text-gray-500 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-400 text-black"}`}
+                                                    >
+                                                        {usedByHero ? `Usato (${usedByHero.name})` : (character.summonedCommanderName ? "Già Usato" : "⚡ Evoca!")}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -10850,6 +10938,54 @@
                                 {storyText}
                             </p>
 
+                          {/* EVENTO ROGUELITE: GLI SPETTRI DELLA VECCHIA COMPAGNIA CADUTA SONO IN QUESTO NODO! */}
+                            {(() => {
+                                try {
+                                    const rawLeg = localStorage.getItem('rpg_roguelite_legacy');
+                                    if (!rawLeg) return null;
+                                    const leg = JSON.parse(rawLeg);
+                                    if (!leg || leg.fallenNode !== character.currentNode) return null;
+                                    const lostNames = (leg.lostItems && leg.lostItems.length > 0)
+                                        ? leg.lostItems.map(i => i.name).join(", ")
+                                        : "Nessun oggetto speciale";
+                                    return (
+                                        <div className="bg-purple-950/95 border-2 border-purple-400 rounded-2xl p-4 mb-5 space-y-2.5 shadow-[0_0_25px_rgba(168,85,247,0.5)] animate-fade">
+                                            <p className="text-xs sm:text-sm font-black text-purple-200 uppercase">
+                                                ⚰️👻 Resti della Precedente Compagnia Ritrovati!
+                                            </p>
+                                            <p className="text-xs text-gray-200 leading-relaxed">
+                                                Tra le ombre di questo luogo si ergono gli spettri corrotti dei vostri predecessori caduti (**{leg.fallenHeroNames}**), che impugnano ancora il loro arsenale perduto (**{lostNames}** e **{leg.legacyGold || 30} 🪙**)!
+                                            </p>
+                                            <button
+                                                onClick={() => {
+                                                    MTG_BESTIARY["fallen_party_revenants"] = {
+                                                        name: "⚰️ " + (leg.monsterName || ("Spettri di " + leg.fallenHeroNames)),
+                                                        isHumanoid: true,
+                                                        maxHP: leg.revenantHP || 65,
+                                                        initBonus: 6,
+                                                        dc: leg.revenantDC || 24,
+                                                        dmg: leg.revenantDmg || 9,
+                                                        blueMana: 2,
+                                                        exp: 120,
+                                                        gold: leg.legacyGold || 30,
+                                                        treasures: 1,
+                                                        isBoss: true,
+                                                        desc: "Le anime corrotte dei vostri vecchi personaggi (" + leg.fallenHeroNames + ")! Sconfiggeteli per dare loro pace e riprendervi tutte le loro armi!"
+                                                    };
+                                                    MONSTER_SCRYFALL_MAP["fallen_party_revenants"] = "Returned Pastcaller";
+                                                    startMonsterEncounter("fallen_party_revenants", character.currentNode);
+                                                }}
+                                                className="w-full bg-gradient-to-r from-purple-600 to-red-600 hover:from-purple-500 hover:to-red-500 text-white font-black py-3 px-4 rounded-xl text-xs sm:text-sm shadow-lg border border-white transition-all active:scale-95"
+                                            >
+                                                ⚔️👻 Affronta gli Spettri di {leg.fallenHeroNames} e Recupera il Bottino Perduto!
+                                            </button>
+                                        </div>
+                                    );
+                                } catch (e) {
+                                    return null;
+                                }
+                            })()}
+                          
                             <div className="space-y-3">
                                 {currentNodeObj.isPhyrexianTrialNode ? (
                                     <div className="bg-black/80 border-2 border-amber-400 rounded-2xl p-4 space-y-3 shadow-2xl">
