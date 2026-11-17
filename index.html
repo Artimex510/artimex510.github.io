@@ -5580,8 +5580,23 @@
         // CALCOLO STATISTICHE BILANCIATO (Evita che i personaggi arrivino a 35+ rendendo inutili i dadi!)
         const getFinalStats = (char) => {
             const totalLevels = (char.level || 1) + (char.secondaryLevel || 0);
-            // +1 per livello (invece di +2), +2 per Leggendario (invece di +5), +4 per Planeswalker (invece di +15)
-            let bonus = (totalLevels - 1) * 1;
+            // +1 per livello, +2 per Leggendario, +4 per Planeswalker + Bonus Conoscenza del Bestiario (+1 ogni 5 mostri unici!)
+            let bestiaryBonus = 0;
+            try {
+                const rawChron = localStorage.getItem('rpg_chronicle');
+                if (rawChron) {
+                    const chron = JSON.parse(rawChron);
+                    if (chron && Array.isArray(chron.kills)) {
+                        let uniq = [];
+                        chron.kills.forEach(k => {
+                            if (k && k.monsterKey && uniq.indexOf(k.monsterKey) === -1) uniq.push(k.monsterKey);
+                        });
+                        bestiaryBonus = Math.floor(uniq.length / 5);
+                    }
+                }
+            } catch (e) {}
+
+            let bonus = (totalLevels - 1) * 1 + bestiaryBonus;
             if (char.isLegendary) bonus += 2;
             if (char.sparkIgnited) bonus += 4;
             if (char.ascensionForm) bonus += 2;
@@ -7864,6 +7879,241 @@
                 setEventBanner("⛺🔥 MEDITAZIONE E TURNO DI GUARDIA! Tutti i membri della Compagnia rigenerano **+2 Mana per ciascuno dei propri colori**!");
             }
         };
+
+        // ============================================================================
+        // --- 1. TAVOLO D'AZZARDO DI KRARK, 2. DUAL TECH DI COPPIA,
+        // --- 3. BESTIARIO ILLUSTRATO (+1 STAT OGNI 5), 4. ALCHIMIA DELLE POZIONI ---
+        // ============================================================================
+        const [showKrarkModal, setShowKrarkModal] = useState(false);
+        const [showBestiaryModal, setShowBestiaryModal] = useState(false);
+        const [showAlchemyModal, setShowAlchemyModal] = useState(false);
+
+        // 1A. SCOMMESSA COL POLLICE DI KRARK (Lancia 2 dadi D20 e tiene il migliore!)
+        const playKrarkThumbGamble = (betAmount) => {
+            if (!character) return;
+            if ((character.gold || 0) < betAmount) {
+                return alert("Non hai abbastanza Monete d'Oro per questa puntata!");
+            }
+            const r1 = Math.floor(Math.random() * 20) + 1;
+            const r2 = Math.floor(Math.random() * 20) + 1;
+            const bestRoll = Math.max(r1, r2);
+
+            let updated = Object.assign({}, character);
+            if (bestRoll >= 19) {
+                const winGold = betAmount * 2;
+                updated.gold = (updated.gold || 0) + winGold;
+                updated.treasures = (updated.treasures || 0) + 1;
+                saveCharState(updated);
+                setEventBanner(`🎰👑 JACKPOT DI KRARK [Dadi: ${r1} e ${r2} ➔ Migliore: **${bestRoll}**]! **${character.name}** triplica la puntata guadagnando **+${winGold}🪙** netti e **+1 Pedina Tesoro 💎**!`);
+            } else if (bestRoll >= 12) {
+                updated.gold = (updated.gold || 0) + betAmount;
+                saveCharState(updated);
+                setEventBanner(`🎰✨ VITTORIA AL TAVOLO DI KRARK [Dadi: ${r1} e ${r2} ➔ Migliore: **${bestRoll}**]! **${character.name}** raddoppia e vince **+${betAmount} Monete d'Oro 🪙**!`);
+            } else {
+                updated.gold = Math.max(0, (updated.gold || 0) - betAmount);
+                saveCharState(updated);
+                setEventBanner(`🎰💨 SCONFITTA [Dadi: ${r1} e ${r2} ➔ Migliore: **${bestRoll}**]! Krark il Senza-Pollice sghignazza e intasca le tue **${betAmount} Monete d'Oro**!`);
+            }
+        };
+
+        // 1B. SCATOLA MISTERIOSA DI URZA (55 Oro -> Pesca un equipaggiamento casuale da RPG_ITEMS_DB!)
+        const buyUrzaMysteryBox = () => {
+            if (!character) return;
+            if (combatState) return alert("Non puoi aprire Scatole Misteriose durante il combattimento!");
+            if ((character.gold || 0) < 55) {
+                return alert("Ti servono 55 Monete d'Oro (🪙) per acquistare una Scatola Misteriosa di Urza!");
+            }
+            const poolKeys = Object.keys(RPG_ITEMS_DB).filter(k => k !== "black_lotus" && k !== "helm_host" && k !== "kaldra_shield");
+            const randomKey = poolKeys[Math.floor(Math.random() * poolKeys.length)];
+            const prizeItem = adaptLootForCharacter(RPG_ITEMS_DB[randomKey], character);
+
+            const curInv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
+            curInv.push(prizeItem);
+            const updated = Object.assign({}, character, {
+                gold: character.gold - 55,
+                inventory: curInv
+            });
+            saveCharState(updated);
+            setShowKrarkModal(false);
+            setEventBanner(`🎁✨ SCATOLA MISTERIOSA DI URZA APERTA! Dentro trovi: **${prizeItem.name}**${formatItemBonuses(prizeItem)} (aggiunto allo Zaino)!`);
+        };
+
+        // 2. TECNICHE COMBINATE DI COPPIA ("DUAL TECH" IN BATTAGLIA)
+        const getAvailableDualTech = () => {
+            const activeList = (party.length > 0 ? party : (character ? [character] : [])).filter(h => h && h.status === "alive" && h.currentHP > 0);
+            const hasPairOrMulticlass = activeList.length >= 2 || (character && character.secondaryClassId);
+            if (!hasPairOrMulticlass) return null;
+
+            let anyMartial = false; let anyCaster = false; let anyRogue = false; let anyHealer = false;
+            activeList.forEach(h => {
+                const arch = getHeroArchetypes(h);
+                if (arch.isMartial) anyMartial = true;
+                if (arch.isCaster) anyCaster = true;
+                if (arch.isRogue) anyRogue = true;
+                if (isHeroHealer(h)) anyHealer = true;
+            });
+
+            if (anyMartial && anyCaster) {
+                return {
+                    name: "⚔️🔮 Dual Tech: Tempesta di Lame Arcana (Marziale + Incantatore)",
+                    dmg: 28, breakShield: true, drainBlue: 2, healParty: 0, poison: 0, goldBonus: 0,
+                    desc: "28 Danni Puri + Infrange lo Scudo Puzzle del Boss + Drena 2💧 Mana Blu!"
+                };
+            }
+            if (anyHealer && (anyMartial || anyRogue)) {
+                return {
+                    name: "☀️🛡️ Dual Tech: Crociata Solare di Serra (Guaritore + Combattente)",
+                    dmg: 22, breakShield: true, drainBlue: 0, healParty: 12, poison: 0, goldBonus: 0, grantShield: true,
+                    desc: "22 Danni + Cura +12 PV a tutta la Compagnia + Attiva Scudo Difensivo!"
+                };
+            }
+            if (anyRogue && (anyCaster || anyMartial)) {
+                return {
+                    name: "🗡️💀 Dual Tech: Eclissi del Velo Nero (Furtivo + Alleato)",
+                    dmg: 24, breakShield: true, drainBlue: 0, healParty: 0, poison: 3, goldBonus: 30,
+                    desc: "24 Danni + Applica +3 Veleno ☣️ al nemico + Trafuga +30 Monete d'Oro 🪙!"
+                };
+            }
+            return {
+                name: "🔥⚡ Dual Tech: Assalto Congiunto della Compagnia",
+                dmg: 25, breakShield: true, drainBlue: 0, healParty: 6, poison: 0, goldBonus: 0,
+                desc: "25 Danni Combinati + Infrange lo Scudo del Boss + Cura +6 PV a tutti!"
+            };
+        };
+
+        const executeDualTechInBattle = () => {
+            if (!combatState || !character) return;
+            if (combatState.dualTechUsedThisBattle) {
+                return alert("Avete già scatenato la Tecnica Combinata di Coppia in questa battaglia!");
+            }
+            const tech = getAvailableDualTech();
+            if (!tech) return alert("Servono almeno 2 eroi coscienti nel Party (oppure un eroe Multiclasse) per eseguire una Dual Tech!");
+
+            let updatedParty = (party.length > 0 ? party : [character]).map(h => {
+                if (h.status === "dead") return h;
+                let nextH = Object.assign({}, h);
+                if (tech.healParty > 0) {
+                    const max = getFinalStats(nextH).maxHP;
+                    nextH.currentHP = Math.min(max, nextH.currentHP + tech.healParty);
+                }
+                if (tech.goldBonus > 0 && nextH.id === character.id) {
+                    nextH.gold = (nextH.gold || 0) + tech.goldBonus;
+                }
+                return nextH;
+            });
+            savePartyState(updatedParty);
+
+            if (tech.grantShield) setCounterspellShield(true);
+
+            const nextMHP = Math.max(0, combatState.currentHP - tech.dmg);
+            let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
+            dmgMap[character.id] = (dmgMap[character.id] || 0) + tech.dmg;
+
+            const techMsg = `🤝🌟 ${tech.name.toUpperCase()}! La Compagnia unisce le forze infliggendo **${tech.dmg} danni** a ${combatState.name} (${tech.desc})!`;
+            setEventBanner(techMsg);
+
+            if (nextMHP <= 0) {
+                const leaderRef = updatedParty.find(p => p.id === character.id) || character;
+                finishCombatVictory(leaderRef, dmgMap, techMsg);
+            } else {
+                setCombatState(Object.assign({}, combatState, {
+                    currentHP: nextMHP,
+                    dualTechUsedThisBattle: true,
+                    puzzleArmorActive: tech.breakShield ? false : combatState.puzzleArmorActive,
+                    enemyBlueMana: Math.max(0, (combatState.enemyBlueMana || 0) - (tech.drainBlue || 0)),
+                    poisonCounters: (combatState.poisonCounters || 0) + (tech.poison || 0),
+                    damageDealtByHero: dmgMap,
+                    log: [techMsg].concat(combatState.log).slice(0, 8)
+                }));
+            }
+        };
+
+        // 3. HELPER BESTIARIO ILLUSTRATO DEL CACCIATORE
+        const getUnlockedBestiaryKeys = () => {
+            let uniq = [];
+            try {
+                const rawChron = localStorage.getItem('rpg_chronicle');
+                if (rawChron) {
+                    const chron = JSON.parse(rawChron);
+                    if (chron && Array.isArray(chron.kills)) {
+                        chron.kills.forEach(k => {
+                            if (k && k.monsterKey && uniq.indexOf(k.monsterKey) === -1) uniq.push(k.monsterKey);
+                        });
+                    }
+                }
+            } catch (e) {}
+            return uniq;
+        };
+
+        // 4. ALCHIMIA DELLE POZIONI (1 Pedina Cibo 🍖 + 1 Mana Colorato)
+        const brewAlchemyElixir = (colorId) => {
+            if (!character || character.status === "dead") return;
+            if ((character.food || 0) < 1) {
+                return alert("Ti serve almeno 1 Pedina Cibo (🍖) per distillare un Elisir Alchemico!");
+            }
+            const curMana = (character.manaPool && character.manaPool[colorId]) ? character.manaPool[colorId] : 0;
+            if (curMana < 1) {
+                return alert("Ti serve 1 Mana " + colorId + " nella tua Riserva per distillare questo Elisir!");
+            }
+
+            let newPool = Object.assign({}, character.manaPool || {});
+            newPool[colorId] = curMana - 1;
+            let updated = Object.assign({}, character, {
+                food: character.food - 1,
+                manaPool: newPool
+            });
+            const maxHp = getFinalStats(updated).maxHP;
+            let msg = "";
+
+            if (colorId === "W") {
+                // Elisir di Luce: Cura +18 PV, rimuove gratis 1 Trauma dallo Zaino e attiva Scudo!
+                let inv = Array.isArray(updated.inventory) ? updated.inventory.slice() : [];
+                const tIdx = inv.findIndex(it => it && it.isTrauma);
+                if (tIdx !== -1) inv.splice(tIdx, 1);
+                updated.inventory = inv;
+                updated.currentHP = Math.min(maxHp, updated.currentHP + 18);
+                updated.status = "alive";
+                setCounterspellShield(true);
+                msg = `🧪☀️ ELISIR DI LUCE DI SERRA! **${updated.name}** recupera **+18 PV**, attiva uno Scudo Difensivo${tIdx !== -1 ? " e **guarisce 1 Trauma fisico dallo Zaino**" : ""}!`;
+            } else if (colorId === "U") {
+                // Pozione d'Invisibilità Acquatica: Scudo + +5 al D20 + +1 Mana Blu extra netto
+                updated.currentHP = Math.min(maxHp, updated.currentHP + 8);
+                setCounterspellShield(true);
+                setTreasureBoostActive(true);
+                msg = `🧪💧 POZIONE D'INVISIBILITÀ ACQUATICA! **${updated.name}** diventa intangibile (evita il prossimo attacco nemico), recupera +8 PV e ottiene **+5 al prossimo Tiro D20**!`;
+            } else if (colorId === "B") {
+                // Fiala del Velo Nero: Cura +12 PV e avvelena/danneggia il nemico se in battaglia
+                updated.currentHP = Math.min(maxHp, updated.currentHP + 12);
+                if (combatState) {
+                    setCombatState(Object.assign({}, combatState, {
+                        currentHP: Math.max(1, combatState.currentHP - 16),
+                        poisonCounters: (combatState.poisonCounters || 0) + 3
+                    }));
+                }
+                msg = `🧪💀 FIALA DEL VELO NERO! **${updated.name}** rigenera **+12 PV**${combatState ? " e scaglia miasmi necrotici (16 danni e +3 Veleno ☣️ al nemico)" : ""}!`;
+            } else if (colorId === "R") {
+                // Fiala di Fuoco di Drago: +6 al D20, +8 Danni e +10 PV
+                updated.currentHP = Math.min(maxHp, updated.currentHP + 10);
+                setGiantGrowthActive(true);
+                if (combatState) {
+                    setCombatState(Object.assign({}, combatState, {
+                        currentHP: Math.max(1, combatState.currentHP - 14),
+                        puzzleArmorActive: false
+                    }));
+                }
+                msg = `🧪🔥 FIALA DI FUOCO DI DRAGO! **${updated.name}** recupera +10 PV, ottiene **+6 al D20 e +8 Danni**${combatState ? " e incendia il nemico per 14 danni" : ""}!`;
+            } else {
+                // Decotto di Corteccia di Yavimaya (G): +15 PV e +1 COS permanente!
+                const curCon = (updated.baseStats && updated.baseStats.con) ? updated.baseStats.con : 18;
+                updated.baseStats = Object.assign({}, updated.baseStats, { con: curCon + 1 });
+                updated.currentHP = Math.min(maxHp + 1, updated.currentHP + 15);
+                msg = `🧪🌳 DECOTTO DI YAVIMAYA! **${updated.name}** recupera **+15 PV** e ottiene **+1 Costituzione (COS) permanente**!`;
+            }
+
+            saveCharState(updated);
+            setShowAlchemyModal(false);
+            setEventBanner(msg);
+        };
       
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
@@ -9601,6 +9851,24 @@
                                 ⚖️ Mercante ({character.gold || 0} 🪙)
                             </button>
                             <button
+                                onClick={() => setShowKrarkModal(!showKrarkModal)}
+                                className="bg-rose-700 hover:bg-rose-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                🎰 Krark
+                            </button>
+                            <button
+                                onClick={() => setShowAlchemyModal(!showAlchemyModal)}
+                                className="bg-teal-700 hover:bg-teal-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                🧪 Alchimia
+                            </button>
+                            <button
+                                onClick={() => setShowBestiaryModal(!showBestiaryModal)}
+                                className="bg-slate-700 hover:bg-slate-600 text-amber-300 font-black px-3 py-2 rounded-lg text-xs shadow border border-amber-500/50"
+                            >
+                                👹 Bestiario ({getUnlockedBestiaryKeys().length})
+                            </button>
+                            <button
                                 onClick={() => setShowSaveModal(!showSaveModal)}
                                 className="bg-emerald-600 hover:bg-emerald-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
                             >
@@ -10007,6 +10275,105 @@
                         </div>
                     )}
 
+                    {/* 1. MODALE TAVOLO D'AZZARDO DI KRARK & SCATOLA MISTERIOSA DI URZA */}
+                    {showKrarkModal && (
+                        <div className="bg-gray-900 border-4 border-rose-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-rose-400 font-black text-sm uppercase">
+                                    🎰 Il Tavolo d'Azzardo del Pollice di Krark (Oro di {character.name}: {character.gold || 0}🪙)
+                                </h3>
+                                <button onClick={() => setShowKrarkModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Grazie al leggendario <b>Pollice di Krark (Krark's Thumb)</b>, quando scommetti lanci <b>due dadi D20 e tieni il migliore</b>! Con 12-18 raddoppi, con 19-20 triplichi + 1 Tesoro 💎!
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <button onClick={() => playKrarkThumbGamble(20)} className="bg-gray-950 hover:bg-rose-950 border border-rose-500 p-3 rounded-xl text-left">
+                                    <p className="text-rose-300 font-black text-xs">🎲 Scommetti 20 🪙</p>
+                                    <p className="text-gray-400 text-[10px] mt-1">Lancia 2d20 (tieni il migliore): vinci fino a +40🪙 e +1💎!</p>
+                                </button>
+                                <button onClick={() => playKrarkThumbGamble(50)} className="bg-gray-950 hover:bg-rose-950 border border-rose-400 p-3 rounded-xl text-left">
+                                    <p className="text-amber-300 font-black text-xs">🔥 Scommessa Alta: 50 🪙</p>
+                                    <p className="text-gray-400 text-[10px] mt-1">Per veri temerari: vinci fino a +100🪙 netti e +1💎!</p>
+                                </button>
+                                <button onClick={buyUrzaMysteryBox} className="bg-gradient-to-br from-purple-950 to-indigo-950 hover:from-purple-900 hover:to-indigo-900 border-2 border-amber-400 p-3 rounded-xl text-left">
+                                    <p className="text-amber-300 font-black text-xs">🎁 Scatola Misteriosa (55 🪙)</p>
+                                    <p className="text-gray-200 text-[10px] mt-1">Pesca un equipaggiamento casuale (anche Raro o Leggendario)!</p>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 2. MODALE ALCHIMIA DELLE POZIONI (1 CIBO + 1 MANA COLORATO) */}
+                    {showAlchemyModal && (
+                        <div className="bg-gray-900 border-4 border-teal-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-teal-300 font-black text-sm uppercase">
+                                    🧪 Laboratorio Alchemico — Distilla 1 Cibo (🍖 Disp: {character.food || 0}) + 1 Mana
+                                </h3>
+                                <button onClick={() => setShowAlchemyModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button onClick={() => brewAlchemyElixir("W")} className="bg-gray-950 hover:bg-yellow-950/50 border border-yellow-500/60 p-2.5 rounded-xl text-left">
+                                    <p className="text-yellow-300 font-black text-xs">☀️ Elisir di Luce (1🍖 + 1☀️)</p>
+                                    <p className="text-gray-300 text-[10px]">Cura +18 PV, attiva Scudo e rimuove gratis 1 Trauma dallo Zaino!</p>
+                                </button>
+                                <button onClick={() => brewAlchemyElixir("U")} className="bg-gray-950 hover:bg-blue-950/50 border border-blue-500/60 p-2.5 rounded-xl text-left">
+                                    <p className="text-blue-300 font-black text-xs">💧 Pozione Invisibilità (1🍖 + 1💧)</p>
+                                    <p className="text-gray-300 text-[10px]">Evita il prossimo attacco nemico, cura +8 PV e dà +5 al D20!</p>
+                                </button>
+                                <button onClick={() => brewAlchemyElixir("B")} className="bg-gray-950 hover:bg-purple-950/50 border border-purple-500/60 p-2.5 rounded-xl text-left">
+                                    <p className="text-purple-300 font-black text-xs">💀 Fiala del Velo Nero (1🍖 + 1💀)</p>
+                                    <p className="text-gray-300 text-[10px]">Cura +12 PV (e in battaglia infligge 16 danni + 3 Veleno ☣️)!</p>
+                                </button>
+                                <button onClick={() => brewAlchemyElixir("R")} className="bg-gray-950 hover:bg-red-950/50 border border-red-500/60 p-2.5 rounded-xl text-left">
+                                    <p className="text-red-300 font-black text-xs">🔥 Fiala Fuoco Drago (1🍖 + 1🔥)</p>
+                                    <p className="text-gray-300 text-[10px]">Cura +10 PV, dà +6 al D20 e +8 Danni (e 14 danni immediati in battaglia)!</p>
+                                </button>
+                                <button onClick={() => brewAlchemyElixir("G")} className="bg-gray-950 hover:bg-emerald-950/50 border border-emerald-500/60 p-2.5 rounded-xl text-left sm:col-span-2">
+                                    <p className="text-emerald-300 font-black text-xs">🌳 Decotto di Corteccia di Yavimaya (1🍖 + 1🌳)</p>
+                                    <p className="text-gray-300 text-[10px]">Cura +15 PV e aumenta permanentemente di +1 la Costituzione (COS)!</p>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 3. MODALE BESTIARIO ILLUSTRATO DEL CACCIATORE (+1 STATISTICHE OGNI 5 MOSTRI!) */}
+                    {showBestiaryModal && (
+                        <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <div>
+                                    <h3 className="text-amber-400 font-black text-sm uppercase">
+                                        👹 Bestiario Illustrato del Multiverso ({getUnlockedBestiaryKeys().length} / {Object.keys(MTG_BESTIARY).length} Specie Sconfitte)
+                                    </h3>
+                                    <p className="text-xs text-emerald-300 font-bold">
+                                        🏆 Bonus Conoscenza dei Mostri Attivo: +{Math.floor(getUnlockedBestiaryKeys().length / 5)} a FOR, AGI, MAG e COS per tutta la Compagnia (+1 ogni 5 specie)!
+                                    </p>
+                                </div>
+                                <button onClick={() => setShowBestiaryModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                                {Object.keys(MTG_BESTIARY).map(mKey => {
+                                    const mObj = MTG_BESTIARY[mKey];
+                                    const isDefeated = getUnlockedBestiaryKeys().indexOf(mKey) !== -1;
+                                    return (
+                                        <div key={mKey} className={`p-2.5 rounded-xl border flex justify-between items-center gap-2 ${isDefeated ? "bg-gray-950 border-emerald-500/70" : "bg-gray-950/40 border-gray-800 opacity-50"}`}>
+                                            <div className="min-w-0">
+                                                <p className="text-white font-black text-xs truncate">
+                                                    {isDefeated ? "✅ " : "🔒 "}{mObj.name}
+                                                </p>
+                                                <p className="text-gray-400 text-[10px] truncate">
+                                                    {isDefeated ? `PV Base: ${mObj.maxHP} • CD ${mObj.dc} • Bottino: ${mObj.gold || 20}🪙` : "Non ancora sconfitto in questa campagna"}
+                                                </p>
+                                            </div>
+                                            {mObj.isBoss && <span className="bg-red-900 text-red-200 text-[9px] font-black px-2 py-0.5 rounded shrink-0">BOSS</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                  
                     {/* MINI-SCHEDA EROE + RISERVA DI MANA + GRIMORIO 3 SLOT MAGIE */}
                     <div className="bg-gray-900/95 border-2 border-amber-600/60 rounded-xl p-3 shadow-xl space-y-3">
                         <div className="flex items-center gap-3">
@@ -10943,6 +11310,14 @@
                                                                     >
                                                                         💥 Esplosione di Frammenti (Distruggi per sempre un tuo Oggetto Equipaggiato ➔ 40 Danni Puri!)
                                                                     </button>
+                                                                  {getAvailableDualTech() && !combatState.dualTechUsedThisBattle && (
+                                                                        <button
+                                                                            onClick={executeDualTechInBattle}
+                                                                            className="w-full bg-gradient-to-r from-purple-700 via-indigo-600 to-cyan-600 hover:from-purple-600 hover:to-cyan-500 border-2 border-white text-white font-black py-2.5 px-3 rounded-xl text-xs shadow-lg mt-1 animate-pulse"
+                                                                        >
+                                                                            🤝 {getAvailableDualTech().name} ➔ {getAvailableDualTech().desc}
+                                                                        </button>
+                                                                    )}
                                                                 </React.Fragment>
                                                             )}
                                                         </div>
