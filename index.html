@@ -9377,6 +9377,90 @@
         const allConsciousDown = activePartyList.length > 0 && activePartyList.every(p => p.status !== "alive" || p.currentHP <= 0);
 
         // ====================================================================
+        // MOTORE TRANSIZIONI CINEMATOGRAFICHE A TUTTO SCHERMO & SFONDI DINAMICI
+        // ====================================================================
+        const [cinematicSplash, setCinematicSplash] = useState(null);
+        const lastZoneKeyRef = useRef(null);
+
+        const getZoneVisualConfig = (nodeKey) => {
+            const n = String(nodeKey || "start");
+            if (n.indexOf("benalia") !== -1 || n.indexOf("thran_") !== -1 || n.indexOf("teferi_") !== -1 || n === "start") {
+                return { zoneId: "benalia", bg: "./bg_benalia.png", regionName: "Dominaria — Regno di Nuova Benalia" };
+            }
+            if (n.indexOf("keld") !== -1 || n.indexOf("jaya_") !== -1 || n.indexOf("squee_") !== -1) {
+                return { zoneId: "keld", bg: "./bg_keld.png", regionName: "Dominaria — Montagne di Ferro di Keld" };
+            }
+            if (n.indexOf("argoth") !== -1 || n.indexOf("lotus_") !== -1 || n === "cleared_lotus_node") {
+                return { zoneId: "argoth", bg: "./bg_argoth.png", regionName: "Anno 64 AR — Isola Sacra di Argoth" };
+            }
+            if (n.indexOf("llanowar") !== -1 || n.indexOf("yavimaya") !== -1) {
+                return { zoneId: "llanowar", bg: "./bg_llanowar.png", regionName: "Dominaria — Giungla di Llanowar & Yavimaya" };
+            }
+            if (n.indexOf("rath_") !== -1) {
+                return { zoneId: "rath", bg: "./bg_rath.png", regionName: "Piano Artificiale di Rath — La Fortezza" };
+            }
+            if (n.indexOf("tolaria") !== -1) {
+                return { zoneId: "tolaria", bg: "./bg_tolaria.png", regionName: "Dominaria — Isola dell'Accademia di Tolaria" };
+            }
+            if (n.indexOf("urborg") !== -1 || n.indexOf("liliana_") !== -1) {
+                return { zoneId: "urborg", bg: "./bg_urborg.png", regionName: "Dominaria — Le Paludi Nere di Urborg" };
+            }
+            if (n.indexOf("otaria") !== -1 || n.indexOf("serra_blessing") !== -1) {
+                return { zoneId: "otaria", bg: "./bg_otaria.png", regionName: "Dominaria — Il Continente di Otaria" };
+            }
+            if (n.indexOf("mirrodin") !== -1 || n.indexOf("phyrexian_") !== -1) {
+                return { zoneId: "mirrodin", bg: "./bg_mirrodin.png", regionName: "Il Mondo Metallico dei Cinque Soli — Mirrodin" };
+            }
+            if (n.indexOf("koilos") !== -1 || n.indexOf("karn_") !== -1) {
+                return { zoneId: "koilos", bg: "./bg_koilos.png", regionName: "Dominaria — Le Grotte Thran di Koilos" };
+            }
+            if (n.indexOf("shiv_") !== -1 || n.indexOf("obelisk_") !== -1) {
+                return { zoneId: "shiv", bg: "./bg_shiv.png", regionName: "Dominaria — Il Continente Vulcanico di Shiv" };
+            }
+            if (n.indexOf("innistrad") !== -1) {
+                return { zoneId: "innistrad", bg: "./bg_innistrad.png", regionName: "Viaggio Planare — Piano Gotico di Innistrad" };
+            }
+            if (n.indexOf("ravnica") !== -1) {
+                return { zoneId: "ravnica", bg: "./bg_ravnica.png", regionName: "Viaggio Planare — Metropoli delle Dieci Gilde di Ravnica" };
+            }
+            if (n.indexOf("kamigawa") !== -1) {
+                return { zoneId: "kamigawa", bg: "./bg_kamigawa.png", regionName: "Viaggio Planare — Spiriti e Neon di Kamigawa" };
+            }
+            if (n.indexOf("zendikar") !== -1) {
+                return { zoneId: "zendikar", bg: "./bg_zendikar.png", regionName: "Viaggio Planare — Il Torbido e gli Edri di Zendikar" };
+            }
+            if (n.indexOf("finale_") !== -1 || n === "victory_epilogue") {
+                return { zoneId: "finale_bolas", bg: "./bg_finale_bolas.png", regionName: "Assedio Finale — Frangireami & Cittadella di Bolas" };
+            }
+            if (n === "planeswalker_nexus" || n.indexOf("nghathrod") !== -1 || n.indexOf("dark_depths") !== -1) {
+                return { zoneId: "nexus", bg: "./bg_nexus.png", regionName: "La Cieca Eternità — Il Nexus dei Planeswalker" };
+            }
+            return { zoneId: "crossroads", bg: "./bg_crossroads.png", regionName: "Dominaria — Il Crocevia dei Continenti" };
+        };
+
+        // Quando il nodo cambia e si entra in una nuova Regione/Piano, mostra la Splash Screen a tutto schermo per 3.2 secondi!
+        useEffect(() => {
+            if (!character || rpgView !== "story") return;
+            const curNodeKey = character.currentNode || "start";
+            const zCfg = getZoneVisualConfig(curNodeKey);
+            if (lastZoneKeyRef.current !== zCfg.zoneId) {
+                lastZoneKeyRef.current = zCfg.zoneId;
+                const nObj = CLEARED_ARC_NODES[curNodeKey] || SPECIAL_DYNAMIC_NODES[curNodeKey] || RPG_STORY_NODES[curNodeKey] || RPG_STORY_NODES["start"];
+                setCinematicSplash({
+                    nodeSpecificBg: "./bg_" + curNodeKey + ".png",
+                    zoneBg: zCfg.bg,
+                    regionName: zCfg.regionName,
+                    act: nObj ? nObj.act : "",
+                    title: nObj ? nObj.title : zCfg.regionName
+                });
+                const tId = setTimeout(() => {
+                    setCinematicSplash(null);
+                }, 3200);
+                return () => clearTimeout(tId);
+            }
+        }, [character ? character.currentNode : null, rpgView]);
+      
+        // ====================================================================
         // SCHERMATA DRAMMATICA DI GAME OVER TOTALE (SALVA SPETTRI & EQUIP PERDUTI!)
         // ====================================================================
         if (character && isTotalPartyKill) {
@@ -10917,12 +11001,62 @@
                         </div>
                     )}
 
-                    {!combatState && dormantTimer === 0 && (
-                        <div 
-                            className="bg-gray-900 border-2 border-amber-700/80 rounded-2xl p-5 sm:p-6 shadow-2xl bg-cover bg-center relative overflow-hidden"
-                            style={{ backgroundImage: "linear-gradient(rgba(10, 15, 25, 0.82), rgba(10, 15, 25, 0.90)), url('./rpg_bg.png')" }}
+                    {/* OVERLAY CINEMATOGRAFICO A TUTTO SCHERMO QUANDO CAMBI REGIONE O PIANO (3.2 SECONDI O TOCCA PER SALTARE) */}
+                    {cinematicSplash && (
+                        <div
+                            onClick={() => setCinematicSplash(null)}
+                            className="fixed inset-0 z-[9999] bg-black flex flex-col justify-end p-6 sm:p-12 cursor-pointer animate-fade overflow-hidden"
                         >
-                            <div className="flex justify-between items-center mb-1">
+                            <img
+                                src={cinematicSplash.nodeSpecificBg}
+                                alt={cinematicSplash.title}
+                                onError={(e) => {
+                                    const cur = e.target.getAttribute("src");
+                                    if (cur !== cinematicSplash.zoneBg && cur !== "./rpg_bg.png") {
+                                        e.target.src = cinematicSplash.zoneBg;
+                                    } else if (cur !== "./rpg_bg.png") {
+                                        e.target.src = "./rpg_bg.png";
+                                    }
+                                }}
+                                className="absolute inset-0 w-full h-full object-cover object-center scale-105 transition-transform duration-1000"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                            <div className="relative z-10 max-w-2xl mx-auto text-center space-y-2 pb-6">
+                                <span className="inline-block bg-amber-500 text-black font-black text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+                                    🌍 {cinematicSplash.regionName}
+                                </span>
+                                <h2 className="text-3xl sm:text-5xl font-black text-white drop-shadow-[0_4px_15px_rgba(0,0,0,1)]" style={{ fontFamily: "Georgia, serif" }}>
+                                    {cinematicSplash.title}
+                                </h2>
+                                <p className="text-amber-300 text-xs sm:text-sm font-bold uppercase tracking-widest">
+                                    {cinematicSplash.act}
+                                </p>
+                                <p className="text-gray-400 text-[10px] pt-2 italic">
+                                    (Tocca lo schermo per entrare subito)
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {!combatState && dormantTimer === 0 && (
+                        <div className="bg-gray-950 border-2 border-amber-700/80 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
+                            {/* IMMAGINE DELLA REGIONE/PIANO SFOCATA IN BACKGROUND (CON FALLBACK AUTOMATICO SU rpg_bg.png) */}
+                            <img
+                                key={character.currentNode}
+                                src={"./bg_" + (character.currentNode || "start") + ".png"}
+                                alt="Sfondo"
+                                onError={(e) => {
+                                    const zBg = getZoneVisualConfig(character.currentNode).bg;
+                                    const cur = e.target.getAttribute("src");
+                                    if (cur !== zBg && cur !== "./rpg_bg.png") {
+                                        e.target.src = zBg;
+                                    } else if (cur !== "./rpg_bg.png") {
+                                        e.target.src = "./rpg_bg.png";
+                                    }
+                                }}
+                                className="absolute inset-0 w-full h-full object-cover object-center blur-[2px] scale-105 opacity-30 pointer-events-none z-0"
+                            />
+                            <div className="relative z-10 flex justify-between items-center mb-1">
                                 <p className="text-amber-500 text-xs font-black uppercase tracking-widest">{currentNodeObj.act}</p>
                                 <button 
                                     onClick={() => setPlayMode(playMode === "solo" ? "party" : "solo")}
