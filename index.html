@@ -15917,10 +15917,32 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
               📊 VEDI STATISTICHE PARTITE
           </button>
         
-          <div className="flex gap-2 mb-6 bg-gray-900 p-1 rounded-lg border border-gray-700">
-             <button onClick={()=>setLobbyMode('local')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='local'?'bg-red-600 text-white shadow':'text-gray-400 hover:text-white'}`}>Tavolo Locale</button>
-             <button onClick={()=>setLobbyMode('cloud')} className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode==='cloud'?'bg-blue-600 text-white shadow':'text-gray-400 hover:text-white'}`}>☁️ Rete Cloud</button>
-          </div>
+          {/* INTERRUTTORE CLOUD LIFE TRACKER: Metti true in futuro per riattivarlo! */}
+          {(() => {
+             const CLOUD_TRACKER_ENABLED = false;
+             return (
+                <div className="flex gap-2 mb-6 bg-gray-900 p-1 rounded-lg border border-gray-700">
+                   <button
+                      onClick={() => setLobbyMode('local')}
+                      className={`flex-1 font-bold py-2 rounded transition-colors ${lobbyMode === 'local' ? 'bg-red-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                   >
+                      Tavolo Locale
+                   </button>
+                   <button
+                      onClick={() => {
+                         if (!CLOUD_TRACKER_ENABLED) {
+                            alert("🔒 La modalità Rete Cloud in tempo reale è temporaneamente disattivata.\n\nUsa il Tavolo Locale: il salvataggio delle Statistiche Partite, la Lega e il Bardo a fine partita funzionano regolarmente!");
+                            return;
+                         }
+                         setLobbyMode('cloud');
+                      }}
+                      className={`flex-1 font-bold py-2 rounded transition-colors ${!CLOUD_TRACKER_ENABLED ? 'bg-gray-800 text-gray-500 opacity-60 cursor-not-allowed' : (lobbyMode === 'cloud' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white')}`}
+                   >
+                      {CLOUD_TRACKER_ENABLED ? "☁️ Rete Cloud" : "🔒 Rete Cloud (Off)"}
+                   </button>
+                </div>
+             );
+          })()}
 
           {lobbyMode === 'local' && (
              <div className="animate-fade">
