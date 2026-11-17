@@ -10338,7 +10338,7 @@
                         </div>
                     )}
 
-                    {/* 3. MODALE BESTIARIO ILLUSTRATO DEL CACCIATORE (+1 STATISTICHE OGNI 5 MOSTRI!) */}
+                                        {/* 3. MODALE BESTIARIO ILLUSTRATO DEL CACCIATORE (CON ART CROP SCRYFALL!) */}
                     {showBestiaryModal && (
                         <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
@@ -10350,29 +10350,84 @@
                                         🏆 Bonus Conoscenza dei Mostri Attivo: +{Math.floor(getUnlockedBestiaryKeys().length / 5)} a FOR, AGI, MAG e COS per tutta la Compagnia (+1 ogni 5 specie)!
                                     </p>
                                 </div>
-                                <button onClick={() => setShowBestiaryModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                                <button onClick={() => setShowBestiaryModal(false)} className="bg-gray-800 hover:bg-gray-700 text-xs text-white font-bold px-3 py-1.5 rounded-lg">Chiudi ✖</button>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-1">
                                 {Object.keys(MTG_BESTIARY).map(mKey => {
                                     const mObj = MTG_BESTIARY[mKey];
                                     const isDefeated = getUnlockedBestiaryKeys().indexOf(mKey) !== -1;
+                                    const scryfallCardName = MONSTER_SCRYFALL_MAP[mKey];
+                                    const directArtCropUrl = scryfallCardName
+                                        ? ("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(scryfallCardName) + "&format=image&version=art_crop")
+                                        : "./rpg_monster_default.png";
+
                                     return (
-                                        <div key={mKey} className={`p-2.5 rounded-xl border flex justify-between items-center gap-2 ${isDefeated ? "bg-gray-950 border-emerald-500/70" : "bg-gray-950/40 border-gray-800 opacity-50"}`}>
-                                            <div className="min-w-0">
-                                                <p className="text-white font-black text-xs truncate">
-                                                    {isDefeated ? "✅ " : "🔒 "}{mObj.name}
-                                                </p>
-                                                <p className="text-gray-400 text-[10px] truncate">
-                                                    {isDefeated ? `PV Base: ${mObj.maxHP} • CD ${mObj.dc} • Bottino: ${mObj.gold || 20}🪙` : "Non ancora sconfitto in questa campagna"}
+                                        <div
+                                            key={mKey}
+                                            className={`rounded-xl border-2 overflow-hidden flex flex-col justify-between transition-all ${
+                                                isDefeated
+                                                    ? "bg-gray-950 border-emerald-500/80 shadow-lg"
+                                                    : "bg-gray-950/60 border-gray-800 opacity-75"
+                                            }`}
+                                        >
+                                            {/* FINESTRA ILLUSTRAZIONE PURA SCRYFALL (ART CROP) */}
+                                            <div className="w-full h-32 bg-black relative overflow-hidden border-b border-gray-800">
+                                                <img
+                                                    src={directArtCropUrl}
+                                                    alt={mObj.name}
+                                                    loading="lazy"
+                                                    onError={(e) => {
+                                                        const cur = e.target.getAttribute("src");
+                                                        if (cur !== "./rpg_monster_default.png" && cur !== "./mtg-bg.jpg") {
+                                                            e.target.src = "./rpg_monster_default.png";
+                                                        } else if (cur !== "./mtg-bg.jpg") {
+                                                            e.target.src = "./mtg-bg.jpg";
+                                                        }
+                                                    }}
+                                                    className={`w-full h-full object-cover object-center transition-all ${
+                                                        isDefeated ? "" : "grayscale brightness-50 blur-[1px]"
+                                                    }`}
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-black/40" />
+
+                                                <span className={`absolute top-2 left-2 text-[9px] font-black uppercase px-2 py-0.5 rounded shadow ${
+                                                    isDefeated ? "bg-emerald-500 text-black" : "bg-gray-900/90 text-gray-400 border border-gray-700"
+                                                }`}>
+                                                    {isDefeated ? "✅ Sconfitto" : "🔒 Ignoto"}
+                                                </span>
+
+                                                {mObj.isBoss && (
+                                                    <span className="absolute top-2 right-2 bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded shadow border border-red-300">
+                                                        👑 BOSS
+                                                    </span>
+                                                )}
+
+                                                <p className="absolute bottom-1.5 left-2.5 right-2.5 text-white font-black text-xs truncate drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                                                    {mObj.name}
                                                 </p>
                                             </div>
-                                            {mObj.isBoss && <span className="bg-red-900 text-red-200 text-[9px] font-black px-2 py-0.5 rounded shrink-0">BOSS</span>}
+
+                                            {/* DATI E LORE DELLA CREATURA */}
+                                            <div className="p-2.5 space-y-1">
+                                                <p className="text-amber-300 font-bold text-[10px]">
+                                                    {isDefeated
+                                                        ? `❤️ ${mObj.maxHP} PV Base • 🛡️ CD ${mObj.dc} • ⚔️ Danno ${mObj.dmg} • 🪙 ${mObj.gold || 20} Oro`
+                                                        : "Sconfiggi questa creatura nell'Arena per sbloccarne i segreti."}
+                                                </p>
+                                                {isDefeated && mObj.desc && (
+                                                    <p className="text-gray-300 text-[10px] italic leading-snug line-clamp-2">
+                                                        {mObj.desc}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
                             </div>
                         </div>
                     )}
+                  
                   
                     {/* MINI-SCHEDA EROE + RISERVA DI MANA + GRIMORIO 3 SLOT MAGIE */}
                     <div className="bg-gray-900/95 border-2 border-amber-600/60 rounded-xl p-3 shadow-xl space-y-3">
