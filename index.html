@@ -11376,11 +11376,11 @@
                         </div>
                     )}
 
-                    {/* OVERLAY CINEMATOGRAFICO A TUTTO SCHERMO QUANDO CAMBI REGIONE O PIANO (3.2 SECONDI O TOCCA PER SALTARE) */}
-                    {cinematicSplash && (
+                                        {/* OVERLAY CINEMATOGRAFICO A TUTTO SCHERMO (PORTAL SU DOCUMENT.BODY PER CENTRATURA PERFETTA 100dvh!) */}
+                    {cinematicSplash && ReactDOM.createPortal(
                         <div
                             onClick={() => setCinematicSplash(null)}
-                            className="fixed inset-0 z-[9999] bg-black flex flex-col justify-end p-6 sm:p-12 cursor-pointer animate-fade overflow-hidden"
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10005] bg-black flex flex-col justify-end p-6 sm:p-10 cursor-pointer animate-fade overflow-hidden"
                         >
                             <img
                                 src={cinematicSplash.nodeSpecificBg}
@@ -11393,29 +11393,30 @@
                                         e.target.src = "./rpg_bg.png";
                                     }
                                 }}
-                                className="absolute inset-0 w-full h-full object-cover object-center scale-105 transition-transform duration-1000"
+                                className="absolute inset-0 w-full h-full object-cover object-center"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                            <div className="relative z-10 max-w-2xl mx-auto text-center space-y-2 pb-6">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                            <div className="relative z-10 max-w-xl mx-auto text-center space-y-2 pb-8">
                                 <span className="inline-block bg-amber-500 text-black font-black text-[10px] sm:text-xs uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
                                     🌍 {cinematicSplash.regionName}
                                 </span>
-                                <h2 className="text-3xl sm:text-5xl font-black text-white drop-shadow-[0_4px_15px_rgba(0,0,0,1)]" style={{ fontFamily: "Georgia, serif" }}>
+                                <h2 className="text-3xl sm:text-4xl font-black text-white drop-shadow-[0_4px_15px_rgba(0,0,0,1)]" style={{ fontFamily: "Georgia, serif" }}>
                                     {cinematicSplash.title}
                                 </h2>
-                                <p className="text-amber-300 text-xs sm:text-sm font-bold uppercase tracking-widest">
+                                <p className="text-amber-300 text-xs sm:text-sm font-bold uppercase tracking-widest drop-shadow">
                                     {cinematicSplash.act}
                                 </p>
-                                <p className="text-gray-400 text-[10px] pt-2 italic">
+                                <p className="text-gray-300 text-[10px] pt-1 italic">
                                     (Tocca lo schermo per entrare subito)
                                 </p>
                             </div>
-                        </div>
+                        </div>,
+                        document.body
                     )}
 
                     {!combatState && dormantTimer === 0 && (
                         <div className="bg-gray-950 border-2 border-amber-700/80 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden">
-                            {/* IMMAGINE DELLA REGIONE/PIANO SFOCATA IN BACKGROUND (CON FALLBACK AUTOMATICO SU rpg_bg.png) */}
+                            {/* IMMAGINE DELLA REGIONE/PIANO SFOCATA E CENTRATA IN BACKGROUND */}
                             <img
                                 key={character.currentNode}
                                 src={"./bg_" + (character.currentNode || "start") + ".png"}
@@ -11429,9 +11430,10 @@
                                         e.target.src = "./rpg_bg.png";
                                     }
                                 }}
-                                className="absolute inset-0 w-full h-full object-cover object-center blur-[2px] scale-105 opacity-30 pointer-events-none z-0"
+                                className="absolute inset-0 w-full h-full object-cover object-center blur-[1.5px] opacity-35 pointer-events-none z-0"
                             />
                             <div className="relative z-10 flex justify-between items-center mb-1">
+                              
                                 <p className="text-amber-500 text-xs font-black uppercase tracking-widest">{currentNodeObj.act}</p>
                                 <button 
                                     onClick={() => setPlayMode(playMode === "solo" ? "party" : "solo")}
