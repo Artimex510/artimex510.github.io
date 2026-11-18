@@ -7544,13 +7544,20 @@
         };
 
       // ============================================================================
-        // --- FINESTRA ILLUSTRAZIONE PURA (ART CROP SCRYFALL + FALLBACK GITHUB) ---
+        // --- FINESTRA ILLUSTRAZIONE PURA (BATCH CACHE SCRYFALL + ZERO RATE LIMIT) ---
         // ============================================================================
         const DEFAULT_MONSTER_FALLBACK_IMG = "./rpg_monster_default.png";
         const [monsterArtUrl, setMonsterArtUrl] = useState(DEFAULT_MONSTER_FALLBACK_IMG);
         const [loadingMonsterArt, setLoadingMonsterArt] = useState(false);
+        const [bestiaryArtCache, setBestiaryArtCache] = useState(() => {
+            try {
+                return JSON.parse(localStorage.getItem('rpg_bestiary_art_cache_v3') || "{}");
+            } catch (e) {
+                return {};
+            }
+        });
 
-        // Tutti i 55+ mostri e Boss mappati alle carte ufficiali di Magic su Scryfall!
+        // Tutti i 76+ mostri e Boss mappati ai nomi esatti delle carte ufficiali su Scryfall!
         const MONSTER_SCRYFALL_MAP = {
             storm_crow: "Storm Crow",
             fblthp_guards: "Fblthp, the Lost",
@@ -7564,7 +7571,7 @@
             colossal_dreadmaw: "Colossal Dreadmaw",
             craw_wurm: "Craw Wurm",
             urza_lotus_guardian: "Colossus of Sardia",
-            sliver_swarm: "Sliver Swarm",
+            sliver_swarm: "Muscle Sliver",
             sliver_queen: "Sliver Queen",
             juzam_djinn: "Juzam Djinn",
             phyrexian_negator: "Phyrexian Negator",
@@ -7628,8 +7635,67 @@
             viashino_heretic_lord: "Viashino Heretic",
             darigaaz_reincarnated: "Darigaaz Reincarnated",
             mind_flayer_nghathrod: "Captain N'ghathrod",
-            pvp_phyrexian_players: "Phyrexian Rebirth"
+            pvp_phyrexian_players: "Phyrexian Rebirth",
+            fallen_party_revenants: "Returned Pastcaller"
         };
+
+        // Scarica in 2 sole chiamate di gruppo tutti i 76 art_crop da Scryfall evitando qualsiasi blocco 429!
+        useEffect(() => {
+            const allMonsterKeys = Object.keys(MONSTER_SCRYFALL_MAP);
+            const missingKeys = allMonsterKeys.filter(k => !bestiaryArtCache[k]);
+            if (missingKeys.length === 0) return;
+
+            let isCancelled = false;
+            const fetchBatchMonsterArts = async () => {
+                let updatedCache = Object.assign({}, bestiaryArtCache);
+                const uniqueCardNames = [];
+                missingKeys.forEach(k => {
+                    const cName = MONSTER_SCRYFALL_MAP[k];
+                    if (cName && uniqueCardNames.indexOf(cName) === -1) uniqueCardNames.push(cName);
+                });
+
+                for (let i = 0; i < uniqueCardNames.length; i += 70) {
+                    const chunk = uniqueCardNames.slice(i, i + 70).map(n => ({ name: n }));
+                    try {
+                        const res = await fetch("https://api.scryfall.com/cards/collection", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ identifiers: chunk })
+                        });
+                        const data = await res.json();
+                        if (data && Array.isArray(data.data)) {
+                            data.data.forEach(cardObj => {
+                                let cropUrl = "";
+                                if (cardObj.image_uris && cardObj.image_uris.art_crop) {
+                                    cropUrl = cardObj.image_uris.art_crop;
+                                } else if (cardObj.card_faces && cardObj.card_faces.length > 0 && cardObj.card_faces[0].image_uris && cardObj.card_faces[0].image_uris.art_crop) {
+                                    cropUrl = cardObj.card_faces[0].image_uris.art_crop;
+                                }
+                                if (cropUrl && cardObj.name) {
+                                    const cardNameLower = cardObj.name.toLowerCase();
+                                    allMonsterKeys.forEach(mKey => {
+                                        const targetLower = (MONSTER_SCRYFALL_MAP[mKey] || "").toLowerCase();
+                                        if (cardNameLower === targetLower || cardNameLower.indexOf(targetLower) !== -1) {
+                                            updatedCache[mKey] = cropUrl;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }
+
+                if (!isCancelled) {
+                    setBestiaryArtCache(updatedCache);
+                    try {
+                        localStorage.setItem('rpg_bestiary_art_cache_v3', JSON.stringify(updatedCache));
+                    } catch (e) {}
+                }
+            };
+
+            fetchBatchMonsterArts();
+            return () => { isCancelled = true; };
+        }, []);
 
         useEffect(() => {
             if (!combatState || !combatState.key) {
@@ -7637,8 +7703,13 @@
                 return;
             }
             const mKey = combatState.key;
-            const scryfallQueryName = MONSTER_SCRYFALL_MAP[mKey];
+            if (bestiaryArtCache && bestiaryArtCache[mKey]) {
+                setMonsterArtUrl(bestiaryArtCache[mKey]);
+                setLoadingMonsterArt(false);
+                return;
+            }
 
+            const scryfallQueryName = MONSTER_SCRYFALL_MAP[mKey];
             if (!scryfallQueryName) {
                 setMonsterArtUrl(DEFAULT_MONSTER_FALLBACK_IMG);
                 return;
@@ -7657,7 +7728,17 @@
                     } else if (data && data.card_faces && data.card_faces.length > 0 && data.card_faces[0].image_uris && data.card_faces[0].image_uris.art_crop) {
                         artCrop = data.card_faces[0].image_uris.art_crop;
                     }
-                    setMonsterArtUrl(artCrop || DEFAULT_MONSTER_FALLBACK_IMG);
+                    if (artCrop) {
+                        setMonsterArtUrl(artCrop);
+                        setBestiaryArtCache(prev => {
+                            const next = Object.assign({}, prev);
+                            next[mKey] = artCrop;
+                            try { localStorage.setItem('rpg_bestiary_art_cache_v3', JSON.stringify(next)); } catch (e) {}
+                            return next;
+                        });
+                    } else {
+                        setMonsterArtUrl(DEFAULT_MONSTER_FALLBACK_IMG);
+                    }
                     setLoadingMonsterArt(false);
                 })
                 .catch(() => {
@@ -7668,7 +7749,7 @@
                 });
 
             return () => { isCancelled = true; };
-        }, [combatState ? combatState.key : null]);
+        }, [combatState ? combatState.key : null, bestiaryArtCache]);
 
         // ============================================================================
         // --- 15 PEDINE FAMIGLIO (CLASSE x COLORE), FORGIA DEL FABBRO (+1/+2/+3),
@@ -10362,9 +10443,8 @@
                                 {Object.keys(MTG_BESTIARY).map(mKey => {
                                     const mObj = MTG_BESTIARY[mKey];
                                     const isDefeated = getUnlockedBestiaryKeys().indexOf(mKey) !== -1;
-                                    const scryfallCardName = MONSTER_SCRYFALL_MAP[mKey];
-                                    const directArtCropUrl = scryfallCardName
-                                        ? ("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(scryfallCardName) + "&format=image&version=art_crop")
+                                    const directArtCropUrl = (bestiaryArtCache && bestiaryArtCache[mKey])
+                                        ? bestiaryArtCache[mKey]
                                         : "./rpg_monster_default.png";
 
                                     return (
