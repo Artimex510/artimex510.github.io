@@ -5577,7 +5577,56 @@
             localStorage.setItem('rpg_party', JSON.stringify(newParty));
         };
 
-        // CALCOLO STATISTICHE BILANCIATO (Evita che i personaggi arrivino a 35+ rendendo inutili i dadi!)
+        // CALCOLO STATISTICHE BILANCIATO + BONUS DEI SET LEGGENDARI (Kaldra, Urza, Mirrodin)
+        const getEquipmentSetInfo = (char) => {
+            if (!char || !char.equipped) return { activeSets: [], str: 0, agi: 0, mag: 0, con: 0, fullKaldra: false };
+            const eqIds = [];
+            ['weapon', 'head', 'body', 'hands', 'feet', 'artifact'].forEach(sl => {
+                if (char.equipped[sl] && char.equipped[sl].id) eqIds.push(char.equipped[sl].id);
+            });
+
+            let sBonus = 0; let aBonus = 0; let mBonus = 0; let cBonus = 0;
+            let activeSets = [];
+            let fullKaldra = false;
+
+            // 1. SET DI KALDRA (Spada, Scudo, Elmo)
+            let kaldraCount = 0;
+            if (eqIds.indexOf("kaldra_sword") !== -1) kaldraCount++;
+            if (eqIds.indexOf("shield_kaldra") !== -1 || eqIds.indexOf("kaldra_shield") !== -1) kaldraCount++;
+            if (eqIds.indexOf("kaldra_helm") !== -1) kaldraCount++;
+            if (kaldraCount === 2) {
+                sBonus += 2; aBonus += 2; mBonus += 2; cBonus += 4;
+                activeSets.push("🛡️ Set di Kaldra (2/3: +2 Stat, +4 COS)");
+            } else if (kaldraCount >= 3) {
+                sBonus += 5; aBonus += 5; mBonus += 5; cBonus += 10;
+                fullKaldra = true;
+                activeSets.push("👑 Set Completo di Kaldra (3/3: +5 Stat, +10 COS e Avatar 4/4 Gratis!)");
+            }
+
+            // 2. SET ACCADEMIA DI URZA (Tunica, Scettro/Bastone, Anello/Reliquia/Loto)
+            let urzaCount = 0;
+            if (eqIds.indexOf("urza_robes") !== -1) urzaCount++;
+            if (eqIds.indexOf("isochron_scepter") !== -1 || eqIds.indexOf("staff_domination") !== -1) urzaCount++;
+            if (eqIds.indexOf("sol_ring") !== -1 || eqIds.indexOf("coalition_relic") !== -1 || eqIds.indexOf("black_lotus") !== -1) urzaCount++;
+            if (urzaCount === 2) {
+                mBonus += 3; aBonus += 2; cBonus += 4;
+                activeSets.push("🔮 Set di Urza (2/3: +3 MAG, +2 AGI, +4 COS)");
+            } else if (urzaCount >= 3) {
+                mBonus += 6; sBonus += 3; aBonus += 3; cBonus += 8;
+                activeSets.push("🌌 Arcimago di Urza (3/3: +6 MAG, +3 FOR/AGI, +8 COS)");
+            }
+
+            // 3. SET ARSENALE DI MIRRODIN (Spada Mirran + Corazza Darksteel/Argentum)
+            const hasMirranSword = eqIds.some(id => id.indexOf("sword_") === 0);
+            const hasMirranArmor = eqIds.indexOf("darksteel_plate") !== -1 || eqIds.indexOf("argentum_armor") !== -1 || eqIds.indexOf("batterskull") !== -1;
+            if (hasMirranSword && hasMirranArmor) {
+                sBonus += 3; aBonus += 3; mBonus += 3; cBonus += 4;
+                activeSets.push("☀️ Set dei Cinque Soli (2/2: +3 FOR/AGI/MAG, +4 COS)");
+            }
+
+            return { activeSets: activeSets, str: sBonus, agi: aBonus, mag: mBonus, con: cBonus, fullKaldra: fullKaldra };
+        };
+
         const getFinalStats = (char) => {
             const totalLevels = (char.level || 1) + (char.secondaryLevel || 0);
             // +1 per livello, +2 per Leggendario, +4 per Planeswalker + Bonus Conoscenza del Bestiario (+1 ogni 5 mostri unici!)
@@ -5619,6 +5668,12 @@
                 });
             }
 
+            const setInfo = getEquipmentSetInfo(char);
+            eqStr += setInfo.str;
+            eqAgi += setInfo.agi;
+            eqMag += setInfo.mag;
+            eqCon += setInfo.con;
+
             // Calcolo diretto dei malus da Traumi/Ferite presenti nello Zaino
             let traumaStr = 0; let traumaAgi = 0; let traumaMag = 0; let traumaCon = 0; let traumaCount = 0;
             if (char.inventory && Array.isArray(char.inventory)) {
@@ -5652,7 +5707,9 @@
                 con: Math.max(5, totalCon + traumaCon),
                 maxHP: Math.max(10, maxHP + (traumaCon * 2)),
                 keywords: activeKeywords,
-                traumaCount: traumaCount
+                traumaCount: traumaCount,
+                activeSets: setInfo.activeSets,
+                fullKaldra: setInfo.fullKaldra
             };
         };
 
@@ -7478,6 +7535,30 @@
             });
             saveCharState(updatedHero);
 
+            // AVVIA LA SEQUENZA VISIVA A 2 FASI (1: AURA ORO COMANDANTE -> 2: ALLARME ROSSO SUL NEMICO!)
+            const cmdArtCrop = "https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(cmdObj.name) + "&format=image&version=art_crop";
+            setCommanderActionCinematic({
+                phase: "summon",
+                cmdName: cmdObj.name,
+                deckName: cmdObj.deckName || "Mazzo Commander",
+                cmdArt: cmdArtCrop,
+                cmdFallbackImg: cmdObj.img || "./mtg-bg.jpg",
+                heroName: character.name,
+                dmg: cmdDmg,
+                enemyName: combatState.name,
+                enemyArt: monsterArtUrl || "./rpg_monster_default.png"
+            });
+            triggerEpicImpact("crit_gold");
+
+            setTimeout(() => {
+                setCommanderActionCinematic(prev => prev ? Object.assign({}, prev, { phase: "strike" }) : null);
+                triggerEpicImpact("crit_red");
+            }, 2100);
+
+            setTimeout(() => {
+                setCommanderActionCinematic(null);
+            }, 3900);
+
             const cmdMsg = `🌌👑 RICHIAMO DEL VERO COMANDANTE! **${character.name}** evoca **${cmdObj.name}** (dal mazzo *"${cmdObj.deckName}"*): infligge **${cmdDmg} danni divini**, spezza lo Scudo Puzzle, cura +20 PV e infonde i suoi colori di Mana!`;
             setEventBanner(cmdMsg);
 
@@ -8196,6 +8277,309 @@
             setShowAlchemyModal(false);
             setEventBanner(msg);
         };
+
+       // ============================================================================
+        // --- 1. SAGHE DI MAGIC (1 PER PIANO, SBLOCCATE DAI BOSS + SAGA NERA),
+        // --- 2. INCANTESIMI DEL MONDO RANDOM SUI CRITICI, 3. RUNE PIETRE DEL POTERE,
+        // --- 4. FOSSA DELLA CABALA (SURVIVAL A ONDATE), 5. SCREEN SHAKE & SFX! ---
+        // ============================================================================
+        const [showSagasModal, setShowSagasModal] = useState(false);
+        const [showRunesModal, setShowRunesModal] = useState(false);
+        const [showCabalPitModal, setShowCabalPitModal] = useState(false);
+        const [screenShakeEffect, setScreenShakeEffect] = useState(null); // "crit_gold" | "crit_red"
+        const [commanderActionCinematic, setCommanderActionCinematic] = useState(null);
+      
+        const [unlockedSagas, setUnlockedSagas] = useState(() => {
+            try { return JSON.parse(localStorage.getItem('rpg_unlocked_sagas') || "[]"); } catch (e) { return []; }
+        });
+        const [sagasUsedByZone, setSagasUsedByZone] = useState(() => {
+            try { return JSON.parse(localStorage.getItem('rpg_sagas_used_zones') || "{}"); } catch (e) { return {}; }
+        });
+        const [cabalPitRecord, setCabalPitRecord] = useState(() => {
+            try { return parseInt(localStorage.getItem('rpg_cabal_pit_record') || "0", 10) || 0; } catch (e) { return 0; }
+        });
+
+        // EFFETTO VISIVO SCREEN SHAKE E SONORO SUI COLPI CRITICI / EVENTI EPICI
+        const triggerEpicImpact = (impactType) => {
+            setScreenShakeEffect(impactType || "crit_gold");
+            try {
+                const sfxUrl = impactType === "crit_red"
+                    ? "https://www.myinstants.com/media/sounds/minecraft-damage-ooff.mp3"
+                    : "music_cmdr_epic_15s.mp3";
+                const a = new Audio(sfxUrl);
+                a.volume = 0.35;
+                a.play().catch(() => {});
+                setTimeout(() => { try { a.pause(); } catch(e){} }, 2500);
+            } catch (e) {}
+            setTimeout(() => setScreenShakeEffect(null), 750);
+        };
+
+        // DATABASE DELLE 5 SAGHE DI MAGIC (Sbloccate sconfiggendo i Grandi Boss, 1 uso per Piano!)
+        const RPG_SAGAS_DB = {
+            history_of_benalia: {
+                id: "history_of_benalia",
+                name: "📜☀️ Storia di Benalia (Saga Bianca)",
+                isDarkSaga: false,
+                ch1Desc: "Cap. I: Cura +8 PV a tutta la Compagnia.",
+                ch2Desc: "Cap. II: Riduce di -2 la Difesa (CD) del nemico.",
+                ch3Desc: "Cap. III: Carica dei Cavalieri (16 danni al nemico e +5 al tiro D20)!"
+            },
+            phyrexian_scriptures: {
+                id: "phyrexian_scriptures",
+                name: "📜💀 Le Scritture di Phyrexia (Saga Nera Rischi/Benefici)",
+                isDarkSaga: true,
+                ch1Desc: "Cap. I: +14 danni immediati al nemico e +2 Mana 💀, MA l'eroe attivo perde -5 PV!",
+                ch2Desc: "Cap. II: +16 danni e +2 Veleno ☣️ al nemico, MA tutta la Compagnia subisce -4 PV dall'Olio!",
+                ch3Desc: "Cap. III: Eclissi dell'Obliteratore (26 danni e spezza lo Scudo Boss), MA azzera il tuo Mana principale!"
+            },
+            the_antiquities_war: {
+                id: "the_antiquities_war",
+                name: "📜💧 La Guerra delle Antichità (Saga Blu)",
+                isDarkSaga: false,
+                ch1Desc: "Cap. I: Genera +2 Mana principale e +1 Pedina Tesoro 💎.",
+                ch2Desc: "Cap. II: Drena 2💧 Mana Blu al nemico e attiva uno Scudo Difensivo.",
+                ch3Desc: "Cap. III: Risveglio degli Artefatti (18 danni al nemico e spezza lo Scudo Puzzle)!"
+            },
+            binding_old_gods: {
+                id: "binding_old_gods",
+                name: "📜🌳 Vincolare gli Antichi Dei (Saga Verde/Nera)",
+                isDarkSaga: false,
+                ch1Desc: "Cap. I: Infligge 10 danni e applica +2 Segnalini Veleno ☣️.",
+                ch2Desc: "Cap. II: Cura +10 PV al gruppo e riduce di -1 la CD del mostro.",
+                ch3Desc: "Cap. III: Furia della Foresta (18 danni e +6 al prossimo tiro D20)!"
+            },
+            fable_mirror_breaker: {
+                id: "fable_mirror_breaker",
+                name: "📜🔥 Favola dello Spezzaspecchi (Saga Rossa)",
+                isDarkSaga: false,
+                ch1Desc: "Cap. I: Saccheggia +20 Monete d'Oro 🪙 e +1 Tesoro 💎.",
+                ch2Desc: "Cap. II: Infligge 12 danni di fuoco e conferisce +6 al tiro D20.",
+                ch3Desc: "Cap. III: Riflesso di Kiki-Jiki (20 danni puri al nemico)!"
+            }
+        };
+
+        // Risolve l'effetto di un singolo Capitolo (1, 2 o 3) della Saga attiva
+        const triggerSagaChapterEffect = (sagaId, chapterNum, cState, pList) => {
+            const sObj = RPG_SAGAS_DB[sagaId];
+            if (!sObj) return { combat: cState, party: pList, logMsg: "" };
+            let nextCombat = Object.assign({}, cState);
+            let nextParty = pList.map(h => Object.assign({}, h));
+            let msg = "";
+
+            if (sagaId === "history_of_benalia") {
+                if (chapterNum === 1) {
+                    nextParty = nextParty.map(h => h.status !== "dead" ? Object.assign({}, h, { currentHP: Math.min(getFinalStats(h).maxHP, h.currentHP + 8) }) : h);
+                    msg = `📜☀️ [${sObj.name} — CAPITOLO I]: Tutta la Compagnia recupera **+8 PV**!`;
+                } else if (chapterNum === 2) {
+                    nextCombat.dc = Math.max(14, nextCombat.dc - 2);
+                    msg = `📜☀️ [${sObj.name} — CAPITOLO II]: La Difesa (CD) di ${nextCombat.name} scende di **-2**!`;
+                } else {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 16);
+                    setTreasureBoostActive(true);
+                    msg = `📜☀️ [${sObj.name} — CAPITOLO III FINALE]: Carica di Benalia! **16 danni** a ${nextCombat.name} e **+5 al prossimo D20**!`;
+                }
+            } else if (sagaId === "phyrexian_scriptures") {
+                // SAGA NERA CON BONUS POTENTI MA MALUS ALLA COMPAGNIA!
+                if (chapterNum === 1) {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 14);
+                    nextParty = nextParty.map(h => {
+                        if (h.id !== character.id || h.status === "dead") return h;
+                        let pool = Object.assign({}, h.manaPool || {});
+                        pool.B = (pool.B || 0) + 2;
+                        return Object.assign({}, h, { currentHP: Math.max(1, h.currentHP - 5), manaPool: pool });
+                    });
+                    msg = `📜💀 [${sObj.name} — CAPITOLO I]: **14 danni** a ${nextCombat.name} e **+2 Mana 💀**, ma il rito brucia **-5 PV** a ${character.name}!`;
+                } else if (chapterNum === 2) {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 16);
+                    nextCombat.poisonCounters = (nextCombat.poisonCounters || 0) + 2;
+                    nextParty = nextParty.map(h => h.status !== "dead" ? Object.assign({}, h, { currentHP: Math.max(1, h.currentHP - 4) }) : h);
+                    msg = `📜💀 [${sObj.name} — CAPITOLO II]: **16 danni** e **+2 Veleno ☣️** al nemico, ma i vapori tossici infliggono **-4 PV a tutta la Compagnia**!`;
+                } else {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 26);
+                    nextCombat.puzzleArmorActive = false;
+                    const mainCol = (character.manaIdentity && character.manaIdentity[0]) ? character.manaIdentity[0] : "B";
+                    nextParty = nextParty.map(h => {
+                        if (h.id !== character.id) return h;
+                        let pool = Object.assign({}, h.manaPool || {});
+                        pool[mainCol] = 0;
+                        return Object.assign({}, h, { manaPool: pool });
+                    });
+                    msg = `📜💀 [${sObj.name} — CAPITOLO III FINALE]: Eclissi di Phyrexia! **26 danni** e Scudo Boss infranto, ma il vortice prosciuga a **0 il Mana ${mainCol}** di ${character.name}!`;
+                }
+            } else if (sagaId === "the_antiquities_war") {
+                if (chapterNum === 1) {
+                    const mCol = (character.manaIdentity && character.manaIdentity[0]) ? character.manaIdentity[0] : "U";
+                    nextParty = nextParty.map(h => {
+                        if (h.id !== character.id) return h;
+                        let pool = Object.assign({}, h.manaPool || {});
+                        pool[mCol] = (pool[mCol] || 0) + 2;
+                        return Object.assign({}, h, { treasures: (h.treasures || 0) + 1, manaPool: pool });
+                    });
+                    msg = `📜💧 [${sObj.name} — CAPITOLO I]: +2 Mana ${mCol} e +1 Pedina Tesoro 💎!`;
+                } else if (chapterNum === 2) {
+                    nextCombat.enemyBlueMana = Math.max(0, (nextCombat.enemyBlueMana || 0) - 2);
+                    setCounterspellShield(true);
+                    msg = `📜💧 [${sObj.name} — CAPITOLO II]: Drenati 2💧 Mana Blu al nemico e attivato Scudo Difensivo!`;
+                } else {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 18);
+                    nextCombat.puzzleArmorActive = false;
+                    msg = `📜💧 [${sObj.name} — CAPITOLO III FINALE]: Marcia dei Costrutti! **18 danni** a ${nextCombat.name} e Scudo Boss infranto!`;
+                }
+            } else if (sagaId === "binding_old_gods") {
+                if (chapterNum === 1) {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 10);
+                    nextCombat.poisonCounters = (nextCombat.poisonCounters || 0) + 2;
+                    msg = `📜🌳 [${sObj.name} — CAPITOLO I]: **10 danni** e **+2 Veleno ☣️** a ${nextCombat.name}!`;
+                } else if (chapterNum === 2) {
+                    nextCombat.dc = Math.max(14, nextCombat.dc - 1);
+                    nextParty = nextParty.map(h => h.status !== "dead" ? Object.assign({}, h, { currentHP: Math.min(getFinalStats(h).maxHP, h.currentHP + 10) }) : h);
+                    msg = `📜🌳 [${sObj.name} — CAPITOLO II]: **+10 PV** alla Compagnia e -1 CD al nemico!`;
+                } else {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 18);
+                    setGiantGrowthActive(true);
+                    msg = `📜🌳 [${sObj.name} — CAPITOLO III FINALE]: **18 danni** e Crescita Gigante (+6 al D20) attivata!`;
+                }
+            } else {
+                if (chapterNum === 1) {
+                    nextParty = nextParty.map(h => h.id === character.id ? Object.assign({}, h, { gold: (h.gold || 0) + 20, treasures: (h.treasures || 0) + 1 }) : h);
+                    msg = `📜🔥 [${sObj.name} — CAPITOLO I]: +20 Monete d'Oro 🪙 e +1 Tesoro 💎!`;
+                } else if (chapterNum === 2) {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 12);
+                    setGiantGrowthActive(true);
+                    msg = `📜🔥 [${sObj.name} — CAPITOLO II]: **12 danni** e +6 al prossimo tiro D20!`;
+                } else {
+                    nextCombat.currentHP = Math.max(1, nextCombat.currentHP - 20);
+                    msg = `📜🔥 [${sObj.name} — CAPITOLO III FINALE]: Riflesso di Kiki-Jiki! **20 danni** a ${nextCombat.name}!`;
+                }
+            }
+
+            return { combat: nextCombat, party: nextParty, logMsg: msg };
+        };
+
+        // Schiera una Saga in battaglia (Massimo 1 Saga per Piano/Regione!)
+        const activateSagaInBattle = (sagaId) => {
+            if (!combatState || !character) {
+                return alert("⚔️ Puoi schierare una Saga solo durante un combattimento nell'Arena!");
+            }
+            if (combatState.activeSaga) {
+                return alert("C'è già una Saga attiva in questo scontro!");
+            }
+            const curZone = getZoneVisualConfig(character.currentNode).zoneId;
+            const zoneLabel = getZoneVisualConfig(character.currentNode).regionName;
+            if (sagasUsedByZone && sagasUsedByZone[curZone]) {
+                return alert(`⛔ Hai già utilizzato il potere di una Saga in questo Piano/Regione (${zoneLabel})!\n\nPotrai schierare una nuova Saga solo quando viaggerai in un altro Piano o Regione.`);
+            }
+
+            const updatedZones = Object.assign({}, sagasUsedByZone);
+            updatedZones[curZone] = sagaId;
+            setSagasUsedByZone(updatedZones);
+            try { localStorage.setItem('rpg_sagas_used_zones', JSON.stringify(updatedZones)); } catch (e) {}
+
+            const currentList = party.length > 0 ? party : [character];
+            const res = triggerSagaChapterEffect(sagaId, 1, combatState, currentList);
+            savePartyState(res.party);
+            setShowSagasModal(false);
+            setEventBanner(res.logMsg);
+
+            setCombatState(Object.assign({}, res.combat, {
+                activeSaga: { id: sagaId, name: RPG_SAGAS_DB[sagaId].name, chapter: 1 },
+                log: [res.logMsg].concat(combatState.log).slice(0, 8)
+            }));
+        };
+
+        // 2. INCANTESIMI DEL MONDO (WORLD ENCHANTMENTS — SCATTANO SUI CRITICI O RANDOM COI BOSS!)
+        const WORLD_ENCHANTMENTS_DB = [
+            { id: "sulfuric_vortex", name: "🌋 Vortice Sulfureo (World Enchantment)", desc: "Pioggia di fuoco simmetrica: a ogni round infligge 5 danni al Mostro e 2 danni agli Eroi!" },
+            { id: "mana_flare", name: "⚡ Fiammata di Mana (World Enchantment)", desc: "Sovraccarico di Leyline: a ogni round +1 Mana agli Eroi e tutti i colpi infliggono +3 danni!" },
+            { id: "the_abyss", name: "🌑 L'Abisso di Pendrell (World Enchantment)", desc: "Gravità Abissale: a ogni round il Mostro perde 6 PV e la sua Difesa (CD) scende di -1!" },
+            { id: "concordant_crossroads", name: "🌪️ Crocevia Concordante (World Enchantment)", desc: "Frenesia del Mondo: Difesa del Mostro ridotta di -2 CD, ma il suo attacco sale di +2!" }
+        ];
+
+        const maybeTriggerRandomWorldEnchantment = (cState, triggerReason) => {
+            if (!cState || cState.worldEnchantment) return { enchanted: null, msg: "" };
+            if (Math.random() > 0.65) return { enchanted: null, msg: "" };
+            const picked = WORLD_ENCHANTMENTS_DB[Math.floor(Math.random() * WORLD_ENCHANTMENTS_DB.length)];
+            return {
+                enchanted: picked,
+                msg: `🌍⚡ ANOMALIA PLANARE (${triggerReason})! Lo scontro squarcia il cielo attivando l'Incantesimo del Mondo **${picked.name}**: ${picked.desc}`
+            };
+        };
+
+        // 3. INCASTONATURA DELLE PIETRE DEL POTERE (RUNE SULLE ARMI + MAESTRIA ARTEFICE/NANO)
+        const POWERSTONE_RUNES_DB = [
+            { id: "rune_lifelink", name: "🩸 Runa del Sangue di Sengir", kw: "Legame Vitale", stat: "str", bonus: 1, desc: "Aggiunge Legame Vitale e +1 FOR all'arma" },
+            { id: "rune_deathtouch", name: "☠️ Runa del Veleno di Urborg", kw: "Tocco Letale", stat: "agi", bonus: 1, desc: "Aggiunge Tocco Letale e +1 AGI all'arma" },
+            { id: "rune_first_strike", name: "⚡ Runa del Fulmine di Keld", kw: "Attacco Improvviso", stat: "str", bonus: 1, desc: "Aggiunge Attacco Improvviso e +1 FOR all'arma" },
+            { id: "rune_trample", name: "🦏 Runa del Behemoth", kw: "Travolgere", stat: "con", bonus: 2, desc: "Aggiunge Travolgere e +2 COS all'arma" },
+            { id: "rune_vigilance", name: "🛡️ Runa dell'Angelo di Serra", kw: "Cautela", stat: "mag", bonus: 2, desc: "Aggiunge Cautela e +2 MAG all'arma" }
+        ];
+
+        const socketRuneIntoWeapon = (runeObj) => {
+            if (!character || !character.equipped || !character.equipped.weapon) {
+                return alert("Devi avere un'Arma equipaggiata nello slot Arma per incastonare una Pietra del Potere!");
+            }
+            if (combatState) return alert("Non puoi incastonare Rune durante il combattimento!");
+
+            const isMasterCrafter = character.classId === "artefice" || character.secondaryClassId === "artefice" || character.raceId === "nano";
+            const maxRunes = isMasterCrafter ? 2 : 1;
+            const goldCost = isMasterCrafter ? 0 : 30;
+
+            const wpn = Object.assign({}, character.equipped.weapon);
+            const currentRunes = Array.isArray(wpn.socketedRunes) ? wpn.socketedRunes.slice() : [];
+            if (currentRunes.length >= maxRunes) {
+                return alert(`⛔ Quest'arma ha già raggiunto il limite di Rune incastonate (${currentRunes.length}/${maxRunes})!${!isMasterCrafter ? "\n\n💡 Solo gli Artefici e i Nani possono incastonare 2 Rune sulla stessa arma!" : ""}`);
+            }
+            if ((character.treasures || 0) < 1 || (character.gold || 0) < goldCost) {
+                return alert(`Per incastonare questa Pietra del Potere ti servono 1 Pedina Tesoro (💎)${goldCost > 0 ? ` e ${goldCost} Monete d'Oro (🪙)` : " (0 Oro grazie a Maestria Artefice/Nano)"}!`);
+            }
+
+            currentRunes.push(runeObj.id);
+            wpn.socketedRunes = currentRunes;
+            wpn[runeObj.stat] = (wpn[runeObj.stat] || 0) + runeObj.bonus;
+            const kws = Array.isArray(wpn.keywords) ? wpn.keywords.slice() : [];
+            if (kws.indexOf(runeObj.kw) === -1) kws.push(runeObj.kw);
+            wpn.keywords = kws;
+            if (wpn.name.indexOf(" [Runica]") === -1) wpn.name = wpn.name + " [Runica]";
+
+            const newEq = Object.assign({}, character.equipped, { weapon: wpn });
+            const updated = Object.assign({}, character, {
+                equipped: newEq,
+                treasures: character.treasures - 1,
+                gold: (character.gold || 0) - goldCost
+            });
+            saveCharState(updated);
+            setShowRunesModal(false);
+            setEventBanner(`💎⚡ PIETRA DEL POTERE INCASTONATA! **${wpn.name}** acquisisce **${runeObj.kw}** e **+${runeObj.bonus} ${runeObj.stat.toUpperCase()}**!`);
+        };
+
+        // 4. LA FOSSA DELLA CABALA (MODALITÀ SURVIVAL A ONDATE CON RECORD SU SCHEDA A4)
+        const startCabalPitWave = (waveNum) => {
+            const w = waveNum || 1;
+            const allKeys = Object.keys(MTG_BESTIARY);
+            const pool = w % 3 === 0
+                ? allKeys.filter(k => MTG_BESTIARY[k].isBoss)
+                : allKeys.filter(k => !MTG_BESTIARY[k].isBoss);
+            const chosenKey = pool[Math.floor(Math.random() * pool.length)] || "goblin_pack";
+
+            setShowCabalPitModal(false);
+            startMonsterEncounter(chosenKey, character.currentNode);
+            setTimeout(() => {
+                setCombatState(prev => {
+                    if (!prev) return prev;
+                    const waveMult = 1 + (w - 1) * 0.15;
+                    const boostedHP = Math.round(prev.maxHP * waveMult);
+                    return Object.assign({}, prev, {
+                        name: `[Ondata Fossa ${w}] ` + prev.name,
+                        isCabalPitWave: w,
+                        maxHP: boostedHP,
+                        currentHP: boostedHP,
+                        dc: prev.dc + Math.floor((w - 1) / 2),
+                        dmg: prev.dmg + Math.floor(w / 2),
+                        log: [`🗼🔥 FOSSA DELLA CABALA — ONDATA ${w}! Sopravvivi per registrare un nuovo Record A4!`].concat(prev.log)
+                    });
+                });
+            }, 60);
+        };
       
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
             const mTemplate = MTG_BESTIARY[monsterKey] || MTG_BESTIARY["goblin_pack"];
@@ -8306,6 +8690,26 @@
                 log: [`👹 ${mTemplate.name} (${scaledHP} PV • CD ${scaledDC} • Danno ${scaledDmg}${flyingMonster ? " • 🦅 Volante" : " • 🐾 Terrestre"}) tira Iniziativa: ${mInitTotal}!${rogueliteScarNote}`]
             };
 
+            // --- PASSO 3 INSERITO QUI ---
+            // 1. Se un eroe indossa tutti e 3 i pezzi del Set di Kaldra, schiera GRATIS l'Avatar di Kaldra 4/4!
+            if (character && getEquipmentSetInfo(character).fullKaldra && !character.activeToken) {
+                const kaldraTok = { name: "👑 Avatar di Kaldra (Pedina 4/4 Indistruttibile)", dmg: 9, scryfall: "Kaldra Compleat", desc: "Evocato gratis dal Set Completo di Kaldra (+9 danni/round o Scudo Mortale)!" };
+                saveCharState(Object.assign({}, character, { activeToken: kaldraTok }));
+                baseCombat.log.unshift(`👑⚡ RISONANZA COMPLETA DI KALDRA (3/3)! **${character.name}** evoca gratuitamente l'**Avatar di Kaldra 4/4** al suo fianco!`);
+            }
+
+            // 2. Nei combattimenti contro i Boss c'è un 25% di probabilità di risvegliare subito un Incantesimo del Mondo!
+            if (isBossMob && Math.random() < 0.25) {
+                const wEnch = WORLD_ENCHANTMENTS_DB[Math.floor(Math.random() * WORLD_ENCHANTMENTS_DB.length)];
+                baseCombat.worldEnchantment = wEnch;
+                if (wEnch.id === "concordant_crossroads") {
+                    baseCombat.dc = Math.max(15, baseCombat.dc - 2);
+                    baseCombat.dmg += 2;
+                }
+                baseCombat.log.unshift(`🌍✨ METEO PLANARE ATTIVO: **${wEnch.name}** (${wEnch.desc})!`);
+            }
+            // --- FINE PASSO 3 ---
+
             setLastRollInfo(null);
             setEventBanner(null);
             setShowMerchant(false);
@@ -8321,7 +8725,7 @@
             }
             window.scrollTo(0, 0);
         };
-
+      
         const submitHeroInitiativeRoll = (d20Val) => {
             if (!combatState || combatState.phase !== "initiative") return;
             const activeParty = party.length > 0 ? party : [character];
@@ -8403,6 +8807,44 @@
                             extraLog.push(`🐾⚔️ **${h.activeToken.name}** di ${h.name} attacca automaticamente infliggendo **${tokDmg} danni**!`);
                         }
                     });
+
+                   // AVANZAMENTO AUTOMATICO CAPITOLI II E III DELLA SAGA DI MAGIC ATTIVA!
+                    if (updatedCombatState.activeSaga && updatedCombatState.activeSaga.chapter < 3) {
+                        const nextChap = updatedCombatState.activeSaga.chapter + 1;
+                        const sagaRes = triggerSagaChapterEffect(updatedCombatState.activeSaga.id, nextChap, updatedCombatState, updatedPartyList);
+                        updatedCombatState = sagaRes.combat;
+                        updatedPartyList = sagaRes.party;
+                        savePartyState(updatedPartyList);
+                        if (sagaRes.logMsg) extraLog.push(sagaRes.logMsg);
+                        updatedCombatState.activeSaga = nextChap >= 3
+                            ? null
+                            : Object.assign({}, updatedCombatState.activeSaga, { chapter: nextChap });
+                    }
+
+                    // EFFETTO DI INIZIO ROUND DELL'INCANTESIMO DEL MONDO (SE ATTIVO)!
+                    if (updatedCombatState.worldEnchantment) {
+                        const we = updatedCombatState.worldEnchantment;
+                        if (we.id === "sulfuric_vortex") {
+                            updatedCombatState.currentHP = Math.max(1, updatedCombatState.currentHP - 5);
+                            updatedPartyList = updatedPartyList.map(h => h.status === "alive" && h.currentHP > 2 ? Object.assign({}, h, { currentHP: h.currentHP - 2 }) : h);
+                            savePartyState(updatedPartyList);
+                            extraLog.push(`🌋 Vortice Sulfureo: -5 PV a ${updatedCombatState.name} e -2 PV agli Eroi!`);
+                        } else if (we.id === "mana_flare") {
+                            updatedPartyList = updatedPartyList.map(h => {
+                                if (h.status === "dead") return h;
+                                const mCol = (h.manaIdentity && h.manaIdentity[0]) ? h.manaIdentity[0] : "R";
+                                let pool = Object.assign({}, h.manaPool || {});
+                                pool[mCol] = Math.min(12, (pool[mCol] || 0) + 1);
+                                return Object.assign({}, h, { manaPool: pool });
+                            });
+                            savePartyState(updatedPartyList);
+                            extraLog.push(`⚡ Fiammata di Mana: tutti gli Eroi ricevono +1 Mana extra!`);
+                        } else if (we.id === "the_abyss") {
+                            updatedCombatState.currentHP = Math.max(1, updatedCombatState.currentHP - 6);
+                            updatedCombatState.dc = Math.max(14, updatedCombatState.dc - 1);
+                            extraLog.push(`🌑 L'Abisso di Pendrell: ${updatedCombatState.name} perde 6 PV e -1 CD!`);
+                        }
+                    }
 
                     if (updatedCombatState.key === "llanowar_troll") {
                         updatedCombatState.currentHP = Math.min(updatedCombatState.maxHP, updatedCombatState.currentHP + 4);
@@ -8587,6 +9029,17 @@
             const mRoll = Math.floor(Math.random() * 20) + 1;
             const isCrit = mRoll === 20;
             const isMiss = mRoll <= 4;
+
+            if (isCrit) {
+                triggerEpicImpact("crit_red");
+                if (!combatState.worldEnchantment) {
+                    const weRes = maybeTriggerRandomWorldEnchantment(combatState, "Colpo Critico del Boss");
+                    if (weRes.enchanted) {
+                        combatState.worldEnchantment = weRes.enchanted;
+                        turnLog.unshift(weRes.msg);
+                    }
+                }
+            }
 
             if (isMiss) {
                 turnLog.unshift(`🛡️ ${combatState.name} sferra un colpo (Dado ${mRoll}), ma manca il bersaglio!`);
@@ -8794,6 +9247,36 @@
                 localStorage.setItem('rpg_chronicle', JSON.stringify(chronicle));
             } catch (e) {}
 
+           // 1. SBLOCCA UNA NUOVA SAGA DI MAGIC QUANDO SCONFIGGI UN GRANDE BOSS!
+            if (combatState.isBoss) {
+                const allSagaIds = Object.keys(RPG_SAGAS_DB);
+                const missingSagas = allSagaIds.filter(id => unlockedSagas.indexOf(id) === -1);
+                if (missingSagas.length > 0) {
+                    const newSagaId = missingSagas[0];
+                    const nextSagas = unlockedSagas.concat([newSagaId]);
+                    setUnlockedSagas(nextSagas);
+                    try { localStorage.setItem('rpg_unlocked_sagas', JSON.stringify(nextSagas)); } catch (e) {}
+                    rogueliteRecoveryBanner += `\n📜✨ NUOVA SAGA CONQUISTATA DAL BOSS: Hai sbloccato **${RPG_SAGAS_DB[newSagaId].name}** (utilizzabile 1 volta per Piano)!`;
+                }
+            }
+
+            // 2. SE ERA UN'ONDATA DELLA FOSSA DELLA CABALA, AGGIORNA IL RECORD A4 E PROPONI L'ONDATA SUCCESSIVA!
+            if (combatState.isCabalPitWave) {
+                const clearedWave = combatState.isCabalPitWave;
+                const newRecord = Math.max(cabalPitRecord, clearedWave);
+                setCabalPitRecord(newRecord);
+                try { localStorage.setItem('rpg_cabal_pit_record', String(newRecord)); } catch (e) {}
+                rogueliteRecoveryBanner += `\n🗼🏆 ONDATA ${clearedWave} DELLA FOSSA SUPERATA (Record A4: Ondata ${newRecord})!`;
+                if (clearedWave % 3 === 0) {
+                    rogueliteRecoveryBanner += ` 🌟 Benedizione ogni 3 Ondate: +15 PV a tutti e +1 Tesoro 💎!`;
+                }
+                setTimeout(() => {
+                    if (window.confirm(`🗼 FOSSA DELLA CABALA — ONDATA ${clearedWave} VINTA!\n\nVuoi lanciarti subito nell'ONDATA ${clearedWave + 1} (più difficile ma più ricca), oppure ritirarti nella Storia col bottino?`)) {
+                        startCabalPitWave(clearedWave + 1);
+                    }
+                }, 400);
+            }
+
             setCombatState(null);
 
             const currentUpdatedActive = partyWithMvp.find(h => h.id === lastActiveHero.id) || partyWithMvp[0];
@@ -8953,6 +9436,16 @@
             newPoison += firstOutcome.poisonAdded;
             dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + firstOutcome.dmg;
             turnLog.unshift(firstOutcome.text);
+          if (firstOutcome.isCrit) {
+                triggerEpicImpact("crit_gold");
+                if (!combatState.worldEnchantment) {
+                    const weRes = maybeTriggerRandomWorldEnchantment(combatState, "20 Naturale Critico");
+                    if (weRes.enchanted) {
+                        combatState.worldEnchantment = weRes.enchanted;
+                        turnLog.unshift(weRes.msg);
+                    }
+                }
+            }
 
             if (firstOutcome.isFumble) {
                 newHero.currentHP = Math.max(0, newHero.currentHP - 3);
@@ -9951,6 +10444,24 @@
                                 👹 Bestiario ({getUnlockedBestiaryKeys().length})
                             </button>
                             <button
+                                onClick={() => setShowSagasModal(!showSagasModal)}
+                                className="bg-amber-600 hover:bg-amber-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                📜 Saghe ({unlockedSagas.length}/5)
+                            </button>
+                            <button
+                                onClick={() => setShowRunesModal(!showRunesModal)}
+                                className="bg-cyan-700 hover:bg-cyan-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            >
+                                💎 Rune Armi
+                            </button>
+                            <button
+                                onClick={() => setShowCabalPitModal(!showCabalPitModal)}
+                                className="bg-purple-900 hover:bg-purple-800 text-purple-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-400"
+                            >
+                                🗼 Fossa (Rec: {cabalPitRecord})
+                            </button>
+                            <button
                                 onClick={() => setShowSaveModal(!showSaveModal)}
                                 className="bg-emerald-600 hover:bg-emerald-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
                             >
@@ -10615,7 +11126,205 @@
                         </div>,
                         document.body
                     )}
-                  
+
+                  {/* SEQUENZA CINEMATOGRAFICA EVOCAZIONE COMANDANTE (FASE 1: AURA ORO -> FASE 2: ALLARME ROSSO NEMICO) */}
+                    {commanderActionCinematic && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setCommanderActionCinematic(null)}
+                            className={`fixed inset-0 w-screen h-[100dvh] z-[10020] flex flex-col items-center justify-center p-4 cursor-pointer transition-colors duration-300 ${
+                                commanderActionCinematic.phase === "summon"
+                                    ? "bg-black/90"
+                                    : "bg-red-950/90"
+                            }`}
+                        >
+                            {commanderActionCinematic.phase === "summon" ? (
+                                /* FASE 1: ILLUMINAZIONE DORATA ATTORNO AL COMANDANTE EVOCATO */
+                                <div className="max-w-md w-full bg-gray-950 border-4 border-amber-300 rounded-3xl overflow-hidden shadow-[0_0_85px_rgba(250,204,21,0.95)] animate-fade text-center">
+                                    <div className="bg-gradient-to-r from-amber-600 via-yellow-300 to-amber-600 text-black font-black text-xs uppercase tracking-widest py-1.5 px-3">
+                                        👑 {commanderActionCinematic.heroName} Evoca il suo Comandante!
+                                    </div>
+                                    <div className="w-full h-64 sm:h-72 bg-black relative overflow-hidden">
+                                        <img
+                                            src={commanderActionCinematic.cmdArt}
+                                            alt={commanderActionCinematic.cmdName}
+                                            onError={(e) => {
+                                                const cur = e.target.getAttribute("src");
+                                                if (cur !== commanderActionCinematic.cmdFallbackImg && cur !== "./mtg-bg.jpg") {
+                                                    e.target.src = commanderActionCinematic.cmdFallbackImg;
+                                                } else if (cur !== "./mtg-bg.jpg") {
+                                                    e.target.src = "./mtg-bg.jpg";
+                                                }
+                                            }}
+                                            className="w-full h-full object-cover object-top scale-105"
+                                        />
+                                        <div className="absolute inset-0 ring-4 ring-inset ring-amber-300/80 pointer-events-none" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-amber-400/20" />
+                                    </div>
+                                    <div className="p-4 space-y-1.5 bg-gradient-to-b from-gray-950 to-amber-950/60">
+                                        <h2 className="text-2xl sm:text-3xl font-black text-amber-300 drop-shadow-[0_2px_10px_rgba(250,204,21,0.8)]">
+                                            {commanderActionCinematic.cmdName}
+                                        </h2>
+                                        <p className="text-xs text-amber-100 font-bold">
+                                            Mazzo: «{commanderActionCinematic.deckName}»
+                                        </p>
+                                        <p className="text-xs text-emerald-300 font-black pt-1">
+                                            ✨ +20 PV Rigenerati • Colori di Mana Infusi • Attacco in corso...
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* FASE 2: ILLUMINAZIONE ROSSA D'ALLARME ATTORNO AL NEMICO COLPITO */
+                                <div className="max-w-md w-full bg-gray-950 border-4 border-red-500 rounded-3xl overflow-hidden shadow-[0_0_95px_rgba(239,68,68,1)] animate-pulse text-center">
+                                    <div className="bg-red-600 text-white font-black text-xs uppercase tracking-widest py-1.5 px-3">
+                                        🚨 IMPATTO SUPREMO SUL NEMICO! 🚨
+                                    </div>
+                                    <div className="w-full h-64 sm:h-72 bg-black relative overflow-hidden">
+                                        <img
+                                            src={commanderActionCinematic.enemyArt}
+                                            alt={commanderActionCinematic.enemyName}
+                                            onError={(e) => {
+                                                if (e.target.getAttribute("src") !== "./mtg-bg.jpg") {
+                                                    e.target.src = "./mtg-bg.jpg";
+                                                }
+                                            }}
+                                            className="w-full h-full object-cover object-center brightness-90"
+                                        />
+                                        <div className="absolute inset-0 bg-red-600/35 mix-blend-multiply pointer-events-none" />
+                                        <div className="absolute inset-0 ring-8 ring-inset ring-red-500 animate-ping opacity-60 pointer-events-none" />
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/35 p-3">
+                                            <span className="text-4xl sm:text-5xl font-black text-red-400 drop-shadow-[0_4px_15px_rgba(0,0,0,1)]">
+                                                💥 -{commanderActionCinematic.dmg} PV!
+                                            </span>
+                                            <span className="mt-2 bg-amber-400 text-black font-black text-[11px] uppercase px-3 py-1 rounded-full shadow-lg">
+                                                🛡️ Scudo Puzzle Infranto!
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="p-4 space-y-1 bg-gradient-to-b from-gray-950 to-red-950">
+                                        <h2 className="text-xl sm:text-2xl font-black text-red-300">
+                                            {commanderActionCinematic.enemyName}
+                                        </h2>
+                                        <p className="text-xs text-gray-200 font-bold">
+                                            Colpito in pieno da <span className="text-amber-300">{commanderActionCinematic.cmdName}</span>!
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>,
+                        document.body
+                    )}
+
+                   {/* MODALE SAGHE DI MAGIC (SBLOCCATE DAI BOSS, MASSIMO 1 PER PIANO/REGIONE) */}
+                    {showSagasModal && (
+                        <div className="bg-gray-900 border-4 border-amber-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <div>
+                                    <h3 className="text-amber-300 font-black text-sm uppercase">
+                                        📜 Le Saghe del Multiverso (1 Utilizzo per Piano • Sbloccate sconfiggendo i Grandi Boss)
+                                    </h3>
+                                    <p className="text-[11px] text-gray-300">
+                                        Piano attuale: <b className="text-white">{getZoneVisualConfig(character.currentNode).regionName}</b> — Stato Saga in questo Piano: {sagasUsedByZone[getZoneVisualConfig(character.currentNode).zoneId] ? <span className="text-red-400 font-black">🔒 Già Usata qui</span> : <span className="text-emerald-400 font-black">✅ Disponibile in Battaglia!</span>}
+                                    </p>
+                                </div>
+                                <button onClick={() => setShowSagasModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            {unlockedSagas.length === 0 ? (
+                                <p className="text-xs text-gray-400 italic p-2 bg-gray-950 rounded-xl border border-gray-800">
+                                    Non hai ancora sbloccato Saghe! Sconfiggi un Grande Boss nella Storia per ottenere la tua prima Saga (inclusa la temibile Saga Nera delle Scritture di Phyrexia).
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {unlockedSagas.map(sId => {
+                                        const sObj = RPG_SAGAS_DB[sId];
+                                        if (!sObj) return null;
+                                        return (
+                                            <div key={sId} className={`p-3 rounded-xl border-2 flex flex-col justify-between gap-2 ${sObj.isDarkSaga ? "bg-purple-950/60 border-purple-500" : "bg-gray-950 border-amber-500/70"}`}>
+                                                <div className="space-y-1">
+                                                    <p className="text-white font-black text-xs">{sObj.name}</p>
+                                                    <p className="text-gray-300 text-[10px]">• {sObj.ch1Desc}</p>
+                                                    <p className="text-gray-300 text-[10px]">• {sObj.ch2Desc}</p>
+                                                    <p className="text-amber-300 text-[10px] font-bold">• {sObj.ch3Desc}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => activateSagaInBattle(sId)}
+                                                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-1.5 rounded-lg text-xs shadow"
+                                                >
+                                                    📜 Schiera Saga in Battaglia (Cap. I Subito)
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* MODALE INCASTONATURA RUNE DELLE PIETRE DEL POTERE */}
+                    {showRunesModal && (
+                        <div className="bg-gray-900 border-4 border-cyan-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-cyan-300 font-black text-sm uppercase">
+                                    💎 Incastonatura Pietre del Potere — Arma di {character.name}: {character.equipped && character.equipped.weapon ? character.equipped.weapon.name : "Nessuna"}
+                                </h3>
+                                <button onClick={() => setShowRunesModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Incastona una Runa nella tua arma (Costo: <b>1 Tesoro 💎 + 30 Oro 🪙</b>, max 1 Runa).
+                                {(character.classId === "artefice" || character.secondaryClassId === "artefice" || character.raceId === "nano") && (
+                                    <span className="text-emerald-300 font-black block mt-1">
+                                        🛠️ Maestria Artefice / Nano Attiva: Puoi incastonare fino a 2 RUNE sulla stessa arma pagando 0 ORO!
+                                    </span>
+                                )}
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {POWERSTONE_RUNES_DB.map(r => (
+                                    <div key={r.id} className="bg-gray-950 border border-cyan-500/50 rounded-xl p-2.5 flex justify-between items-center gap-2">
+                                        <div>
+                                            <p className="text-white font-black text-xs">{r.name}</p>
+                                            <p className="text-cyan-300 text-[10px]">{r.desc}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => socketRuneIntoWeapon(r)}
+                                            className="bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
+                                        >
+                                            💎 Incastona
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODALE FOSSA DELLA CABALA (MODALITÀ SURVIVAL A ONDATE) */}
+                    {showCabalPitModal && (
+                        <div className="bg-gray-900 border-4 border-purple-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3 text-center">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <h3 className="text-purple-300 font-black text-sm uppercase">
+                                    🗼 La Fossa della Cabala — Arena Survival a Ondate (Record A4: Ondata {cabalPitRecord})
+                                </h3>
+                                <button onClick={() => setShowCabalPitModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                Affronta ondate consecutive di mostri sempre più forti! Ogni 3 ondate vinte affronterai un Boss e riceverai una Benedizione curativa e Tesori. Il tuo Record verrà stampato sulla Scheda A4!
+                            </p>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                <button
+                                    onClick={() => startCabalPitWave(1)}
+                                    className="bg-purple-600 hover:bg-purple-500 text-white font-black py-2.5 px-5 rounded-xl text-xs shadow-lg"
+                                >
+                                    ⚔️ Inizia Scalata (Ondata 1)
+                                </button>
+                                {cabalPitRecord >= 3 && (
+                                    <button
+                                        onClick={() => startCabalPitWave(cabalPitRecord)}
+                                        className="bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 px-5 rounded-xl text-xs shadow-lg"
+                                    >
+                                        🔥 Riprendi dal tuo Record (Ondata {cabalPitRecord})
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                   
                   
                     {/* MINI-SCHEDA EROE + RISERVA DI MANA + GRIMORIO 3 SLOT MAGIE */}
@@ -11077,7 +11786,7 @@
                     {/* ARENA DI COMBATTIMENTO (LAYOUT MOBILE CORRETTO SENZA SCRITTE TAGLIATE) */}
                     {/* ==================================================================== */}
                     {combatState && dormantTimer === 0 && (
-                        <div className="bg-gradient-to-b from-red-950 via-gray-900 to-gray-950 border-4 border-red-500 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-fade space-y-4 overflow-hidden">
+                        <div className={`bg-gradient-to-b from-red-950 via-gray-900 to-gray-950 border-4 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(239,68,68,0.4)] animate-fade space-y-4 overflow-hidden transition-transform ${screenShakeEffect === "crit_gold" ? "border-yellow-300 scale-[1.02] shadow-[0_0_50px_rgba(250,204,21,0.9)]" : (screenShakeEffect === "crit_red" ? "border-red-300 -rotate-1 scale-[1.02]" : "border-red-500")}`}>
                             {/* INTESTAZIONE IMPILATA CHE NON ESCE MAI DALLA PAGINA! */}
                             <div className="flex flex-col gap-2 border-b border-red-800 pb-3">
                                 <div className="flex flex-wrap justify-between items-center gap-1">
@@ -11188,6 +11897,17 @@
                                     </div>
                                 </div>
                             )}
+
+                            {combatState.activeSaga && (
+                           <div className="bg-amber-950/90 border border-amber-400 rounded-xl p-2 text-center text-xs font-black text-amber-200">
+                               {combatState.activeSaga.name} — Capitolo Attuale: {combatState.activeSaga.chapter} / 3 (Avanza al prossimo round!)
+                           </div>
+                       )}
+                       {combatState.worldEnchantment && (
+                           <div className="bg-indigo-950/90 border border-cyan-400 rounded-xl p-2 text-center text-xs font-black text-cyan-200">
+                               🌍 {combatState.worldEnchantment.name}: <span className="font-normal text-gray-200">{combatState.worldEnchantment.desc}</span>
+                           </div>
+                       )}
 
                             {/* FASE 1: INIZIATIVA */}
                             {combatState.phase === "initiative" && (
@@ -12180,6 +12900,16 @@
                                     {(character.spells || []).map(sId => MTG_SPELLS_DB[sId] ? `${MTG_SPELLS_DB[sId].name} (${MTG_SPELLS_DB[sId].costAmount}${MTG_SPELLS_DB[sId].costColor})` : sId).join(" • ")}
                                 </p>
                             </div>
+                            {stats.activeSets && stats.activeSets.length > 0 && (
+                                <p className="font-black text-amber-800 text-[10px] border-t border-gray-300 pt-0.5">
+                                    {stats.activeSets.join(" • ")}
+                                </p>
+                            )}
+                            {cabalPitRecord > 0 && (
+                                <p className="font-black text-purple-900 text-[10px] border-t border-gray-300 pt-0.5">
+                                    🗼 Record Fossa della Cabala: Ondata {cabalPitRecord}
+                                </p>
+                            )}
                         </div>
 
                         <div className="bg-white/80 p-2.5 rounded-xl border-2 border-gray-800 space-y-1">
