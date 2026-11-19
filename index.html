@@ -56,7 +56,48 @@
     .track-button:hover { background: #2a2a2a; }
     .track-button.active-track { background: rgba(212, 175, 55, 0.15); border-color: #d4af37; color: #d4af37; }
     .native-audio-player { width: 100%; outline: none; margin-top: 1rem; }
+
+    /* Nasconde la barra superiore e i fumetti popup di Google Translate su tutta l'app */
+    .skiptranslate iframe, .goog-te-banner-frame, .goog-tooltip, #goog-gt-tt { display: none !important; }
+    .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+    body { top: 0px !important; }
+    #google_translate_element { display: none !important; }
   </style>
+
+  <script>
+    // Patch anti-crash per React quando Google Translate modifica i nodi di testo nel DOM
+    if (typeof Node === 'function' && Node.prototype) {
+      var origRemoveChild = Node.prototype.removeChild;
+      Node.prototype.removeChild = function(child) {
+        if (child.parentNode !== this) return child;
+        return origRemoveChild.apply(this, arguments);
+      };
+      var origInsertBefore = Node.prototype.insertBefore;
+      Node.prototype.insertBefore = function(newNode, referenceNode) {
+        if (referenceNode && referenceNode.parentNode !== this) {
+          if (newNode instanceof Node) return this.appendChild(newNode);
+          return newNode;
+        }
+        return origInsertBefore.apply(this, arguments);
+      };
+    }
+
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'it',
+        includedLanguages: 'it,en',
+        autoDisplay: false
+      }, 'google_translate_element');
+
+      // Protegge automaticamente le caselle di ricerca Scryfall e i box export 1 Card Name
+      setInterval(function() {
+        document.querySelectorAll('textarea, input[type="text"], code, pre').forEach(function(el) {
+          if (!el.classList.contains('notranslate')) el.classList.add('notranslate');
+        });
+      }, 1000);
+    }
+  </script>
+  <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -10718,7 +10759,7 @@
                                                     <div className="flex items-center gap-2.5 min-w-0">
                                                         <img src={cmd.img} className="w-12 h-12 rounded-lg object-cover object-top border border-orange-400 shrink-0" alt={cmd.name} />
                                                         <div className="min-w-0">
-                                                            <p className="text-white font-black text-xs truncate">{cmd.name}</p>
+                                                            <p className="text-white font-black text-xs truncate notranslate">{cmd.name}</p>
                                                             <p className="text-gray-400 text-[10px] truncate">
                                                                 {usedByHero ? `Già evocato da ${usedByHero.name}` : `Mazzo: ${cmd.deckName}`}
                                                             </p>
@@ -10750,7 +10791,7 @@
                                         {getSavedAppCollectionCards().map((cObj, idx) => (
                                             <div key={idx} className="bg-gray-950 border border-emerald-500/60 rounded-xl p-2 flex items-center justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-white font-bold text-xs truncate">{cObj.name}</p>
+                                                    <p className="text-white font-bold text-xs truncate notranslate">{cObj.name}</p>
                                                     <p className="text-emerald-300 text-[10px] truncate">{cObj.type || "Carta Collezione"}</p>
                                                 </div>
                                                 <button
