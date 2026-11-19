@@ -7594,11 +7594,11 @@
             setTimeout(() => {
                 setCommanderActionCinematic(prev => prev ? Object.assign({}, prev, { phase: "strike" }) : null);
                 triggerEpicImpact("crit_red");
-            }, 2100);
+            }, 4200);
 
             setTimeout(() => {
                 setCommanderActionCinematic(null);
-            }, 3900);
+            }, 8000);
 
             const cmdMsg = `🌌👑 RICHIAMO DEL VERO COMANDANTE! **${character.name}** evoca **${cmdObj.name}** (dal mazzo *"${cmdObj.deckName}"*): infligge **${cmdDmg} danni divini**, spezza lo Scudo Puzzle, cura +20 PV e infonde i suoi colori di Mana!`;
             setEventBanner(cmdMsg);
@@ -8329,6 +8329,270 @@
         const [showCabalPitModal, setShowCabalPitModal] = useState(false);
         const [screenShakeEffect, setScreenShakeEffect] = useState(null); // "crit_gold" | "crit_red"
         const [commanderActionCinematic, setCommanderActionCinematic] = useState(null);
+        // ====================================================================
+        // --- 1. HUB CITTÀ, 2. FLAG CONSOLE MASTER, 3. SCRYFALL EQUIPAGGIAMENTI,
+        // --- 4. SPLASH ENTRATA BOSS (7s) E MUSICA DI BATTAGLIA CON FADE-OUT ---
+        // ====================================================================
+        const [showCityHubModal, setShowCityHubModal] = useState(false);
+        const [zoomedItemModal, setZoomedItemModal] = useState(null); // { item, shopEntry }
+        const [encounterIntroSplash, setEncounterIntroSplash] = useState(null);
+        const [useMasterConsole, setUseMasterConsole] = useState(() => {
+            try { return localStorage.getItem('rpg_use_master_console') === 'true'; } catch (e) { return false; }
+        });
+
+        const toggleMasterConsoleFlag = (checkedVal) => {
+            setUseMasterConsole(checkedVal);
+            try { localStorage.setItem('rpg_use_master_console', checkedVal ? 'true' : 'false'); } catch (e) {}
+        };
+
+        // --- CACHE IMMAGINI SCRYFALL ART CROP PER TUTTI GLI EQUIPAGGIAMENTI ---
+        const [itemArtCache, setItemArtCache] = useState(() => {
+            try { return JSON.parse(localStorage.getItem('rpg_item_art_cache_v1') || "{}"); } catch (e) { return {}; }
+        });
+
+        const ITEM_SCRYFALL_MAP = {
+            bonesplitter: "Bonesplitter",
+            vulshok_morningstar: "Vulshok Morningstar",
+            whispersilk_dagger: "Silver-Inlaid Dagger",
+            isochron_scepter: "Isochron Scepter",
+            o_naginata: "O-Naginata",
+            loxodon_warhammer: "Loxodon Warhammer",
+            shadowspear: "Shadowspear",
+            umezawa_jitte: "Umezawa's Jitte",
+            quietus_spike: "Quietus Spike",
+            grafted_wargear: "Grafted Wargear",
+            maul_skyclaves: "Maul of the Skyclaves",
+            batterskull: "Batterskull",
+            staff_domination: "Staff of Domination",
+            kaldra_sword: "Sword of Kaldra",
+            sword_light_shadow: "Sword of Light and Shadow",
+            sword_feast_famine: "Sword of Feast and Famine",
+            sword_fire_ice: "Sword of Fire and Ice",
+            sword_sinew_steel: "Sword of Sinew and Steel",
+            godsend: "Godsend",
+            embercleave: "Embercleave",
+            blackblade: "Blackblade Reforged",
+            colossus_hammer: "Colossus Hammer",
+            champion_helm: "Champion's Helm",
+            horned_helm: "Horned Helm",
+            hood_assassin: "Prowler's Helm",
+            skullclamp: "Skullclamp",
+            sensei_top: "Sensei's Divining Top",
+            kaldra_helm: "Helm of Kaldra",
+            helm_of_the_host: "Helm of the Host",
+            helm_host: "Helm of the Host",
+            whisper_cloak: "Whispersilk Cloak",
+            celestial_armor: "Serra's Embrace",
+            assault_suit: "Assault Suit",
+            urza_robes: "Robe of the Archmagi",
+            darksteel_plate: "Darksteel Plate",
+            akroma_armor: "Akroma's Memorial",
+            argentum_armor: "Argentum Armor",
+            venom_bracers: "Basilisk Collar",
+            brawler_plate: "Brawler's Plate",
+            gauntlets_power: "Gauntlet of Might",
+            pyromancer_goggles: "Pyromancer's Goggles",
+            shield_kaldra: "Shield of Kaldra",
+            kaldra_shield: "Shield of Kaldra",
+            Swiftfoot_boots: "Swiftfoot Boots",
+            berserker_greaves: "Fleetfeather Sandals",
+            trailblazer_boots: "Trailblazer's Boots",
+            lightning_greaves: "Lightning Greaves",
+            sol_ring: "Sol Ring",
+            coalition_relic: "Coalition Relic",
+            mox_diamond: "Mox Diamond",
+            chromatic_lantern: "Chromatic Lantern",
+            nevinyrral_disk: "Nevinyrral's Disk",
+            the_mirari: "Mirari",
+            mana_crypt: "Mana Crypt",
+            black_lotus: "Black Lotus",
+            start_body: "Traveler's Cloak",
+            start_feet: "Leather Armor",
+            start_wpn: "Short Sword",
+            start_tome: "Spellbook",
+            start_blade: "Trusty Machete",
+            start_daggers: "Silver-Inlaid Dagger",
+            start_scepter: "Scepter of Dominance"
+        };
+
+        // Pre-carica in 1 sola chiamata batch tutti gli art_crop degli equipaggiamenti (zero blocco 429!)
+        useEffect(() => {
+            const allItemKeys = Object.keys(ITEM_SCRYFALL_MAP);
+            const missingKeys = allItemKeys.filter(k => !itemArtCache[k]);
+            if (missingKeys.length === 0) return;
+
+            let isCancelled = false;
+            const fetchBatchItemArts = async () => {
+                let updatedCache = Object.assign({}, itemArtCache);
+                const uniqueNames = [];
+                missingKeys.forEach(k => {
+                    const cName = ITEM_SCRYFALL_MAP[k];
+                    if (cName && uniqueNames.indexOf(cName) === -1) uniqueNames.push(cName);
+                });
+
+                for (let i = 0; i < uniqueNames.length; i += 70) {
+                    const chunk = uniqueNames.slice(i, i + 70).map(n => ({ name: n }));
+                    try {
+                        const res = await fetch("https://api.scryfall.com/cards/collection", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ identifiers: chunk })
+                        });
+                        const data = await res.json();
+                        if (data && Array.isArray(data.data)) {
+                            data.data.forEach(cardObj => {
+                                let cropUrl = "";
+                                if (cardObj.image_uris && cardObj.image_uris.art_crop) {
+                                    cropUrl = cardObj.image_uris.art_crop;
+                                } else if (cardObj.card_faces && cardObj.card_faces.length > 0 && cardObj.card_faces[0].image_uris && cardObj.card_faces[0].image_uris.art_crop) {
+                                    cropUrl = cardObj.card_faces[0].image_uris.art_crop;
+                                }
+                                if (cropUrl && cardObj.name) {
+                                    const cardLower = cardObj.name.toLowerCase();
+                                    allItemKeys.forEach(iKey => {
+                                        const targetLower = (ITEM_SCRYFALL_MAP[iKey] || "").toLowerCase();
+                                        if (cardLower === targetLower || cardLower.indexOf(targetLower) !== -1) {
+                                            updatedCache[iKey] = cropUrl;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }
+
+                if (!isCancelled) {
+                    setItemArtCache(updatedCache);
+                    try { localStorage.setItem('rpg_item_art_cache_v1', JSON.stringify(updatedCache)); } catch (e) {}
+                }
+            };
+            fetchBatchItemArts();
+            return () => { isCancelled = true; };
+        }, []);
+
+        const getItemArtUrl = (itemObj) => {
+            if (!itemObj) return "./mtg-bg.jpg";
+            if (itemObj.id && itemArtCache && itemArtCache[itemObj.id]) return itemArtCache[itemObj.id];
+            return "./mtg-bg.jpg";
+        };
+
+        // Verifica chiara di Slot e Compatibilità di un equipaggiamento rispetto all'eroe attivo (Fix Vito!)
+        const getItemCompatibilityDetails = (rawItem, heroObj) => {
+            const slotKey = detectRealSlot(rawItem);
+            const slotObj = EQUIP_SLOTS.find(s => s.key === slotKey) || { key: slotKey, label: "Oggetto", icon: "🎒" };
+            const dbRef = (rawItem && rawItem.id && RPG_ITEMS_DB[rawItem.id]) ? RPG_ITEMS_DB[rawItem.id] : {};
+            const item = Object.assign({}, dbRef, rawItem, { slot: slotKey });
+
+            const reqGroup = getItemClassRequirement(item);
+            let reqClassLabel = "Tutte le Classi";
+            if (reqGroup === "martial") reqClassLabel = "Solo Marziali (Guerriero, Barbaro, Soldato, Cavaliere)";
+            else if (reqGroup === "caster") reqClassLabel = "Solo Incantatori (Mago, Necromante, Chierico, Sciamano, Artefice)";
+            else if (reqGroup === "rogue") reqClassLabel = "Solo Furtivi (Farabutto, Assassino, Ninja)";
+            else if (reqGroup === "martial_rogue") reqClassLabel = "Marziali o Furtivi (No Incantatori puri)";
+
+            let reasons = [];
+            if (heroObj) {
+                const totalLvl = (heroObj.level || 1) + (heroObj.secondaryLevel || 0);
+                const reqLvl = item.minLvl || 1;
+                if (totalLvl < reqLvl) reasons.push("Richiede Livello " + reqLvl + "+");
+                if (item.reqLegendary && !heroObj.isLegendary && !heroObj.sparkIgnited) reasons.push("Solo Leggendario / Planeswalker");
+
+                const arch = getHeroArchetypes(heroObj);
+                if (reqGroup === "martial" && !arch.isMartial) reasons.push("Solo Classi Marziali");
+                if (reqGroup === "caster" && !arch.isCaster) reasons.push("Solo Incantatori");
+                if (reqGroup === "rogue" && !arch.isRogue) reasons.push("Solo Classi Furtive");
+                if (reqGroup === "martial_rogue" && !arch.isMartial && !arch.isRogue) reasons.push("Solo Marziali o Furtivi");
+
+                const hasLantern = heroObj.equipped && heroObj.equipped.artifact && heroObj.equipped.artifact.id === 'chromatic_lantern';
+                if (item.reqMana && (!heroObj.manaIdentity || heroObj.manaIdentity.indexOf(item.reqMana) === -1) && !hasLantern) {
+                    reasons.push("Richiede Mana " + item.reqMana);
+                }
+            }
+
+            return {
+                item: item,
+                slotObj: slotObj,
+                reqClassLabel: reqClassLabel,
+                usable: reasons.length === 0,
+                reasons: reasons
+            };
+        };
+
+        // --- MUSICA DA BATTAGLIA PERSISTENTE CON FADE-OUT AUTOMATICO A FINE SCONTRO ---
+        const rpgBattleAudioRef = useRef(null);
+        const rpgBattleFadeRef = useRef(null);
+        const encounterSplashTimeoutRef = useRef(null);
+
+        const stopBattleMusicWithFade = () => {
+            if (rpgBattleFadeRef.current) clearInterval(rpgBattleFadeRef.current);
+            const aud = rpgBattleAudioRef.current;
+            if (!aud) return;
+            const startVol = aud.volume || 0.38;
+            let step = 0;
+            const totalSteps = 25; // 2.5 secondi di sfumatura morbida
+            rpgBattleFadeRef.current = setInterval(() => {
+                step++;
+                const nextVol = Math.max(0, startVol * (1 - step / totalSteps));
+                try { aud.volume = nextVol; } catch (e) {}
+                if (step >= totalSteps) {
+                    clearInterval(rpgBattleFadeRef.current);
+                    rpgBattleFadeRef.current = null;
+                    try { aud.pause(); aud.currentTime = 0; } catch (e) {}
+                    rpgBattleAudioRef.current = null;
+                }
+            }, 100);
+        };
+
+        useEffect(() => {
+            if (combatState) {
+                if (rpgBattleFadeRef.current) {
+                    clearInterval(rpgBattleFadeRef.current);
+                    rpgBattleFadeRef.current = null;
+                }
+                if (!rpgBattleAudioRef.current) {
+                    try {
+                        const track = combatState.isBoss ? "bgm_battaglia.mp3" : "bgm_battaglia.mp3";
+                        const a = new Audio(track);
+                        a.loop = true;
+                        a.volume = 0.38;
+                        a.play().catch(() => {});
+                        rpgBattleAudioRef.current = a;
+                    } catch (e) {}
+                } else {
+                    try {
+                        rpgBattleAudioRef.current.volume = 0.38;
+                        if (rpgBattleAudioRef.current.paused) rpgBattleAudioRef.current.play().catch(() => {});
+                    } catch (e) {}
+                }
+            } else {
+                if (rpgBattleAudioRef.current) {
+                    stopBattleMusicWithFade();
+                }
+            }
+        }, [Boolean(combatState)]);
+
+        // Pulizia audio se si esce dal GDR
+        useEffect(() => {
+            return () => {
+                if (rpgBattleFadeRef.current) clearInterval(rpgBattleFadeRef.current);
+                if (encounterSplashTimeoutRef.current) clearTimeout(encounterSplashTimeoutRef.current);
+                if (rpgBattleAudioRef.current) {
+                    try { rpgBattleAudioRef.current.pause(); } catch (e) {}
+                    rpgBattleAudioRef.current = null;
+                }
+            };
+        }, []);
+
+        // Helper per aprire un servizio cittadino chiudendo prima l'Hub Città
+        const openCityService = (serviceName) => {
+            setShowCityHubModal(false);
+            setShowMerchant(serviceName === "merchant");
+            setShowMercenaryModal(serviceName === "mercenary");
+            setShowKrarkModal(serviceName === "krark");
+            setShowBlacksmithModal(serviceName === "blacksmith");
+            setShowAlchemyModal(serviceName === "alchemy");
+            setShowRunesModal(serviceName === "runes");
+        };
       
         const [unlockedSagas, setUnlockedSagas] = useState(() => {
             try { return JSON.parse(localStorage.getItem('rpg_unlocked_sagas') || "[]"); } catch (e) { return []; }
@@ -8750,6 +9014,27 @@
                 baseCombat.log.unshift(`🌍✨ METEO PLANARE ATTIVO: **${wEnch.name}** (${wEnch.desc})!`);
             }
             // --- FINE PASSO 3 ---
+
+            // --- SPLASH CINEMATOGRAFICO DI ENTRATA MOSTRO / BOSS (7 SECONDI + MUSICA BATTAGLIA!) ---
+            const cachedSplashArt = (bestiaryArtCache && bestiaryArtCache[monsterKey])
+                ? bestiaryArtCache[monsterKey]
+                : (MONSTER_SCRYFALL_MAP[monsterKey]
+                    ? ("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(MONSTER_SCRYFALL_MAP[monsterKey]) + "&format=image&version=art_crop")
+                    : "./rpg_monster_default.png");
+
+            if (encounterSplashTimeoutRef.current) clearTimeout(encounterSplashTimeoutRef.current);
+            setEncounterIntroSplash({
+                name: mTemplate.name,
+                isBoss: isBossMob,
+                img: cachedSplashArt,
+                maxHP: baseCombat.maxHP,
+                dc: baseCombat.dc,
+                dmg: baseCombat.dmg,
+                desc: mTemplate.desc || ""
+            });
+            encounterSplashTimeoutRef.current = setTimeout(() => {
+                setEncounterIntroSplash(null);
+            }, 7000);
 
             setLastRollInfo(null);
             setEventBanner(null);
@@ -10427,9 +10712,10 @@
 
             return (
                 <div className="max-w-3xl mx-auto p-2 sm:p-4 animate-fade pb-24 space-y-4">
-                    {/* BARRA COMANDI SUPERIORE */}
-                    <div className="bg-gray-800 p-3 rounded-xl border border-gray-600 flex flex-wrap justify-between items-center gap-2 shadow-lg">
-                        <div className="flex gap-1.5 flex-wrap">
+                    {/* BARRA COMANDI SUPERIORE PULITA (CON HUB CITTÀ & GRUPPO BATTAGLIA) */}
+                    <div className="bg-gray-800/95 p-3 rounded-xl border border-gray-600 space-y-2.5 shadow-lg">
+                        {/* RIGA 1: GESTIONE, CITTÀ & ESPLORAZIONE */}
+                        <div className="flex flex-wrap items-center gap-1.5">
                             <button onClick={() => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); setRpgView("sheet"); }} className="bg-amber-500 hover:bg-amber-400 text-black font-black px-3 py-2 rounded-lg text-xs shadow">
                                 🪪 Scheda & Stampa
                             </button>
@@ -10437,16 +10723,22 @@
                                 👥 Party ({party.length})
                             </button>
                             <button
-                                onClick={() => startMonsterEncounter( Object.keys(MTG_BESTIARY)[Math.floor(Math.random() * 6)], character.currentNode )}
+                                onClick={() => setShowCityHubModal(!showCityHubModal)}
+                                className={`font-black px-3.5 py-2 rounded-lg text-xs shadow border transition-all ${showCityHubModal ? "bg-amber-400 text-black border-white scale-105" : "bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 text-black border-yellow-300"}`}
+                            >
+                                🏘️ Vai in Città ({character.gold || 0} 🪙)
+                            </button>
+                            <button
+                                onClick={() => startMonsterEncounter(Object.keys(MTG_BESTIARY)[Math.floor(Math.random() * 6)], character.currentNode)}
                                 className="bg-red-700 hover:bg-red-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
                             >
                                 ⚔️ Caccia Mostri
                             </button>
-                          <button
-                                onClick={() => setShowBlacksmithModal(!showBlacksmithModal)}
-                                className="bg-orange-700 hover:bg-orange-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                            <button
+                                onClick={() => setShowCabalPitModal(!showCabalPitModal)}
+                                className="bg-purple-900 hover:bg-purple-800 text-purple-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-400"
                             >
-                                ⚒️ Fabbro (+1/+3)
+                                🗼 Fossa (Rec: {cabalPitRecord})
                             </button>
                             <button
                                 onClick={() => setShowBountyModal(!showBountyModal)}
@@ -10461,62 +10753,18 @@
                                 ⛺ Bivacco
                             </button>
                             <button
-                                onClick={() => setShowMerchant(!showMerchant)}
-                                className="bg-yellow-600 hover:bg-yellow-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
-                            >
-                                ⚖️ Mercante ({character.gold || 0} 🪙)
-                            </button>
-                            <button
-                                onClick={() => setShowKrarkModal(!showKrarkModal)}
-                                className="bg-rose-700 hover:bg-rose-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
-                            >
-                                🎰 Krark
-                            </button>
-                            <button
-                                onClick={() => setShowAlchemyModal(!showAlchemyModal)}
-                                className="bg-teal-700 hover:bg-teal-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
-                            >
-                                🧪 Alchimia
-                            </button>
-                            <button
                                 onClick={() => setShowBestiaryModal(!showBestiaryModal)}
                                 className="bg-slate-700 hover:bg-slate-600 text-amber-300 font-black px-3 py-2 rounded-lg text-xs shadow border border-amber-500/50"
                             >
                                 👹 Bestiario ({getUnlockedBestiaryKeys().length})
                             </button>
                             <button
-                                onClick={() => setShowSagasModal(!showSagasModal)}
-                                className="bg-amber-600 hover:bg-amber-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
-                            >
-                                📜 Saghe ({unlockedSagas.length}/5)
-                            </button>
-                            <button
-                                onClick={() => setShowRunesModal(!showRunesModal)}
-                                className="bg-cyan-700 hover:bg-cyan-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
-                            >
-                                💎 Rune Armi
-                            </button>
-                            <button
-                                onClick={() => setShowCabalPitModal(!showCabalPitModal)}
-                                className="bg-purple-900 hover:bg-purple-800 text-purple-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-400"
-                            >
-                                🗼 Fossa (Rec: {cabalPitRecord})
-                            </button>
-                            <button
                                 onClick={() => setShowSaveModal(!showSaveModal)}
                                 className="bg-emerald-600 hover:bg-emerald-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
                             >
-                                📲 Salva / Trasferisci
+                                📲 Salva
                             </button>
-                            {(hasDeadCompanions || playMode === "party") && (
-                                <button
-                                    onClick={() => setShowMercenaryModal(!showMercenaryModal)}
-                                    className={`font-black px-3 py-2 rounded-lg text-xs shadow ${hasDeadCompanions ? "bg-emerald-600 text-white animate-pulse border border-white" : "bg-teal-800 text-teal-100"}`}
-                                >    
-                                  🍻 {hasDeadCompanions ? "Sostituisci Caduto (Mercenari)" : "Locanda Mercenari"}
-                                </button>
-                            )}
-                            {/* 2ª CLASSE: Si sblocca solo dopo 2 Grandi Boss Continentali oppure dopo l'Obliteratore di Koilos! */}
+
                             {!character.secondaryClassId && ((character.completedArcs || []).length >= 2 || (character.completedArcs || []).indexOf("koilos_gates") !== -1 || character.sparkIgnited) && (
                                 <button
                                     onClick={() => setShowMulticlassModal(true)}
@@ -10525,8 +10773,6 @@
                                     🏛️ Sblocca 2ª Classe
                                 </button>
                             )}
-
-                            {/* 2° COLORE DI MANA (dopo il 1° Grande Boss) e 3° COLORE DI MANA (dopo aver acceso la Scintilla su Shiv)! */}
                             {(
                                 ((character.manaIdentity || []).length === 1 && ((character.completedArcs || []).length >= 1 || character.isPhyrexian)) ||
                                 ((character.manaIdentity || []).length === 2 && character.sparkIgnited)
@@ -10535,21 +10781,9 @@
                                     onClick={() => setShowLeylineModal(!showLeylineModal)}
                                     className="bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow border border-cyan-300 animate-pulse"
                                 >
-                                    🌈 Sblocca {(character.manaIdentity || []).length + 1}° Colore Mana
+                                    🌈 +{(character.manaIdentity || []).length + 1}° Colore Mana
                                 </button>
                             )}
-                            <button
-                                onClick={signDemonicPact}
-                                className="bg-red-950 hover:bg-red-800 text-red-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-red-500"
-                            >
-                                😈 Patto Demoniaco
-                            </button>
-                            <button
-                                onClick={() => setShowAppBridgeModal(!showAppBridgeModal)}
-                                className="bg-amber-600 hover:bg-amber-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
-                            >
-                                🃏 Mazzi & Collezione
-                            </button>
                             {partyHasPlaneswalker && (
                                 <button
                                     onClick={() => applyRewardsAndMove(character, null, "planeswalker_nexus", "🌌 Viaggio Planare attivato!")}
@@ -10560,19 +10794,95 @@
                             )}
                         </div>
 
-                        <div className="flex bg-gray-900 p-1 rounded-lg border border-amber-500/60">
-                            <button onClick={() => { setDiceMode("auto"); setPendingRollChoice(null); setPendingCombatAction(null); }} className={`px-2.5 py-1 rounded text-xs font-black transition-all ${diceMode === "auto" ? "bg-amber-500 text-black shadow" : "text-gray-400"}`}>
-                                🤖 Dado Auto
-                            </button>
-                            <button onClick={() => setDiceMode("manual")} className={`px-2.5 py-1 rounded text-xs font-black transition-all ${diceMode === "manual" ? "bg-emerald-500 text-black shadow" : "text-gray-400"}`}>
-                                🖐️ Dado Reale
-                            </button>
-                        </div>
+                        {/* RIGA 2: ARSENALE DI BATTAGLIA (VICINI TRA LORO) + DADI & VOCE */}
+                        <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-gray-700">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-[10px] font-black uppercase text-red-400 mr-0.5">⚔️ Battaglia:</span>
+                                <button
+                                    onClick={() => setShowSagasModal(!showSagasModal)}
+                                    className="bg-amber-600 hover:bg-amber-500 text-black font-black px-2.5 py-1.5 rounded-lg text-xs shadow"
+                                >
+                                    📜 Saghe ({unlockedSagas.length}/5)
+                                </button>
+                                <button
+                                    onClick={signDemonicPact}
+                                    className="bg-red-950 hover:bg-red-800 text-red-200 font-black px-2.5 py-1.5 rounded-lg text-xs shadow border border-red-500"
+                                >
+                                    😈 Patto Demoniaco
+                                </button>
+                                <button
+                                    onClick={() => setShowAppBridgeModal(!showAppBridgeModal)}
+                                    className="bg-orange-500 hover:bg-orange-400 text-black font-black px-2.5 py-1.5 rounded-lg text-xs shadow"
+                                >
+                                    🃏 Mazzi & Collezione
+                                </button>
+                            </div>
 
-                        <button onClick={() => toggleSpeech(`${currentNodeObj.title}. ${storyText}`)} className={`px-3 py-2 rounded-lg font-black text-xs shadow border ${isSpeaking ? "bg-red-700 border-red-400 text-white animate-pulse" : "bg-gray-700 border-gray-500 text-gray-200"}`}>
-                            {isSpeaking ? "🛑 Ferma" : "🎙️ Narra"}
-                        </button>
+                            <div className="flex items-center gap-1.5">
+                                <div className="flex bg-gray-900 p-1 rounded-lg border border-amber-500/60">
+                                    <button onClick={() => { setDiceMode("auto"); setPendingRollChoice(null); setPendingCombatAction(null); }} className={`px-2 py-1 rounded text-[11px] font-black transition-all ${diceMode === "auto" ? "bg-amber-500 text-black shadow" : "text-gray-400"}`}>
+                                        🤖 Dado Auto
+                                    </button>
+                                    <button onClick={() => setDiceMode("manual")} className={`px-2 py-1 rounded text-[11px] font-black transition-all ${diceMode === "manual" ? "bg-emerald-500 text-black shadow" : "text-gray-400"}`}>
+                                        🖐️ Dado Reale
+                                    </button>
+                                </div>
+
+                                <button onClick={() => toggleSpeech(`${currentNodeObj.title}. ${storyText}`)} className={`px-2.5 py-1.5 rounded-lg font-black text-xs shadow border ${isSpeaking ? "bg-red-700 border-red-400 text-white animate-pulse" : "bg-gray-700 border-gray-500 text-gray-200"}`}>
+                                    {isSpeaking ? "🛑 Ferma" : "🎙️ Narra"}
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* HUB CITTÀ / VILLAGGIO GDR (MERCANTE, LOCANDA, KRARK, FABBRO, ALCHIMIA, RUNE) */}
+                    {showCityHubModal && (
+                        <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
+                                <div>
+                                    <h3 className="text-amber-400 font-black text-base uppercase">
+                                        🏘️ Piazza della Città — Servizi per la Compagnia
+                                    </h3>
+                                    <p className="text-xs text-gray-300">
+                                        Eroe attivo: <b className="text-white">{character.name}</b> • Oro: <b className="text-yellow-400 notranslate">{character.gold || 0} 🪙</b> • Tesori: <b className="text-cyan-300 notranslate">{character.treasures || 0} 💎</b> • Cibo: <b className="text-emerald-300 notranslate">{character.food || 0} 🍖</b>
+                                    </p>
+                                </div>
+                                <button onClick={() => setShowCityHubModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Chiudi ✖</button>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                <button onClick={() => openCityService("merchant")} className="bg-yellow-950/70 hover:bg-yellow-900 border-2 border-yellow-500 p-3 rounded-xl text-left transition-all active:scale-95">
+                                    <span className="text-2xl block mb-1">⚖️</span>
+                                    <p className="text-yellow-300 font-black text-xs">Mercante Planare</p>
+                                    <p className="text-gray-300 text-[10px]">Compra e vendi armi, armature e pergamene</p>
+                                </button>
+                                <button onClick={() => openCityService("mercenary")} className={`border-2 p-3 rounded-xl text-left transition-all active:scale-95 ${hasDeadCompanions ? "bg-emerald-900 border-white animate-pulse" : "bg-teal-950/70 hover:bg-teal-900 border-teal-500"}`}>
+                                    <span className="text-2xl block mb-1">🍻</span>
+                                    <p className="text-teal-200 font-black text-xs">{hasDeadCompanions ? "Sostituisci Caduto!" : "Locanda Mercenari"}</p>
+                                    <p className="text-gray-300 text-[10px]">Recluta nuovi compagni per il Party</p>
+                                </button>
+                                <button onClick={() => openCityService("krark")} className="bg-rose-950/70 hover:bg-rose-900 border-2 border-rose-500 p-3 rounded-xl text-left transition-all active:scale-95">
+                                    <span className="text-2xl block mb-1">🎰</span>
+                                    <p className="text-rose-300 font-black text-xs">Tavolo di Krark</p>
+                                    <p className="text-gray-300 text-[10px]">Scommetti 2d20 o apri Scatole di Urza</p>
+                                </button>
+                                <button onClick={() => openCityService("blacksmith")} className="bg-orange-950/70 hover:bg-orange-900 border-2 border-orange-500 p-3 rounded-xl text-left transition-all active:scale-95">
+                                    <span className="text-2xl block mb-1">⚒️</span>
+                                    <p className="text-orange-300 font-black text-xs">Fabbro Runico (+1/+3)</p>
+                                    <p className="text-gray-300 text-[10px]">Potenzia l'equipaggiamento indossato</p>
+                                </button>
+                                <button onClick={() => openCityService("alchemy")} className="bg-teal-950/70 hover:bg-teal-900 border-2 border-teal-400 p-3 rounded-xl text-left transition-all active:scale-95">
+                                    <span className="text-2xl block mb-1">🧪</span>
+                                    <p className="text-teal-300 font-black text-xs">Laboratorio Alchemico</p>
+                                    <p className="text-gray-300 text-[10px]">Distilla Elisir con Cibo e Mana</p>
+                                </button>
+                                <button onClick={() => openCityService("runes")} className="bg-cyan-950/70 hover:bg-cyan-900 border-2 border-cyan-400 p-3 rounded-xl text-left transition-all active:scale-95">
+                                    <span className="text-2xl block mb-1">💎</span>
+                                    <p className="text-cyan-300 font-black text-xs">Rune Pietre del Potere</p>
+                                    <p className="text-gray-300 text-[10px]">Incastona abilità Magic sulle tue armi</p>
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* TIMER DI INCOSCIENZA (1 GIORNO E 4 ORE = 1 MINUTO E 4 SECONDI = 64s) */}
                     {dormantTimer > 0 && (
@@ -11689,31 +11999,32 @@
                         </div>
                     )}
 
-                    {/* BOTTEGA DEL MERCANTE PLANARE (COMPRA + VENDI EQUIPAGGIAMENTO DALLO ZAINO!) */}
+                    {/* BOTTEGA DEL MERCANTE PLANARE (CON IMMAGINI SCRYFALL, ICONE SLOT, COMPATIBILITÀ E TASTO VISUALIZZA!) */}
                     {showMerchant && (
                         <div className="bg-gray-900 border-4 border-yellow-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-4">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <div>
                                     <h3 className="text-yellow-400 font-black text-base uppercase">⚖️ Bottega del Mercante Planare (Compra & Vendi)</h3>
-                                    <p className="text-xs text-gray-300">Commercia per <b>{character.name}</b> (LIV {character.level} • Oro: <b className="text-yellow-300">{character.gold || 0} 🪙</b>)</p>
+                                    <p className="text-xs text-gray-300">Commercia per <b>{character.name}</b> ({character.classType || "Standard"} LIV {character.level} • Oro: <b className="text-yellow-300 notranslate">{character.gold || 0} 🪙</b>)</p>
                                 </div>
                                 <button onClick={() => setShowMerchant(false)} className="bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded">Chiudi ✖</button>
                             </div>
 
-                            {/* SEZIONE 1: VENDI OGGETTI DALLO ZAINO */}
+                            {/* SEZIONE 1: VENDI OGGETTI DALLO ZAINO (CLICCABILI PER VEDERE L'IMMAGINE!) */}
                             <div className="bg-gray-950 border border-amber-700/70 rounded-xl p-3 space-y-2">
                                 <p className="text-amber-300 font-black text-xs uppercase">
                                     🎒 Vendi Equipaggiamento dal tuo Zaino ({(character.inventory || []).length} oggetti):
                                 </p>
                                 {(character.inventory || []).length === 0 ? (
-                                    <p className="text-gray-500 text-xs italic">Il tuo zaino è vuoto (se vuoi vendere un oggetto indossato, rimettilo prima nello zaino dalla Scheda).</p>
+                                    <p className="text-gray-500 text-xs italic">Il tuo zaino è vuoto (per vendere un oggetto indossato, rimettilo prima nello zaino dalla Scheda).</p>
                                 ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-44 overflow-y-auto pr-1">
                                         {(character.inventory || []).map((invEntry, invIdx) => {
                                             const itemId = (typeof invEntry === "string") ? invEntry : (invEntry && invEntry.id ? invEntry.id : null);
                                             const dbItem = (typeof invEntry === "object" && invEntry !== null)
                                                 ? invEntry
                                                 : (itemId && RPG_ITEMS_DB[itemId] ? RPG_ITEMS_DB[itemId] : null);
+                                            const det = dbItem ? getItemCompatibilityDetails(dbItem, character) : null;
                                             const itemName = dbItem && dbItem.name ? dbItem.name : (itemId || "Oggetto");
                                             const statSum = dbItem
                                                 ? (Math.abs(dbItem.str || 0) + Math.abs(dbItem.agi || 0) + Math.abs(dbItem.mag || 0) + Math.abs(dbItem.con || 0))
@@ -11723,15 +12034,27 @@
 
                                             return (
                                                 <div key={invIdx} className="bg-gray-900 border border-amber-600/50 rounded-lg p-2 flex justify-between items-center gap-2">
-                                                    <div className="min-w-0">
-                                                        <p className="text-white font-bold text-xs truncate">{itemName}</p>
-                                                        {dbItem && <p className="text-gray-400 text-[10px] truncate">{formatItemBonuses(dbItem)}</p>}
+                                                    <div
+                                                        onClick={() => dbItem && setZoomedItemModal({ item: dbItem, shopEntry: null })}
+                                                        className="flex items-center gap-2 min-w-0 cursor-pointer"
+                                                    >
+                                                        {dbItem && (
+                                                            <img src={getItemArtUrl(dbItem)} alt={itemName} className="w-10 h-10 rounded object-cover border border-amber-500/60 shrink-0" />
+                                                        )}
+                                                        <div className="min-w-0">
+                                                            <p className="text-white font-bold text-xs truncate">
+                                                                {det ? det.slotObj.icon + " " : ""}{itemName}
+                                                            </p>
+                                                            <p className="text-gray-400 text-[10px]">
+                                                                {det ? det.slotObj.label : "Oggetto"} • Tocca per dettagli
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                     <button
                                                         onClick={() => sellItemFromInventory(invIdx)}
-                                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-2.5 py-1 rounded shrink-0 shadow"
+                                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs px-2.5 py-1.5 rounded shrink-0 shadow"
                                                     >
-                                                        Vendi +{sellPrice} 🪙
+                                                        +{sellPrice} 🪙
                                                     </button>
                                                 </div>
                                             );
@@ -11742,36 +12065,228 @@
 
                             {/* SEZIONE 2: ACQUISTA DAL CATALOGO DEL MERCANTE */}
                             <div className="space-y-1.5">
-                                <p className="text-yellow-300 font-black text-xs uppercase">🛒 Acquista Nuovi Artefatti & Rifornimenti:</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                                <p className="text-yellow-300 font-black text-xs uppercase">🛒 Acquista Artefatti, Armi & Rifornimenti (Tocca 👁️ Visualizza per tutte le statistiche):</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1">
                                     {MERCHANT_SHOP.map((entry, idx) => {
                                         const isToken = entry.type === "token";
                                         const isSpell = entry.type === "spell";
                                         const dbItem = (!isToken && !isSpell) ? RPG_ITEMS_DB[entry.id] : null;
                                         if (!isToken && !isSpell && !dbItem) return null;
+
                                         const itemName = (isToken || isSpell) ? entry.name : dbItem.name;
-                                        const itemDesc = (isToken || isSpell) ? entry.desc : formatItemBonuses(dbItem);
+                                        const compat = dbItem ? getItemCompatibilityDetails(dbItem, character) : null;
                                         const lockedByLvl = (character.level || 1) < (entry.minLvl || 1);
 
                                         return (
-                                            <div key={idx} className={`bg-gray-800 border rounded-xl p-2.5 flex justify-between items-center gap-2 ${lockedByLvl ? "border-red-900 opacity-60" : "border-gray-700"}`}>
-                                                <div className="min-w-0">
-                                                    <p className="text-white font-bold text-xs truncate">{itemName}</p>
-                                                    <p className="text-amber-400 text-[10px] truncate">{itemDesc}</p>
-                                                    {entry.minLvl > 1 && <p className="text-[9px] text-cyan-300 font-bold">Richiede Livello {entry.minLvl}+</p>}
+                                            <div key={idx} className={`bg-gray-800 border-2 rounded-xl p-2.5 flex flex-col justify-between gap-2 ${lockedByLvl ? "border-red-900/80 opacity-75" : (compat && !compat.usable ? "border-orange-600/70" : "border-gray-700")}`}>
+                                                <div className="flex items-start gap-2.5">
+                                                    {dbItem ? (
+                                                        <img
+                                                            src={getItemArtUrl(dbItem)}
+                                                            alt={itemName}
+                                                            loading="lazy"
+                                                            onClick={() => setZoomedItemModal({ item: dbItem, shopEntry: entry })}
+                                                            className="w-14 h-14 rounded-lg object-cover border border-amber-400/70 shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-14 h-14 rounded-lg bg-gray-900 border border-gray-600 flex items-center justify-center text-2xl shrink-0">
+                                                            {isSpell ? "📜" : (entry.id === "buy_food" ? "🍖" : "💎")}
+                                                        </div>
+                                                    )}
+                                                    <div className="min-w-0 flex-1 space-y-0.5">
+                                                        {compat && (
+                                                            <span className="inline-block bg-gray-950 text-amber-300 border border-amber-600/60 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
+                                                                {compat.slotObj.icon} {compat.slotObj.label}
+                                                            </span>
+                                                        )}
+                                                        <p className="text-white font-black text-xs leading-tight">{itemName}</p>
+                                                        {isToken || isSpell ? (
+                                                            <p className="text-gray-300 text-[10px] leading-snug">{entry.desc}</p>
+                                                        ) : (
+                                                            <p className={`text-[10px] font-bold leading-snug ${compat.usable ? "text-emerald-400" : "text-red-400"}`}>
+                                                                {compat.usable ? `✅ Utilizzabile da ${character.name}` : `⛔ ${compat.reasons.join(" • ")}`}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => buyFromMerchant(entry)}
-                                                    className="bg-yellow-500 hover:bg-yellow-400 text-black font-black text-xs px-3 py-1.5 rounded-lg shrink-0 shadow"
-                                                >
-                                                    {entry.cost} 🪙
-                                                </button>
+
+                                                <div className="flex items-center gap-1.5 pt-1 border-t border-gray-700/70">
+                                                    {dbItem && (
+                                                        <button
+                                                            onClick={() => setZoomedItemModal({ item: dbItem, shopEntry: entry })}
+                                                            className="flex-1 bg-indigo-700 hover:bg-indigo-600 text-white font-black text-[11px] py-1.5 px-2 rounded-lg shadow"
+                                                        >
+                                                            👁️ Visualizza
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => buyFromMerchant(entry)}
+                                                        className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-[11px] py-1.5 px-2 rounded-lg shadow"
+                                                    >
+                                                        🛒 Acquista ({entry.cost} 🪙)
+                                                    </button>
+                                                </div>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* MODALE VISUALIZZA EQUIPAGGIAMENTO A TUTTO SCHERMO (IMMAGINE SCRYFALL + STAT COMPLETE + REQUISITI!) */}
+                    {zoomedItemModal && zoomedItemModal.item && ReactDOM.createPortal(
+                        (() => {
+                            const det = getItemCompatibilityDetails(zoomedItemModal.item, character);
+                            const it = det.item;
+                            const shopEntry = zoomedItemModal.shopEntry;
+                            return (
+                                <div
+                                    onClick={() => setZoomedItemModal(null)}
+                                    className="fixed inset-0 w-screen h-[100dvh] z-[10015] bg-black/92 flex items-center justify-center p-4 animate-fade"
+                                >
+                                    <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="bg-gray-900 border-4 border-amber-500 rounded-2xl max-w-md w-full overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.5)] pb-4 space-y-3"
+                                    >
+                                        <div className="w-full h-56 sm:h-64 bg-black relative overflow-hidden border-b-2 border-amber-500/60">
+                                            <img
+                                                src={getItemArtUrl(it)}
+                                                alt={it.name}
+                                                className="w-full h-full object-cover object-center"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-black/50" />
+                                            <span className="absolute top-3 left-3 bg-amber-500 text-black text-xs font-black px-2.5 py-1 rounded-lg shadow">
+                                                {det.slotObj.icon} Slot: {det.slotObj.label}
+                                            </span>
+                                            <button
+                                                onClick={() => setZoomedItemModal(null)}
+                                                className="absolute top-3 right-3 bg-black/80 hover:bg-red-600 text-white font-black text-xs px-3 py-1.5 rounded-lg border border-gray-500"
+                                            >
+                                                Chiudi ✖
+                                            </button>
+                                            <h2 className="absolute bottom-3 left-4 right-4 text-xl font-black text-white drop-shadow-[0_2px_6px_rgba(0,0,0,1)]">
+                                                {it.name}
+                                            </h2>
+                                        </div>
+
+                                        <div className="px-4 space-y-3">
+                                            {/* STATISTICHE COMPLETE SENZA TAGLI */}
+                                            <div className="grid grid-cols-4 gap-1.5 text-center notranslate">
+                                                <div className="bg-gray-950 border border-gray-700 rounded-lg p-2">
+                                                    <span className="text-[10px] text-gray-400 font-bold block">FOR</span>
+                                                    <span className={`text-sm font-black ${(it.str || 0) > 0 ? "text-emerald-400" : ((it.str || 0) < 0 ? "text-red-400" : "text-gray-500")}`}>{(it.str || 0) > 0 ? "+" + it.str : (it.str || 0)}</span>
+                                                </div>
+                                                <div className="bg-gray-950 border border-gray-700 rounded-lg p-2">
+                                                    <span className="text-[10px] text-gray-400 font-bold block">AGI</span>
+                                                    <span className={`text-sm font-black ${(it.agi || 0) > 0 ? "text-emerald-400" : ((it.agi || 0) < 0 ? "text-red-400" : "text-gray-500")}`}>{(it.agi || 0) > 0 ? "+" + it.agi : (it.agi || 0)}</span>
+                                                </div>
+                                                <div className="bg-gray-950 border border-gray-700 rounded-lg p-2">
+                                                    <span className="text-[10px] text-gray-400 font-bold block">MAG</span>
+                                                    <span className={`text-sm font-black ${(it.mag || 0) > 0 ? "text-emerald-400" : ((it.mag || 0) < 0 ? "text-red-400" : "text-gray-500")}`}>{(it.mag || 0) > 0 ? "+" + it.mag : (it.mag || 0)}</span>
+                                                </div>
+                                                <div className="bg-gray-950 border border-gray-700 rounded-lg p-2">
+                                                    <span className="text-[10px] text-gray-400 font-bold block">COS</span>
+                                                    <span className={`text-sm font-black ${(it.con || 0) > 0 ? "text-emerald-400" : ((it.con || 0) < 0 ? "text-red-400" : "text-gray-500")}`}>{(it.con || 0) > 0 ? "+" + it.con : (it.con || 0)}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-gray-950 border border-gray-800 rounded-xl p-3 space-y-1.5 text-xs">
+                                                {it.keywords && it.keywords.length > 0 && (
+                                                    <p className="text-amber-300 font-black">
+                                                        ⚡ Abilità Magic: <span className="text-white">{it.keywords.join(", ")}</span>
+                                                    </p>
+                                                )}
+                                                <p className="text-gray-300">
+                                                    🛡️ <b>Classi Ammesse:</b> <span className="text-cyan-300 font-bold">{det.reqClassLabel}</span>
+                                                </p>
+                                                <p className="text-gray-300">
+                                                    ⭐ <b>Livello Richiesto:</b> <span className="text-white font-bold">Liv. {it.minLvl || 1}+</span>
+                                                    {it.reqLegendary && <span className="text-yellow-400 font-black ml-2">👑 Solo Leggendario</span>}
+                                                    {it.reqMana && <span className="text-orange-300 font-black ml-2">💧 Mana {it.reqMana}</span>}
+                                                </p>
+                                                {it.desc && <p className="text-gray-400 italic pt-1">{it.desc}</p>}
+                                            </div>
+
+                                            <div className={`p-2.5 rounded-xl border text-xs font-black text-center ${det.usable ? "bg-emerald-950/70 border-emerald-500 text-emerald-300" : "bg-red-950/70 border-red-500 text-red-300"}`}>
+                                                {det.usable
+                                                    ? `✅ ${character.name} può equipaggiare subito questo oggetto!`
+                                                    : `⛔ ${character.name} NON può equipaggiarlo: ${det.reasons.join(" • ")}`}
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                {shopEntry && (
+                                                    <button
+                                                        onClick={() => { buyFromMerchant(shopEntry); setZoomedItemModal(null); }}
+                                                        className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow"
+                                                    >
+                                                        🛒 Acquista ({shopEntry.cost} 🪙)
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => setZoomedItemModal(null)}
+                                                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-black py-2.5 rounded-xl text-xs uppercase border border-gray-600"
+                                                >
+                                                    Chiudi
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })(),
+                        document.body
+                    )}
+
+                    {/* SPLASH CINEMATOGRAFICO DI ENTRATA MOSTRO / BOSS (7 SECONDI + MUSICA BATTAGLIA!) */}
+                    {encounterIntroSplash && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setEncounterIntroSplash(null)}
+                            className={`fixed inset-0 w-screen h-[100dvh] z-[10018] flex flex-col items-center justify-center p-4 cursor-pointer animate-fade ${encounterIntroSplash.isBoss ? "bg-gradient-to-b from-red-950 via-black to-black" : "bg-black/95"}`}
+                        >
+                            <div className={`max-w-lg w-full rounded-3xl overflow-hidden border-4 shadow-2xl text-center space-y-0 ${encounterIntroSplash.isBoss ? "border-amber-400 shadow-[0_0_80px_rgba(239,68,68,0.9)]" : "border-red-500 shadow-[0_0_50px_rgba(220,38,38,0.6)]"}`}>
+                                {/* NOME GRANDE IN ALTO */}
+                                <div className={`p-4 space-y-1 ${encounterIntroSplash.isBoss ? "bg-gradient-to-r from-red-900 via-red-700 to-red-900" : "bg-gray-900"}`}>
+                                    <span className={`inline-block text-[10px] font-black uppercase tracking-widest px-3 py-0.5 rounded-full ${encounterIntroSplash.isBoss ? "bg-amber-400 text-black animate-pulse" : "bg-red-600 text-white"}`}>
+                                        {encounterIntroSplash.isBoss ? "👑 BOSS DEL MULTIVERSO IN ARRIVO!" : "⚔️ SCONTRO NELL'ARENA!"}
+                                    </span>
+                                    <h2 className="text-2xl sm:text-3xl font-black text-white drop-shadow-[0_3px_10px_rgba(0,0,0,1)] leading-tight" style={{ fontFamily: "Georgia, serif" }}>
+                                        {encounterIntroSplash.name}
+                                    </h2>
+                                </div>
+
+                                {/* IMMAGINE SCRYFALL CROP A IMPATTO */}
+                                <div className="w-full h-72 sm:h-80 bg-black relative overflow-hidden">
+                                    <img
+                                        src={encounterIntroSplash.img}
+                                        alt={encounterIntroSplash.name}
+                                        onError={(e) => {
+                                            if (e.target.getAttribute("src") !== "./rpg_monster_default.png") {
+                                                e.target.src = "./rpg_monster_default.png";
+                                            }
+                                        }}
+                                        className="w-full h-full object-cover object-center scale-105 animate-pulse"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
+                                    <div className="absolute bottom-3 left-3 right-3 flex justify-center gap-2 notranslate">
+                                        <span className="bg-black/80 border border-red-500 text-red-300 font-black text-xs px-3 py-1 rounded-full">❤️ {encounterIntroSplash.maxHP} PV</span>
+                                        <span className="bg-black/80 border border-amber-500 text-amber-300 font-black text-xs px-3 py-1 rounded-full">🛡️ CD {encounterIntroSplash.dc}</span>
+                                        <span className="bg-black/80 border border-orange-500 text-orange-300 font-black text-xs px-3 py-1 rounded-full">⚔️ {encounterIntroSplash.dmg} Danni</span>
+                                    </div>
+                                </div>
+
+                                {/* LORE & SKIP */}
+                                <div className="bg-gray-950 p-4 space-y-2">
+                                    <p className="text-xs sm:text-sm text-gray-200 italic leading-snug">
+                                        {encounterIntroSplash.desc}
+                                    </p>
+                                    <p className="text-[10px] text-amber-400/80 uppercase font-bold tracking-widest">
+                                        🎵 Musica di Battaglia Attiva • (Tocca per entrare subito nell'Arena)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
                     )}
 
                     {/* PANNELLO TRASFERIMENTO SALVATAGGIO TRA DISPOSITIVI */}
@@ -12587,7 +13102,7 @@
                     )}
 
                     {/* CONSOLE DEL DUNGEON MASTER (FIX MOBILE SENZA ELEMENTI FUORI SCHERMO) */}
-                    {playMode === "party" && (
+                    {useMasterConsole && (
                         <div className="bg-purple-950/40 border-2 border-purple-500 rounded-2xl p-3.5 shadow-xl space-y-3 animate-fade overflow-hidden w-full max-w-full">
                             <h3 className="text-purple-300 font-black text-xs sm:text-sm uppercase tracking-wider truncate">
                                 🎭 Console del Master (Eroe attivo: {character.name})
@@ -12694,10 +13209,12 @@
                         </div>
                     )}
 
-                    {/* EQUIPAGGIAMENTO A 6 SLOT E ZAINO CON SCAMBIO TRA COMPAGNI */}
+                    {/* EQUIPAGGIAMENTO A 6 SLOT E ZAINO CON IMMAGINI SCRYFALL CLICCABILI */}
                     <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-lg space-y-3">
                         <div className="flex flex-wrap justify-between items-center gap-2">
-                            <h4 className="text-xs font-black uppercase text-amber-400">🎒 Equipaggiamento GDR a 6 Slot ({character.name}) — Tocca uno slot per rimuovere</h4>
+                            <h4 className="text-xs font-black uppercase text-amber-400">
+                                🎒 Equipaggiamento GDR a 6 Slot ({character.name}) — Tocca l'immagine per ingrandire • Tocca lo slot per rimuovere
+                            </h4>
                             {party.length > 1 && (character.gold || 0) >= 10 && (
                                 <div className="flex flex-wrap gap-1 items-center">
                                     <span className="text-[10px] font-bold text-yellow-300">Passa 10🪙 a:</span>
@@ -12721,52 +13238,108 @@
                                     <div 
                                         key={sl.key} 
                                         onClick={() => eqItem && unequipSlot(sl.key)}
-                                        className={`bg-gray-900 p-2 rounded border ${eqItem ? "border-amber-500/60 cursor-pointer hover:bg-gray-800" : "border-gray-700"}`}
+                                        className={`bg-gray-900 p-2 rounded-lg border flex items-center gap-2.5 ${eqItem ? "border-amber-500/60 cursor-pointer hover:bg-gray-800" : "border-gray-700"}`}
                                     >
-                                        {sl.icon} {sl.label}: <span className="text-white">{eqItem ? eqItem.name : sl.empty}</span>
-                                        {eqItem && <span className="text-amber-400 text-[10px] block">{formatItemBonuses(eqItem)}</span>}
+                                        {eqItem ? (
+                                            <div
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setZoomedItemModal({ item: eqItem, shopEntry: null });
+                                                }}
+                                                className="relative w-12 h-12 rounded-lg overflow-hidden border border-amber-400 shrink-0 cursor-zoom-in hover:scale-105 transition-transform"
+                                                title="Tocca per vedere immagine e statistiche complete"
+                                            >
+                                                <img
+                                                    src={getItemArtUrl(eqItem)}
+                                                    alt={eqItem.name}
+                                                    loading="lazy"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <span className="absolute bottom-0 right-0 bg-black/80 text-[9px] px-1 rounded-tl">🔍</span>
+                                            </div>
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-lg bg-gray-950 border border-dashed border-gray-700 flex items-center justify-center text-lg shrink-0 opacity-60">
+                                                {sl.icon}
+                                            </div>
+                                        )}
+                                        <div className="min-w-0 flex-1">
+                                            <span className="text-[10px] text-gray-400 uppercase block">{sl.icon} {sl.label}</span>
+                                            <span className="text-white block truncate">{eqItem ? eqItem.name : sl.empty}</span>
+                                            {eqItem && <span className="text-amber-400 text-[10px] block truncate">{formatItemBonuses(eqItem)}</span>}
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
 
                         <div>
-                            <h5 className="text-[11px] font-black uppercase text-indigo-300 mb-1.5">Zaino Oggetti (Equipaggia o Scambia con il Party):</h5>
+                            <h5 className="text-[11px] font-black uppercase text-indigo-300 mb-1.5">Zaino Oggetti (Visualizza, Equipaggia o Scambia con il Party):</h5>
                             {character.inventory.length > 0 ? (
                                 <div className="space-y-2">
                                     {character.inventory.map((it, idx) => {
                                         const rSlot = detectRealSlot(it);
                                         const slObj = EQUIP_SLOTS.find(s => s.key === rSlot);
+                                        const isSpecialMalus = Boolean(it.isTrauma || it.isDemonicPact);
                                         return (
-                                           <div key={idx} className="bg-gray-900 border border-gray-700 p-2 rounded-lg flex flex-wrap justify-between items-center gap-2">
-                                                    <span className="text-xs font-bold text-white">
-                                                        {slObj ? slObj.icon : "🎒"} {it.name} <span className="text-amber-400">{formatItemBonuses(it)}</span>
-                                                    </span>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {it.isDemonicPact ? (
-                                                            <button
-                                                                onClick={() => breakDemonicPactInBackpack(idx)}
-                                                                className="bg-purple-800 hover:bg-purple-600 border border-purple-300 text-white text-[11px] font-black px-2.5 py-1 rounded shadow animate-pulse"
-                                                            >
-                                                                ⛓️ Spezza Patto (-80🪙 e -2💎)
-                                                            </button>
-                                                        ) : it.isTrauma ? (
-                                                            <button
-                                                                onClick={() => cureTraumaInBackpack(idx)}
-                                                                className="bg-red-700 hover:bg-red-600 border border-red-300 text-white text-[11px] font-black px-2.5 py-1 rounded shadow animate-pulse"
-                                                            >
-                                                                🩹 Cura Trauma (-1🍖 e -20🪙)
-                                                            </button>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => equipItem(it)}
-                                                                className="bg-indigo-700 hover:bg-indigo-600 border border-indigo-400 text-white text-[11px] font-black px-2.5 py-1 rounded shadow"
-                                                            >
-                                                                ⬆️ Equipaggia
-                                                            </button>
-                                                        )}
-                                                        {!it.isTrauma && !it.isDemonicPact && party.length > 1 && party.filter(p => p.id !== character.id).map(mate => (
-                                                            <button
+                                            <div key={idx} className="bg-gray-900 border border-gray-700 p-2 rounded-lg flex flex-wrap justify-between items-center gap-2">
+                                                <div
+                                                    onClick={() => !isSpecialMalus && setZoomedItemModal({ item: it, shopEntry: null })}
+                                                    className={`flex items-center gap-2.5 min-w-0 flex-1 ${!isSpecialMalus ? "cursor-pointer" : ""}`}
+                                                >
+                                                    {!isSpecialMalus ? (
+                                                        <img
+                                                            src={getItemArtUrl(it)}
+                                                            alt={it.name}
+                                                            loading="lazy"
+                                                            className="w-11 h-11 rounded-lg object-cover border border-indigo-400/70 shrink-0 hover:scale-105 transition-transform"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-11 h-11 rounded-lg bg-red-950 border border-red-600 flex items-center justify-center text-xl shrink-0">
+                                                            {it.isDemonicPact ? "😈" : "🩸"}
+                                                        </div>
+                                                    )}
+                                                    <div className="min-w-0">
+                                                        <span className="text-xs font-bold text-white block truncate">
+                                                            {slObj ? slObj.icon + " " : "🎒 "}{it.name}
+                                                        </span>
+                                                        <span className="text-amber-400 text-[10px] block truncate">{formatItemBonuses(it)}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {!isSpecialMalus && (
+                                                        <button
+                                                            onClick={() => setZoomedItemModal({ item: it, shopEntry: null })}
+                                                            className="bg-gray-800 hover:bg-gray-700 border border-gray-500 text-white text-[11px] font-black px-2 py-1 rounded shadow"
+                                                            title="Visualizza immagine e dettagli"
+                                                        >
+                                                            👁️
+                                                        </button>
+                                                    )}
+                                                    {it.isDemonicPact ? (
+                                                        <button
+                                                            onClick={() => breakDemonicPactInBackpack(idx)}
+                                                            className="bg-purple-800 hover:bg-purple-600 border border-purple-300 text-white text-[11px] font-black px-2.5 py-1 rounded shadow animate-pulse"
+                                                        >
+                                                            ⛓️ Spezza Patto (-80🪙 e -2💎)
+                                                        </button>
+                                                    ) : it.isTrauma ? (
+                                                        <button
+                                                            onClick={() => cureTraumaInBackpack(idx)}
+                                                            className="bg-red-700 hover:bg-red-600 border border-red-300 text-white text-[11px] font-black px-2.5 py-1 rounded shadow animate-pulse"
+                                                        >
+                                                            🩹 Cura Trauma (-1🍖 e -20🪙)
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => equipItem(it)}
+                                                            className="bg-indigo-700 hover:bg-indigo-600 border border-indigo-400 text-white text-[11px] font-black px-2.5 py-1 rounded shadow"
+                                                        >
+                                                            ⬆️ Equipaggia
+                                                        </button>
+                                                    )}
+                                                    {!it.isTrauma && !it.isDemonicPact && party.length > 1 && party.filter(p => p.id !== character.id).map(mate => (
+                                                        <button
                                                             key={mate.id}
                                                             onClick={() => tradeItemToHero(it, idx, mate.id)}
                                                             className="bg-purple-800 hover:bg-purple-700 border border-purple-400 text-purple-100 text-[11px] font-bold px-2.5 py-1 rounded shadow"
@@ -13005,6 +13578,20 @@
                     </div>
                 </div>
 
+                {/* FLAG OPZIONALE: ATTIVA O NASCONDI LA CONSOLE MASTER */}
+                <label className="flex items-center gap-3 bg-gray-950 border border-amber-600/60 p-3 rounded-xl cursor-pointer select-none">
+                    <input
+                        type="checkbox"
+                        checked={useMasterConsole}
+                        onChange={(e) => toggleMasterConsoleFlag(e.target.checked)}
+                        className="w-5 h-5 accent-amber-500 shrink-0"
+                    />
+                    <div className="text-left">
+                        <span className="text-amber-300 font-black text-xs sm:text-sm block">🎲 Usa Console Master (Modalità DM)</span>
+                        <span className="text-gray-400 text-[10px] block">Se deselezionato, nasconde i comandi da Master durante la campagna per una schermata più pulita.</span>
+                    </div>
+                </label>
+
                 {party.length > 0 && playMode === 'party' && (
                     <div className="bg-purple-950/40 border-2 border-purple-500 rounded-xl p-3 space-y-2">
                         <p className="text-purple-300 font-black text-xs uppercase">Eroi nel Party ({party.length}):</p>
@@ -13023,7 +13610,6 @@
                         </button>
                     </div>
                 )}
-
                 {party.length > 0 && playMode === 'solo' && (
                     <div className="bg-indigo-950/40 border-2 border-indigo-500 rounded-xl p-3 text-center space-y-2">
                         <p className="text-indigo-300 font-black text-xs">Eroe attivo: <b className="text-white">{party[0].name} ({party[0].race} {party[0].classType || "Standard"})</b></p>
