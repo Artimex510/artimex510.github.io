@@ -9769,6 +9769,7 @@
             turnLog.unshift(`👹 ${combatState.name} attacca **${chosenTarget.name}** (Dado ${mRoll}${isCrit ? " CRITICO!" : ""}) infliggendo **${finalDmg} danni**!${vigilanceNote}${specialStr} (${chosenTarget.name}: ${newHP} PV)${fellUnconscious ? ` 🩸 **${chosenTarget.name} CADE INCOSCIENTE A 0 PV!**` : ""}`);
 
             advanceToNextTurn({ ...combatState, arenaPoisonByHero: arenaPoisonMap, log: turnLog }, nextParty);
+          };
           
         const finishCombatVictory = (lastActiveHero, dmgMap, finalBlowMsg) => {
             // Se era il Duello PvP tra compagni e hanno vinto i Puri, riunisce e purifica tutta la Compagnia!
@@ -14073,6 +14074,26 @@
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* PULSANTE APERTURA / DOWNLOAD MANUALE PDF DEL GDR */}
+                <div className="flex gap-2">
+                    <a
+                        href="./manuale_gdr_mtg_completo.pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-black font-black py-2.5 px-3 rounded-xl text-xs shadow-lg flex items-center justify-center gap-1.5 transition-transform active:scale-95"
+                    >
+                        📖 Apri Manuale Completo (PDF)
+                    </a>
+                    <a
+                        href="./manuale_gdr_mtg_completo.pdf"
+                        download="Manuale_GDR_MTG.pdf"
+                        className="bg-gray-800 hover:bg-gray-700 text-amber-300 border border-amber-500/70 font-black py-2.5 px-3.5 rounded-xl text-xs shadow flex items-center justify-center gap-1 transition-transform active:scale-95"
+                        title="Scarica il PDF sul dispositivo"
+                    >
+                        ⬇️ Scarica
+                    </a>
                 </div>
 
                 {party.length > 0 && playMode === 'party' && (
