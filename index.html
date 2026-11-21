@@ -75,6 +75,34 @@
       50% { transform: scale(1.07); box-shadow: 0 0 26px rgba(220, 38, 38, 1); }
     }
     .blood-drop-btn { animation: bloodPulse 1.8s infinite ease-in-out; }
+
+    /* Barra superiore trasparente sopra la cornice 3D solo dentro il GDR */
+    body.in-rpg-mode .rpg-top-header {
+      position: fixed !important;
+      top: 8px !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 45 !important;
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      pointer-events: none !important;
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    body.in-rpg-mode .rpg-top-header button {
+      pointer-events: auto !important;
+      background: rgba(15, 10, 8, 0.85) !important;
+      border: 1px solid rgba(217, 119, 6, 0.8) !important;
+      border-radius: 10px !important;
+      padding: 5px 8px !important;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.9) !important;
+    }
+    body.in-rpg-mode .rpg-hide-title {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
   </style>
 
   <script>
@@ -10999,6 +11027,12 @@
             }
         }, [character ? character.currentNode : null, rpgView]);
 
+        useEffect(() => {
+            document.body.classList.add('in-rpg-mode');
+            return () => {
+                document.body.classList.remove('in-rpg-mode');
+            };
+        }, []);
         // ====================================================================
         // CORNICE 3D FANTASY & SFONDO DINAMICO PER TUTTO IL GDR (ZERO CLICK BLOCK)
         // ====================================================================
@@ -14691,12 +14725,12 @@
           )}
 
           {introState === 'finished' && (
-            <div className="min-h-screen bg-gray-900/85 backdrop-blur-sm flex flex-col animate-fade">
+            <div className={view === 'rpg' ? "min-h-screen flex flex-col" : "min-h-screen bg-gray-900/85 backdrop-blur-sm flex flex-col animate-fade"}>
               
               {(view !== 'game_active' && view !== 'playtester_active') && (
-                <header className="bg-gray-900/95 border-b border-gray-700 p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md no-print">
+                <header className="rpg-top-header bg-gray-900/95 border-b border-gray-700 p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-md no-print">
                   <button onClick={() => setMenuOpen(true)} className="text-gray-300 hover:text-white"><Icons.Menu /></button>
-                  <h1 className="text-lg font-bold tracking-widest text-white notranslate">MTG <span className="text-red-500">FOR FUN</span></h1>
+                  <h1 className="rpg-hide-title text-lg font-bold tracking-widest text-white notranslate">MTG <span className="text-red-500">FOR FUN</span></h1>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => switchAppLanguage(appLang === 'it' ? 'en' : 'it')}
@@ -14710,7 +14744,7 @@
                 </header>
               )}
               {menuOpen && (
-                <div className="fixed inset-0 bg-black/80 z-50 no-print animate-fade" onClick={() => setMenuOpen(false)}>
+                <div className="fixed inset-0 bg-black/80 z-[60] no-print animate-fade" onClick={() => setMenuOpen(false)}>
                   <div className="w-64 bg-gray-900 h-full p-6 shadow-2xl border-r border-gray-700 overflow-y-auto" onClick={e => e.stopPropagation()}>
                     <h2 className="text-2xl font-bold mb-6 border-b border-gray-700 pb-2">Menu</h2>
                     <nav className="space-y-4">
