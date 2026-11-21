@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>MTG Commander Companion</title>
   
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Crimson+Text:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
 
@@ -57,11 +61,20 @@
     .track-button.active-track { background: rgba(212, 175, 55, 0.15); border-color: #d4af37; color: #d4af37; }
     .native-audio-player { width: 100%; outline: none; margin-top: 1rem; }
 
-    /* Nasconde la barra superiore e i fumetti popup di Google Translate su tutta l'app */
+   /* Nasconde la barra superiore e i fumetti popup di Google Translate su tutta l'app */
     .skiptranslate iframe, .goog-te-banner-frame, .goog-tooltip, #goog-gt-tt { display: none !important; }
     .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
     body { top: 0px !important; }
     #google_translate_element { display: none !important; }
+
+    /* Font fantasy e animazione goccia di sangue per le pergamene */
+    .font-rpg-title { font-family: 'Cinzel', Georgia, serif; }
+    .font-rpg-body { font-family: 'Crimson Text', Georgia, serif; }
+    @keyframes bloodPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(153, 27, 27, 0.75); }
+      50% { transform: scale(1.07); box-shadow: 0 0 26px rgba(220, 38, 38, 1); }
+    }
+    .blood-drop-btn { animation: bloodPulse 1.8s infinite ease-in-out; }
   </style>
 
   <script>
@@ -7490,6 +7503,8 @@
         };
 
         // 2. PATTO DEMONIACO A OROLOGERIA (+5 a tutte le Stat, +50 Oro, Cura Totale, ma Morte dopo 4 Rintocchi!)
+        const [showDemonicPactModal, setShowDemonicPactModal] = useState(false);
+
         const signDemonicPact = () => {
             if (!character || character.status === "dead") return;
             const inv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
@@ -7497,7 +7512,14 @@
             if (alreadySigned) {
                 return alert(character.name + " ha già un Patto Demoniaco attivo nello zaino!");
             }
-            if (!window.confirm("😈 PATTO DEMONIACO (Demonic Pact):\n\nRiceverai SUBITO:\n• +5 FOR, +5 AGI, +5 MAG, +5 COS\n• +50 Monete d'Oro 🪙\n• Guarigione Totale dei Punti Vita ❤️\n\n⚠️ MA ATTENZIONE: Il Contratto di Sangue occuperà 1 Slot del tuo Zaino con un conto alla rovescia di 4 RINTOCCHI (4 spostamenti tra i nodi). Se non lo spezzi pagando 80 Oro e 2 Tesori prima che scada il 4° Rintocco, IL DEMONE PRENDERÀ LA TUA ANIMA UCCIDENDOTI ALL'ISTANTE!\n\nAccetti di firmare col sangue?")) {
+            setShowDemonicPactModal(true);
+        };
+
+        const confirmSignDemonicPact = () => {
+            if (!character || character.status === "dead") return;
+            const inv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
+            if (inv.some(it => it && it.isDemonicPact)) {
+                setShowDemonicPactModal(false);
                 return;
             }
 
@@ -7527,7 +7549,9 @@
                 deathSuccesses: 0
             });
             saveCharState(updated);
-            setEventBanner(`😈🩸 PATTO DEMONIACO FIRMATO! **${character.name}** ottiene +5 a tutte le Statistiche, +50 Oro e Salute Massima... ma restano solo **4 Rintocchi** prima della riscossione dell'anima!`);
+            setShowDemonicPactModal(false);
+            triggerEpicImpact("crit_red");
+            setEventBanner(`😈🩸 PATTO DEMONIACO FIRMATO COL SANGUE! **${character.name}** ottiene +5 a tutte le Statistiche, +50 Oro e Salute Massima... ma restano solo **4 Rintocchi** prima della riscossione dell'anima!`);
         };
 
         const breakDemonicPactInBackpack = (invIdx) => {
@@ -11980,7 +12004,86 @@
                         </div>
                     )}
 
-                    {/* MODALE INCANTA CREATURA (AURE MISTICHE PER INCANTATORI) */}
+                  {/* PERGAMENA INTERATTIVA DEL PATTO DEMONIACO (FIRMA CON GOCCIA DI SANGUE O RINUNCIA!) */}
+                    {showDemonicPactModal && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setShowDemonicPactModal(false)}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10025] bg-black/88 backdrop-blur-sm flex items-center justify-center p-2.5 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-[400px] max-h-[92dvh] aspect-[2/3] flex flex-col drop-shadow-[0_0_45px_rgba(153,27,27,0.85)]"
+                                style={{
+                                    backgroundImage: "url('./pergamena_patto.png')",
+                                    backgroundSize: "100% 100%",
+                                    backgroundRepeat: "no-repeat"
+                                }}
+                            >
+                                <div className="absolute top-[17.5%] bottom-[13.5%] left-[17%] right-[17%] flex flex-col justify-between text-[#261108]">
+                                    {/* TITOLO DEL CONTRATTO */}
+                                    <div className="text-center border-b border-red-950/40 pb-1">
+                                        <h3 className="font-rpg-title text-base sm:text-lg font-black text-red-950 tracking-wider uppercase leading-tight">
+                                            Patto Demoniaco
+                                        </h3>
+                                        <p className="font-rpg-body text-[11px] italic text-red-900 font-bold">
+                                            Contratto di Sangue Vincolante
+                                        </p>
+                                    </div>
+
+                                    {/* CLAUSOLE DEL PATTO */}
+                                    <div className="flex-1 overflow-y-auto my-1.5 space-y-2 px-0.5 font-rpg-body text-[13px] sm:text-sm leading-tight">
+                                        <p className="text-center italic font-semibold text-[#3a1c0e]">
+                                            «Io, <b className="notranslate underline">{character.name}</b>, invoco le potenze dell'Abisso per ricevere subito:»
+                                        </p>
+
+                                        <div className="bg-black/10 border border-amber-950/30 rounded-lg p-2 space-y-0.5 font-bold text-[#1f0d06]">
+                                            <p>✦ <span className="text-red-950">+5 FOR, +5 AGI, +5 MAG, +5 COS</span></p>
+                                            <p>✦ <span className="text-amber-950">+50 Monete d'Oro immediate</span></p>
+                                            <p>✦ <span className="text-emerald-950">Guarigione Totale dei Punti Vita</span></p>
+                                        </div>
+
+                                        <div className="bg-red-950/15 border border-red-900/50 rounded-lg p-2 text-[12px] text-red-950 font-bold leading-snug">
+                                            ⚠️ <b>CLAUSOLA DELL'ANIMA:</b> Il contratto occupa 1 Slot dello Zaino per <b>4 Rintocchi</b> (4 spostamenti). Se non lo spezzi pagando <b>80 Oro e 2 Tesori</b> prima dello scadere, il Demone riscuoterà la tua anima uccidendoti all'istante!
+                                        </div>
+                                    </div>
+
+                                    {/* ZONA FIRMA: GOCCIA DI SANGUE CLICCABILE + TASTO RINUNCIA */}
+                                    <div className="pt-1.5 border-t border-red-950/40 flex flex-col items-center gap-1.5">
+                                        <div className="w-full flex items-end justify-between gap-2">
+                                            <div className="flex-1 border-b border-dashed border-red-950/70 pb-0.5 text-left">
+                                                <span className="block text-[9px] uppercase tracking-wider font-rpg-title text-red-950/80">
+                                                    Firma del Contraente
+                                                </span>
+                                                <span className="font-rpg-body italic text-sm font-bold text-red-950 truncate block notranslate">
+                                                    {character.name}
+                                                </span>
+                                            </div>
+
+                                            {/* GOCCIA DI SANGUE CLICCABILE */}
+                                            <button
+                                                onClick={confirmSignDemonicPact}
+                                                className="blood-drop-btn bg-gradient-to-b from-red-600 via-red-800 to-red-950 hover:from-red-500 hover:to-red-900 text-red-50 border-2 border-red-300/80 rounded-full px-3 py-2 flex items-center gap-1.5 shadow-xl transition-transform active:scale-90 shrink-0"
+                                                title="Premi per firmare il contratto col sangue"
+                                            >
+                                                <span className="text-lg leading-none">🩸</span>
+                                                <span className="font-rpg-title text-[10px] font-black uppercase tracking-wider">Firma</span>
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setShowDemonicPactModal(false)}
+                                            className="font-rpg-title text-[11px] font-black uppercase tracking-widest text-[#3b1f10] hover:text-red-900 underline decoration-red-950/50 py-0.5 px-3 transition-colors"
+                                        >
+                                            ✖ Rinuncia al Patto
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+                   
+                  {/* MODALE INCANTA CREATURA (AURE MISTICHE PER INCANTATORI) */}
                     {showAurasModal && (
                         <div className="bg-gray-900 border-4 border-fuchsia-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
@@ -14475,26 +14578,43 @@
               document.body
           )}
 
-          {/* MODALE UNIVERSALE PER TUTTI GLI ALERT (TRADOTTI AUTOMATICAMENTE IN INGLESE!) */}
+          {/* MODALE UNIVERSALE PER TUTTI GLI ALERT SU PERGAMENA DORATA (TRADOTTO IN AUTOMATICO!) */}
           {customAlertQueue.length > 0 && ReactDOM.createPortal(
               <div
                   onClick={() => setCustomAlertQueue(prev => prev.slice(1))}
-                  className="fixed inset-0 w-screen h-[100dvh] z-[100000] bg-black/85 flex items-center justify-center p-4 animate-fade"
+                  className="fixed inset-0 w-screen h-[100dvh] z-[100000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
               >
                   <div
                       onClick={(e) => e.stopPropagation()}
-                      className="bg-gray-900 border-2 border-amber-500 rounded-2xl max-w-md w-full p-5 shadow-[0_0_40px_rgba(245,158,11,0.45)] space-y-4 text-center"
+                      className="relative w-full max-w-[380px] max-h-[90dvh] aspect-[2/3] flex flex-col drop-shadow-[0_15px_35px_rgba(0,0,0,0.95)]"
+                      style={{
+                          backgroundImage: "url('./pergamena_avviso.png')",
+                          backgroundSize: "100% 100%",
+                          backgroundRepeat: "no-repeat"
+                      }}
                   >
-                      <div className="text-3xl">📜</div>
-                      <p className="text-sm sm:text-base text-gray-100 font-bold whitespace-pre-line leading-relaxed">
-                          {customAlertQueue[0]}
-                      </p>
-                      <button
-                          onClick={() => setCustomAlertQueue(prev => prev.slice(1))}
-                          className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 px-6 rounded-xl text-sm uppercase tracking-wider shadow transition-transform active:scale-95 notranslate"
-                      >
-                          OK
-                      </button>
+                      <div className="absolute top-[14%] bottom-[13.5%] left-[16.5%] right-[16.5%] flex flex-col justify-between text-center">
+                          <div className="border-b border-amber-900/40 pb-1.5">
+                              <span className="font-rpg-title text-[11px] font-black uppercase tracking-[0.2em] text-amber-900">
+                                  📜 Decreto del Multiverso
+                              </span>
+                          </div>
+
+                          <div className="flex-1 overflow-y-auto my-2 px-1 flex items-center justify-center">
+                              <p className="font-rpg-body text-[15px] sm:text-base text-[#2b180a] font-bold whitespace-pre-line leading-snug">
+                                  {customAlertQueue[0]}
+                              </p>
+                          </div>
+
+                          <div className="pt-2 border-t border-amber-900/35">
+                              <button
+                                  onClick={() => setCustomAlertQueue(prev => prev.slice(1))}
+                                  className="font-rpg-title bg-gradient-to-b from-amber-800 to-amber-950 hover:from-amber-700 hover:to-amber-900 text-amber-100 border-2 border-amber-400/80 font-black py-2 px-8 rounded-full text-xs uppercase tracking-widest shadow-lg transition-transform active:scale-95 notranslate"
+                              >
+                                  ✦ OK ✦
+                              </button>
+                          </div>
+                      </div>
                   </div>
               </div>,
               document.body
