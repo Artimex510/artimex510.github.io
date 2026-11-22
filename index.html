@@ -7,7 +7,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Crimson+Text:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Crimson+Text:ital,wght@0,600;0,700;1,600&family=Pirata+One&display=swap" rel="stylesheet">
   
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
@@ -70,6 +70,7 @@
     /* Font fantasy e animazione goccia di sangue per le pergamene */
     .font-rpg-title { font-family: 'Cinzel', Georgia, serif; }
     .font-rpg-body { font-family: 'Crimson Text', Georgia, serif; }
+    .font-rpg-gothic { font-family: 'Pirata One', 'Cinzel', Georgia, serif; }
     @keyframes bloodPulse {
       0%, 100% { transform: scale(1); box-shadow: 0 0 12px rgba(153, 27, 27, 0.75); }
       50% { transform: scale(1.07); box-shadow: 0 0 26px rgba(220, 38, 38, 1); }
@@ -6249,6 +6250,7 @@
 
             const healAmount = d8RollValue + classLvl;
             let logMsg = "";
+            let revivedHeroInCombat = null;
 
             const newParty = (party.length > 0 ? party : [caster]).map(h => {
                 let updatedH = h.id === caster.id ? Object.assign({}, h, { manaPool: pool }) : Object.assign({}, h);
@@ -6260,13 +6262,19 @@
                         updatedH.status = "alive";
                         updatedH.deathSuccesses = 0;
                         updatedH.deathFailures = 0;
-                        if (wasDown) logMsg += ` 🌟 ${updatedH.name} si risveglia da 0 PV!`;
+                        if (wasDown) {
+                            logMsg += ` 🌟 ${updatedH.name} si risveglia da 0 PV!`;
+                            if (!revivedHeroInCombat) revivedHeroInCombat = updatedH;
+                        }
                     }
                 }
                 return updatedH;
             });
 
             savePartyState(newParty);
+            if (combatState && revivedHeroInCombat) {
+                maybeTriggerDemonTemptation(revivedHeroInCombat, "sei appena stato strappato dal baratro degli 0 PV", 0.50);
+            }
             setPendingHealSpell(null);
 
             // Effetto Blu del Chierico/Sciamano: Attiva lo Scudo Contromagia!
@@ -7533,6 +7541,56 @@
         // 2. PATTO DEMONIACO A OROLOGERIA (+5 a tutte le Stat, +50 Oro, Cura Totale, ma Morte dopo 4 Rintocchi!)
         const [showDemonicPactModal, setShowDemonicPactModal] = useState(false);
 
+        const [demonTemptation, setDemonTemptation] = useState(null);
+        const [pactFromTemptationHero, setPactFromTemptationHero] = useState(null);
+        const demonTemptedThisBattleRef = useRef(false);
+
+        const maybeTriggerDemonTemptation = (heroObj, reasonText, chanceProb) => {
+            if (!heroObj || heroObj.status === "dead") return false;
+            if (demonTemptedThisBattleRef.current) return false;
+            const hasPactAlready = Array.isArray(heroObj.inventory) && heroObj.inventory.some(it => it && it.isDemonicPact);
+            if (hasPactAlready) return false;
+            if (Math.random() > (chanceProb || 0.5)) return false;
+
+            demonTemptedThisBattleRef.current = true;
+            triggerEpicImpact("crit_red");
+            setDemonTemptation({
+                heroId: heroObj.id,
+                heroName: heroObj.name,
+                hp: heroObj.currentHP,
+                reason: reasonText
+            });
+            return true;
+        };
+
+        const proceedFromDemonToPact = () => {
+            if (!demonTemptation) return;
+            const targetHero = (party.length > 0 ? party : [character]).find(h => h && h.id === demonTemptation.heroId);
+            if (targetHero) setCharacter(targetHero);
+            setPactFromTemptationHero({ heroId: demonTemptation.heroId, heroName: demonTemptation.heroName });
+            setDemonTemptation(null);
+            setShowDemonicPactModal(true);
+        };
+
+        const closeOrDeclineDemonicPact = () => {
+            setShowDemonicPactModal(false);
+            if (pactFromTemptationHero) {
+                const heroId = pactFromTemptationHero.heroId;
+                const heroName = pactFromTemptationHero.heroName;
+                const nextParty = (party.length > 0 ? party : [character]).map(h => {
+                    if (!h || h.id !== heroId) return h;
+                    return Object.assign({}, h, { karma: (h.karma || 0) + 1 });
+                });
+                savePartyState(nextParty);
+                setPactFromTemptationHero(null);
+                const msg = `🛡️✨ VOLONTÀ INCROLLABILE! **${heroName}** rifiuta l'offerta del Demone (+1 Karma)!`;
+                setEventBanner(msg);
+                if (combatState) {
+                    setCombatState(Object.assign({}, combatState, { log: [msg].concat(combatState.log).slice(0, 8) }));
+                }
+            }
+        };
+
         const signDemonicPact = () => {
             if (!character || character.status === "dead") return;
             const inv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
@@ -7540,6 +7598,7 @@
             if (alreadySigned) {
                 return alert(character.name + " ha già un Patto Demoniaco attivo nello zaino!");
             }
+            setPactFromTemptationHero(null);
             setShowDemonicPactModal(true);
         };
 
@@ -7548,6 +7607,7 @@
             const inv = Array.isArray(character.inventory) ? character.inventory.slice() : [];
             if (inv.some(it => it && it.isDemonicPact)) {
                 setShowDemonicPactModal(false);
+                setPactFromTemptationHero(null);
                 return;
             }
 
@@ -7578,6 +7638,7 @@
             });
             saveCharState(updated);
             setShowDemonicPactModal(false);
+            setPactFromTemptationHero(null);
             triggerEpicImpact("crit_red");
             setEventBanner(`😈🩸 PATTO DEMONIACO FIRMATO COL SANGUE! **${character.name}** ottiene +5 a tutte le Statistiche, +50 Oro e Salute Massima... ma restano solo **4 Rintocchi** prima della riscossione dell'anima!`);
         };
@@ -8742,6 +8803,9 @@
 
         // Helper per aprire un servizio cittadino chiudendo prima l'Hub Città
         const openCityService = (serviceName) => {
+            if (combatState) {
+                return alert("⚔️ Sei nel mezzo di una battaglia! Sconfiggi prima il nemico per andare in Città.");
+            }
             setShowCityHubModal(false);
             setShowMerchant(serviceName === "merchant");
             setShowMercenaryModal(serviceName === "mercenary");
@@ -9374,9 +9438,22 @@
                 setEncounterIntroSplash(null);
             }, 7000);
 
+            demonTemptedThisBattleRef.current = false;
+            setDemonTemptation(null);
             setLastRollInfo(null);
             setEventBanner(null);
+            setShowCityHubModal(false);
             setShowMerchant(false);
+            setShowMercenaryModal(false);
+            setShowKrarkModal(false);
+            setShowBlacksmithModal(false);
+            setShowAlchemyModal(false);
+            setShowRunesModal(false);
+            setShowBountyModal(false);
+            setShowCampfireModal(false);
+            setShowCabalPitModal(false);
+            setShowBestiaryModal(false);
+            setShowSaveModal(false);
             setTeferiPhaseOut(false);
             setCounterspellShield(false);
 
@@ -9587,6 +9664,7 @@
                 h.deathSuccesses = 0;
                 h.deathFailures = 0;
                 turnLog.unshift(`🌟 20 NATURALE SALVEZZA MORTE! **${h.name}** riapre gli occhi e si rialza immediatamente con **1 PV**!`);
+                maybeTriggerDemonTemptation(h, "sei appena sfuggito alla morte tornando con 1 solo Punto Vita", 0.70);
             } else if (roll === 1) {
                 h.deathFailures = (h.deathFailures || 0) + 2;
                 turnLog.unshift(`💀 1 NATURALE SALVEZZA MORTE! **${h.name}** subisce **2 Fallimenti**! (Successi: ${h.deathSuccesses}/3 | Fallimenti: ${h.deathFailures}/3)`);
@@ -9816,6 +9894,16 @@
             });
 
             savePartyState(nextParty);
+
+            if (!fellUnconscious && newHP >= 1 && newHP <= Math.max(4, Math.round(targetStats.maxHP * 0.15))) {
+                const woundedHero = nextParty.find(h => h.id === chosenTarget.id);
+                const temptChance = newHP === 1 ? 0.75 : 0.45;
+                maybeTriggerDemonTemptation(
+                    woundedHero,
+                    newHP === 1 ? "sei ridotto a 1 solo Punto Vita, a un soffio dall'oblio" : ("ti restano appena " + newHP + " Punti Vita"),
+                    temptChance
+                );
+            }
 
             const specialStr = specialBossNotes.length > 0 ? " • " + specialBossNotes.join(" • ") : "";
             turnLog.unshift(`👹 ${combatState.name} attacca **${chosenTarget.name}** (Dado ${mRoll}${isCrit ? " CRITICO!" : ""}) infliggendo **${finalDmg} danni**!${vigilanceNote}${specialStr} (${chosenTarget.name}: ${newHP} PV)${fellUnconscious ? ` 🩸 **${chosenTarget.name} CADE INCOSCIENTE A 0 PV!**` : ""}`);
@@ -11179,7 +11267,12 @@
                     {rpgFantasyChrome}
                     {/* BARRA COMANDI SUPERIORE PULITA (CON HUB CITTÀ & GRUPPO BATTAGLIA) */}
                     <div className="bg-gray-800/95 p-3 rounded-xl border border-gray-600 space-y-2.5 shadow-lg">
-                        {/* RIGA 1: GESTIONE, CITTÀ & ESPLORAZIONE */}
+                        {/* RIGA 1: GESTIONE SEMPRE ATTIVA, CITTÀ & ATTIVITÀ BLOCCATE IN BATTAGLIA */}
+                        {combatState && (
+                            <div className="bg-red-950/80 border border-red-500/70 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase text-red-200 tracking-wide text-center">
+                                🔒 Combattimento in corso: Città, Caccia, Fossa, Taglie e Bivacco bloccati
+                            </div>
+                        )}
                         <div className="flex flex-wrap items-center gap-1.5">
                             <button onClick={() => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); setRpgView("sheet"); }} className="bg-amber-500 hover:bg-amber-400 text-black font-black px-3 py-2 rounded-lg text-xs shadow">
                                 🪪 Scheda & Stampa
@@ -11188,32 +11281,37 @@
                                 👥 Party ({party.length})
                             </button>
                             <button
-                                onClick={() => setShowCityHubModal(!showCityHubModal)}
-                                className={`font-black px-3.5 py-2 rounded-lg text-xs shadow border transition-all ${showCityHubModal ? "bg-amber-400 text-black border-white scale-105" : "bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 text-black border-yellow-300"}`}
+                                disabled={Boolean(combatState)}
+                                onClick={() => !combatState && setShowCityHubModal(!showCityHubModal)}
+                                className={`font-black px-3.5 py-2 rounded-lg text-xs shadow border transition-all ${combatState ? "opacity-35 pointer-events-none grayscale select-none bg-gray-800 text-gray-400 border-gray-600" : (showCityHubModal ? "bg-amber-400 text-black border-white scale-105" : "bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 text-black border-yellow-300")}`}
                             >
                                 🏘️ Vai in Città ({character.gold || 0} 🪙)
                             </button>
                             <button
-                                onClick={() => startMonsterEncounter(Object.keys(MTG_BESTIARY)[Math.floor(Math.random() * 6)], character.currentNode)}
-                                className="bg-red-700 hover:bg-red-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                                disabled={Boolean(combatState)}
+                                onClick={() => !combatState && startMonsterEncounter(Object.keys(MTG_BESTIARY)[Math.floor(Math.random() * 6)], character.currentNode)}
+                                className={`bg-red-700 hover:bg-red-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
                             >
                                 ⚔️ Caccia Mostri
                             </button>
                             <button
-                                onClick={() => setShowCabalPitModal(!showCabalPitModal)}
-                                className="bg-purple-900 hover:bg-purple-800 text-purple-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-400"
+                                disabled={Boolean(combatState)}
+                                onClick={() => !combatState && setShowCabalPitModal(!showCabalPitModal)}
+                                className={`bg-purple-900 hover:bg-purple-800 text-purple-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-400 ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
                             >
                                 🗼 Fossa (Rec: {cabalPitRecord})
                             </button>
                             <button
-                                onClick={() => setShowBountyModal(!showBountyModal)}
-                                className="bg-amber-700 hover:bg-amber-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                                disabled={Boolean(combatState)}
+                                onClick={() => !combatState && setShowBountyModal(!showBountyModal)}
+                                className={`bg-amber-700 hover:bg-amber-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
                             >
                                 🎯 Taglie
                             </button>
                             <button
-                                onClick={() => setShowCampfireModal(!showCampfireModal)}
-                                className="bg-emerald-800 hover:bg-emerald-700 text-white font-black px-3 py-2 rounded-lg text-xs shadow"
+                                disabled={Boolean(combatState)}
+                                onClick={() => !combatState && setShowCampfireModal(!showCampfireModal)}
+                                className={`bg-emerald-800 hover:bg-emerald-700 text-white font-black px-3 py-2 rounded-lg text-xs shadow ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
                             >
                                 ⛺ Bivacco
                             </button>
@@ -11230,7 +11328,7 @@
                                 📲 Salva
                             </button>
 
-                            {!character.secondaryClassId && ((character.completedArcs || []).length >= 2 || (character.completedArcs || []).indexOf("koilos_gates") !== -1 || character.sparkIgnited) && (
+                            {!combatState && !character.secondaryClassId && ((character.completedArcs || []).length >= 2 || (character.completedArcs || []).indexOf("koilos_gates") !== -1 || character.sparkIgnited) && (
                                 <button
                                     onClick={() => setShowMulticlassModal(true)}
                                     className="bg-purple-600 hover:bg-purple-500 text-white font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-300 animate-pulse"
@@ -11238,7 +11336,7 @@
                                     🏛️ Sblocca 2ª Classe
                                 </button>
                             )}
-                            {(
+                            {!combatState && (
                                 ((character.manaIdentity || []).length === 1 && ((character.completedArcs || []).length >= 1 || character.isPhyrexian)) ||
                                 ((character.manaIdentity || []).length === 2 && character.sparkIgnited)
                             ) && (
@@ -11249,7 +11347,7 @@
                                     🌈 +{(character.manaIdentity || []).length + 1}° Colore Mana
                                 </button>
                             )}
-                            {partyHasPlaneswalker && (
+                            {!combatState && partyHasPlaneswalker && (
                                 <button
                                     onClick={() => applyRewardsAndMove(character, null, "planeswalker_nexus", "🌌 Viaggio Planare attivato!")}
                                     className="bg-gradient-to-r from-orange-500 to-amber-500 text-black font-black px-3 py-2 rounded-lg text-xs shadow"
@@ -11258,7 +11356,6 @@
                                 </button>
                             )}
                         </div>
-
                         {/* RIGA 2: ARSENALE DI BATTAGLIA (VICINI TRA LORO) + DADI & VOCE */}
                         <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-gray-700">
                             <div className="flex flex-wrap items-center gap-1.5">
@@ -12081,10 +12178,55 @@
                         </div>
                     )}
 
+                  {/* APPARIZIONE RANDOM DEL DEMONE TENTATORE (STEP 1 -> AVANTI -> PERGAMENA PATTO) */}
+                    {demonTemptation && ReactDOM.createPortal(
+                        <div className="fixed inset-0 w-screen h-[100dvh] z-[10022] bg-black/92 backdrop-blur-sm flex items-center justify-center p-3 animate-fade">
+                            <div className="max-w-md w-full bg-gradient-to-b from-[#1a0505] via-black to-[#120303] border-4 border-red-700 rounded-3xl overflow-hidden shadow-[0_0_65px_rgba(220,38,38,0.9)] text-center">
+                                {/* TITOLO GOTICO IN ALTO */}
+                                <div className="bg-gradient-to-r from-black via-red-950 to-black border-b-2 border-red-800/80 px-4 py-3">
+                                    <h3 className="font-rpg-gothic text-2xl sm:text-3xl text-red-400 tracking-wide drop-shadow-[0_2px_8px_rgba(220,38,38,0.85)] leading-tight">
+                                        Si presenta un Demone con un'Offerta
+                                    </h3>
+                                </div>
+
+                                {/* ILLUSTRAZIONE 4:3 COMPLETA DEL DEMONE */}
+                                <div className="w-full aspect-[4/3] bg-black relative overflow-hidden border-b-2 border-red-800/80">
+                                    <img
+                                        src="./demone_patto.png"
+                                        alt="Demone Tentatore"
+                                        onError={(e) => {
+                                            const fallback = "https://api.scryfall.com/cards/named?exact=Griselbrand&format=image&version=art_crop";
+                                            if (e.target.getAttribute("src") !== fallback) e.target.src = fallback;
+                                        }}
+                                        className="w-full h-full object-cover object-center"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/25 pointer-events-none" />
+                                    <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/75 border border-red-500/70 text-amber-200 font-rpg-title text-[10px] font-black uppercase tracking-widest px-3 py-0.5 rounded-full whitespace-nowrap">
+                                        {demonTemptation.heroName} — {demonTemptation.reason}
+                                    </span>
+                                </div>
+
+                                {/* BATTUTA DEL DEMONE + TASTO AVANTI */}
+                                <div className="p-5 space-y-4">
+                                    <p className="font-rpg-gothic text-2xl sm:text-3xl text-amber-100 tracking-wide leading-snug drop-shadow-[0_2px_6px_rgba(0,0,0,1)]">
+                                        «È un'offerta che non puoi rifiutare...»
+                                    </p>
+
+                                    <button
+                                        onClick={proceedFromDemonToPact}
+                                        className="blood-drop-btn w-full bg-gradient-to-r from-red-900 via-red-700 to-red-900 hover:from-red-800 hover:to-red-800 text-amber-50 border-2 border-red-300/90 font-rpg-title font-black py-3.5 px-6 rounded-xl text-sm uppercase tracking-[0.2em] shadow-xl transition-transform active:scale-95"
+                                    >
+                                        Avanti ➔
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
                   {/* PERGAMENA INTERATTIVA DEL PATTO DEMONIACO (FIRMA CON GOCCIA DI SANGUE O RINUNCIA!) */}
                     {showDemonicPactModal && ReactDOM.createPortal(
                         <div
-                            onClick={() => setShowDemonicPactModal(false)}
+                            onClick={closeOrDeclineDemonicPact}
                             className="fixed inset-0 w-screen h-[100dvh] z-[10025] bg-black/88 backdrop-blur-sm flex items-center justify-center p-2.5 animate-fade"
                         >
                             <div
@@ -12148,7 +12290,7 @@
                                         </div>
 
                                         <button
-                                            onClick={() => setShowDemonicPactModal(false)}
+                                            onClick={closeOrDeclineDemonicPact}
                                             className="font-rpg-title text-[11px] font-black uppercase tracking-widest text-[#3b1f10] hover:text-red-900 underline decoration-red-950/50 py-0.5 px-3 transition-colors"
                                         >
                                             ✖ Rinuncia al Patto
