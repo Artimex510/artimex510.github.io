@@ -10205,8 +10205,7 @@
                 gold: combatState.gold || 25,
                 loot: combatState.loot
             };
-            if (combatState.isBoss) winRewards.makeLegendary = true;
-
+            
             const targetWinNode = combatState.winNode;
             const monsterName = combatState.name;
             const plunderBanner = (plunderGold > 0 || plunderTreasures > 0 || plunderFood > 0)
