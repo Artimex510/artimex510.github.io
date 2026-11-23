@@ -11362,7 +11362,7 @@
         // ====================================================================
         if (character && isTotalPartyKill) {
             return (
-                <div className="max-w-xl mx-6 sm:mx-auto p-6 mt-20 mb-44 bg-gradient-to-b from-black via-red-950 to-black border-4 border-red-600 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,0.8)] text-center space-y-6 animate-fade">
+                <div className="max-w-xl mx-4 sm:mx-auto p-5 mt-4 mb-28 bg-gradient-to-b from-black via-red-950 to-black border-4 border-red-600 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,0.8)] text-center space-y-6 animate-fade">
                   {rpgFantasyChrome} 
                   <div className="text-8xl animate-bounce drop-shadow-[0_0_25px_rgba(255,0,0,0.9)]">💀</div>
                     <h1 className="text-3xl sm:text-4xl font-black text-red-500 uppercase tracking-widest" style={{ fontFamily: "Georgia, serif" }}>
@@ -11463,7 +11463,7 @@
                 : CLASSES;
 
             return (
-                <div className="max-w-3xl mx-auto px-6 sm:px-10 pt-20 pb-44 animate-fade space-y-4">
+                <div className="max-w-3xl mx-auto px-4 sm:px-8 pt-3 pb-28 animate-fade space-y-4">
                     {rpgFantasyChrome}
                     {/* BARRA COMANDI SUPERIORE COMPATTA (TUTTI I SERVIZI SONO NELLA MAPPA CITTÀ) */}
                     <div className="bg-gray-800/95 p-3 rounded-xl border border-gray-600 space-y-2 shadow-lg">
@@ -11552,11 +11552,11 @@
                         <React.Fragment>
                             <div
                                 onClick={() => { setShowCityHubModal(false); setShowBachecaModal(false); }}
-                                className="fixed inset-0 w-screen h-[100dvh] z-[38] bg-black/90 flex items-center justify-center px-5 pt-14 pb-24 animate-fade"
+                                className="fixed inset-0 w-screen h-[100dvh] z-[38] bg-black/90 flex items-center justify-center px-6 pt-16 pb-24 animate-fade"
                             >
                                 <div
                                     onClick={(e) => e.stopPropagation()}
-                                    className="relative h-full max-h-[82dvh] aspect-[941/1672] max-w-full rounded-2xl overflow-hidden border-2 border-amber-500/90 shadow-[0_0_45px_rgba(0,0,0,1)]"
+                                    className="relative h-full max-h-[84dvh] aspect-[941/1672] max-w-full rounded-2xl overflow-hidden border-2 border-amber-500/90 shadow-[0_0_45px_rgba(0,0,0,1)]"
                                 >
                                     <img
                                         src="./mappa_citta.png"
@@ -11612,7 +11612,7 @@
 
                             {/* RISORSE E TASTO ESCI SOPRA LA CORNICE 3D (SPOSTATI LEGGERMENTE PIÙ IN BASSO) */}
                             {!showBachecaModal && (
-                                <div className="fixed top-[62px] left-0 right-0 z-[44] pointer-events-none flex justify-center px-5 animate-fade">
+                                <div className="fixed top-[54px] left-0 right-0 z-[44] pointer-events-none flex justify-center px-6 animate-fade">
                                     <div className="w-full max-w-md flex justify-between items-center gap-2">
                                         <span className="bg-black/90 border-2 border-amber-400/90 text-amber-200 font-black text-[11px] px-3 py-1 rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.95)] notranslate pointer-events-auto">
                                             {character.name} • {character.gold || 0}🪙 • {character.treasures || 0}💎 • {character.food || 0}🍖
@@ -14462,7 +14462,7 @@
             const avatarSrc = getAvatarSrc(character.raceId, character.classId, character.customAvatar, character.ascensionForm);
 
             return (
-                <div className="max-w-md mx-auto px-6 sm:px-10 pt-20 pb-44 animate-fade">
+                <div className="max-w-md mx-auto px-4 sm:px-8 pt-3 pb-28 animate-fade">
                    {rpgFantasyChrome}
                     <style>{`
                         @media print {
@@ -14648,7 +14648,7 @@
             : CLASSES;
 
         return (
-            <div className="max-w-md mx-6 sm:mx-auto bg-gray-800/90 p-5 rounded-xl border border-gray-600 mt-20 mb-44 shadow-2xl animate-fade space-y-5 pb-10">
+            <div className="max-w-md mx-4 sm:mx-auto bg-gray-800/90 p-5 rounded-xl border border-gray-600 mt-4 mb-28 shadow-2xl animate-fade space-y-5 pb-10">
                 {rpgFantasyChrome}
                 <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                     <h2 className="text-3xl font-black text-amber-400 drop-shadow-md">Creazione Compagnia</h2>
@@ -21932,3 +21932,4 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
   </script>
 </body>
 </html>
+
