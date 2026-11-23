@@ -8602,18 +8602,7 @@
         const [showCityHubModal, setShowCityHubModal] = useState(false);
         const [showBachecaModal, setShowBachecaModal] = useState(false);
         const [showBattleOptionsModal, setShowBattleOptionsModal] = useState(false);
-        const arenaSectionRef = useRef(null);
-
-        useEffect(() => {
-            if (combatState && !encounterIntroSplash) {
-                const tScroll = setTimeout(() => {
-                    if (arenaSectionRef.current && arenaSectionRef.current.scrollIntoView) {
-                        arenaSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }
-                }, 120);
-                return () => clearTimeout(tScroll);
-            }
-        }, [Boolean(combatState), Boolean(encounterIntroSplash)]);
+        
         const justBeatBossRef = useRef(false);
         const openCityAfterWinRef = useRef(false);
 
@@ -8681,6 +8670,18 @@
         );
         const [zoomedItemModal, setZoomedItemModal] = useState(null); // { item, shopEntry }
         const [encounterIntroSplash, setEncounterIntroSplash] = useState(null);
+        const arenaSectionRef = useRef(null);
+
+        useEffect(() => {
+            if (combatState && !encounterIntroSplash) {
+                const tScroll = setTimeout(() => {
+                    if (arenaSectionRef.current && arenaSectionRef.current.scrollIntoView) {
+                        arenaSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }, 120);
+                return () => clearTimeout(tScroll);
+            }
+        }, [Boolean(combatState), Boolean(encounterIntroSplash)]);
         const [useMasterConsole, setUseMasterConsole] = useState(() => {
             try { return localStorage.getItem('rpg_use_master_console') === 'true'; } catch (e) { return false; }
         });
@@ -11118,7 +11119,7 @@
                 return;
             }
 
-            // 5. Gestione Rewards Speciali (Reset Partita, Purificazione, Tutti Phyrexiani, Liberazione Trappola)
+           // 5. Gestione Rewards Speciali (Reset Partita, Purificazione, Tutti Phyrexiani, Liberazione Trappola)
             if (choice.rewards) {
                 if (choice.rewards.resetCampaignOnLoss) {
                     localStorage.removeItem('rpg_party');
@@ -11129,18 +11130,6 @@
                     localStorage.removeItem('rpg_sagas_used_zones');
                     setUnlockedSagas([]);
                     setSagasUsedByZone({});
-                    setParty([]);
-                    setCharacter(null);
-                    setCombatState(null);
-                    setRpgView("create");
-                    setEventBanner("🔄 Campagna resettata: forgia una nuova Compagnia!");
-                    return;
-                }
-                if (choice.rewards.curePhyrexianHostility && party.length > 0) {
-                    const curedParty = party.map(h => Object.assign({}, h, { isPhyrexian: false, isTrapped: false }));
-                    setParty(curedParty);
-                    localStorage.setItem('rpg_party', JSON.stringify(curedParty));
-                }
                     setParty([]);
                     setCharacter(null);
                     setCombatState(null);
