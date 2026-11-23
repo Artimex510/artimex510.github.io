@@ -11346,7 +11346,7 @@
                         <div
                             className="w-full max-w-3xl h-full"
                             style={{
-                                backgroundImage: "url('./cornice_gdr_3d.png')",
+                                backgroundImage: "url('./cornice_gdr_3d.png?v=3')",
                                 backgroundSize: "100% 100%",
                                 backgroundRepeat: "no-repeat"
                             }}
@@ -11550,14 +11550,15 @@
                     {/* 1. MAPPA INTERATTIVA DELLA CITTÀ (MAPPA DENTRO LA CORNICE, RISORSE & ESCI SOPRA LA CORNICE!) */}
                     {showCityHubModal && !combatState && ReactDOM.createPortal(
                         <React.Fragment>
-                            <div
+                             <div
                                 onClick={() => { setShowCityHubModal(false); setShowBachecaModal(false); }}
-                                className="fixed inset-0 w-screen h-[100dvh] z-[38] bg-black/90 flex items-center justify-center px-6 pt-16 pb-24 animate-fade"
+                                className="fixed inset-0 w-screen h-[100dvh] z-[38] bg-black/90 flex items-center justify-center px-4 pt-14 pb-20 animate-fade"
                             >
                                 <div
                                     onClick={(e) => e.stopPropagation()}
-                                    className="relative h-full max-h-[84dvh] aspect-[941/1672] max-w-full rounded-2xl overflow-hidden border-2 border-amber-500/90 shadow-[0_0_45px_rgba(0,0,0,1)]"
+                                    className="relative h-full max-h-[88dvh] aspect-[941/1672] max-w-full rounded-2xl overflow-hidden border-2 border-amber-500/90 shadow-[0_0_45px_rgba(0,0,0,1)]"
                                 >
+                                  
                                     <img
                                         src="./mappa_citta.png"
                                         alt="Mappa della Città"
@@ -11612,7 +11613,7 @@
 
                             {/* RISORSE E TASTO ESCI SOPRA LA CORNICE 3D (SPOSTATI LEGGERMENTE PIÙ IN BASSO) */}
                             {!showBachecaModal && (
-                                <div className="fixed top-[54px] left-0 right-0 z-[44] pointer-events-none flex justify-center px-6 animate-fade">
+                                <div className="fixed top-[74px] left-0 right-0 z-[44] pointer-events-none flex justify-center px-4 animate-fade">
                                     <div className="w-full max-w-md flex justify-between items-center gap-2">
                                         <span className="bg-black/90 border-2 border-amber-400/90 text-amber-200 font-black text-[11px] px-3 py-1 rounded-full shadow-[0_2px_12px_rgba(0,0,0,0.95)] notranslate pointer-events-auto">
                                             {character.name} • {character.gold || 0}🪙 • {character.treasures || 0}💎 • {character.food || 0}🍖
@@ -21932,4 +21933,5 @@ Scrivi un racconto epico di circa 20 righe (3-4 paragrafi). Romanza i danni e gl
   </script>
 </body>
 </html>
+
 
