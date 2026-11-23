@@ -1852,7 +1852,11 @@
         aetherflux_reservoir: { id: "aetherflux_reservoir", name: "Serbatoio di Flusso Etereo", slot: "artifact", reqClassGroup: "caster", minLvl: 5, str: 0, agi: 0, mag: 4, con: 4, keywords: ["Legame Vitale"] },
         panharmonicon: { id: "panharmonicon", name: "Panarmonico (Panharmonicon)", slot: "artifact", reqClassGroup: "caster", minLvl: 6, str: 1, agi: 1, mag: 5, con: 3, keywords: [] },
         bolas_citadel_relic: { id: "bolas_citadel_relic", name: "Cittadella di Bolas (Reliquia)", slot: "artifact", reqClassGroup: "caster", minLvl: 8, str: 0, agi: 1, mag: 6, con: 3, keywords: ["Tocco Letale"] },
-        the_one_ring: { id: "the_one_ring", name: "L'Unico Anello (The One Ring)", slot: "artifact", reqLegendary: true, minLvl: 10, str: 3, agi: 3, mag: 6, con: 6, keywords: ["Indistruttibile", "Cautela"] }
+        the_one_ring: { id: "the_one_ring", name: "L'Unico Anello (The One Ring)", slot: "artifact", reqLegendary: true, minLvl: 10, str: 3, agi: 3, mag: 6, con: 6, keywords: ["Indistruttibile", "Cautela"] },
+        // --- 3 ARMI MITICHE ESCLUSIVE DEI SUPER-BOSS ERRANTI ---
+        worldslayer: { id: "worldslayer", name: "💥 Sterminatore di Mondi (Worldslayer)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 9, agi: 4, mag: 4, con: 6, keywords: ["Indistruttibile", "Travolgere", "Doppio Attacco"] },
+        kaldra_compleat: { id: "kaldra_compleat", name: "👑 Kaldra Compleat (Arma Vivente)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 8, agi: 5, mag: 5, con: 8, keywords: ["Indistruttibile", "Attacco Improvviso", "Travolgere", "Rapidità"] },
+        legacy_weapon: { id: "legacy_weapon", name: "🌌 Arma dell'Eredità (Legacy Weapon)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 7, agi: 5, mag: 9, con: 7, keywords: ["Indistruttibile", "Cautela", "Legame Vitale"] }
     };
 
     // ============================================================================
@@ -1937,7 +1941,34 @@
         kaldra_avatar: { name: "Avatar di Kaldra Risvegliato (4/4 Indistruttibile)", isHumanoid: false, maxHP: 96, initBonus: 7, dc: 29, dmg: 14, blueMana: 0, exp: 170, gold: 70, treasures: 2, loot: "kaldra_helm", isBoss: true, desc: "Il leggendario costrutto generato dall'unione di Spada, Scudo ed Elmo di Kaldra: esilia ciò che tocca!" },
         viashino_heretic_lord: { name: "Signore della Guerra Viashino & Draghi Cuccioli", isHumanoid: true, maxHP: 88, initBonus: 7, dc: 28, dmg: 13, blueMana: 0, exp: 145, gold: 65, treasures: 2, loot: "pyromancer_goggles", isBoss: false, desc: "Feroce clan di uomini-lucertola delle gole laviche di Shiv affiancato da giovani draghi sputafuoco!" },
         darigaaz_reincarnated: { name: "Darigaaz il Rinato, Drago Primordiale (Boss)", isHumanoid: false, maxHP: 112, initBonus: 8, dc: 30, dmg: 15, blueMana: 2, exp: 210, gold: 95, treasures: 3, loot: "sword_fire_ice", isBoss: true, desc: "Uno dei cinque Draghi Primordiali di Dominaria risorto dal suo uovo vulcanico nella caldera di Shiv (2💧)!" },
-        mind_flayer_nghathrod: { name: "Capitano N'ghathrod, Divoratore di Menti (Boss Telepate)", isHumanoid: true, maxHP: 98, initBonus: 9, dc: 27, dmg: 14, blueMana: 4, exp: 220, gold: 110, treasures: 3, loot: "helm_of_the_host", isBoss: true, desc: "Orrore Illithid degli Abissi che legge la memoria della vostra partita e prevede le mosse del vostro Leader (4💧)!" }
+        mind_flayer_nghathrod: { name: "Capitano N'ghathrod, Divoratore di Menti (Boss Telepate)", isHumanoid: true, maxHP: 98, initBonus: 9, dc: 27, dmg: 14, blueMana: 4, exp: 220, gold: 110, treasures: 3, loot: "helm_of_the_host", isBoss: true, desc: "Orrore Illithid degli Abissi che legge la memoria della vostra partita e prevede le mosse del vostro Leader (4💧)!" },
+
+        // --- 20 NUOVI MOSTRI ICONICI DI MAGIC (STRADA, CACCIA & BESTIARIO) ---
+        serra_angel_rogue: { name: "Angelo di Serra Guardiano (4/4 Volare)", isHumanoid: true, maxHP: 52, initBonus: 6, dc: 25, dmg: 8, blueMana: 0, exp: 80, gold: 30, treasures: 1, loot: "mask_of_avacyn", desc: "L'angelo più iconico del 1993: vigilanza eterna e spada di luce!" },
+        hypnotic_specter: { name: "Spettro Ipnotico (Hypnotic Specter 2/2)", isHumanoid: true, maxHP: 42, initBonus: 7, dc: 24, dmg: 7, blueMana: 0, exp: 70, gold: 26, treasures: 1, loot: "whisper_cloak", desc: "Un cavaliere spettrale su destriero alato che prosciuga i pensieri delle sue vittime!" },
+        royal_assassin: { name: "Assassino Reale (Royal Assassin 1/1)", isHumanoid: true, maxHP: 38, initBonus: 9, dc: 24, dmg: 9, blueMana: 0, exp: 72, gold: 32, treasures: 1, loot: "whispersilk_dagger", desc: "Colpisce con precisione letale chiunque abbassi la guardia!" },
+        mahamoti_djinn: { name: "Djinn Mahamoti dei Cieli (5/6 Volare)", isHumanoid: true, maxHP: 64, initBonus: 6, dc: 26, dmg: 10, blueMana: 2, exp: 105, gold: 42, treasures: 1, loot: "winged_boots", desc: "Spirito nobile delle tempeste blu armato di scimitarra e 2💧 Mana Blu!" },
+        force_of_nature: { name: "Forza della Natura (Force of Nature 8/8)", isHumanoid: false, maxHP: 82, initBonus: 3, dc: 27, dmg: 12, blueMana: 0, exp: 130, gold: 45, treasures: 2, loot: "nettlecyst", desc: "Colosso primordiale del 1993: il suo passo schiaccia intere foreste!" },
+        lord_of_the_pit: { name: "Signore della Fossa (Lord of the Pit 7/7)", isHumanoid: true, maxHP: 80, initBonus: 6, dc: 28, dmg: 13, blueMana: 0, exp: 135, gold: 52, treasures: 2, loot: "mask_of_griselbrand", desc: "L'antico demone alato che esige sacrifici di sangue a ogni turno!" },
+        balduvian_horde: { name: "Orda di Balduvia (Balduvian Horde 5/5)", isHumanoid: true, maxHP: 58, initBonus: 6, dc: 25, dmg: 9, blueMana: 0, exp: 88, gold: 34, treasures: 1, loot: "lavaspur_boots", desc: "Barbari urlanti delle steppe ghiacciate pronti a saccheggiare i viandanti!" },
+        spiritmonger: { name: "Mercante di Spiriti (Spiritmonger 6/6)", isHumanoid: false, maxHP: 76, initBonus: 6, dc: 27, dmg: 11, blueMana: 0, exp: 125, gold: 45, treasures: 2, loot: "venom_bracers", desc: "Una delle creature Golgari più temute di sempre: muta colore e si rigenera dal dolore!" },
+        psychatog: { name: "Psicatog Vorace (Psychatog 1/2)", isHumanoid: false, maxHP: 46, initBonus: 7, dc: 25, dmg: 9, blueMana: 2, exp: 82, gold: 30, treasures: 1, loot: "arcane_signet", desc: "Divora ricordi e carte del cimitero diventando enormemente potente (2💧 Mana Blu)!" },
+        vampire_nighthawk: { name: "Falco Notturno Vampiro (2/3 Tocco Letale)", isHumanoid: true, maxHP: 48, initBonus: 8, dc: 25, dmg: 8, blueMana: 0, exp: 84, gold: 32, treasures: 1, loot: "shadowspear", desc: "Volare, Tocco Letale e Legame Vitale: il predatore perfetto della notte!" },
+        wurmcoil_engine: { name: "Macchina dei Wurm Attorcigliati (6/6)", isHumanoid: false, maxHP: 86, initBonus: 5, dc: 28, dmg: 12, blueMana: 0, exp: 145, gold: 58, treasures: 2, loot: "mithril_coat", desc: "Colosso meccanico phyrexiano dotato di Tocco Letale e Legame Vitale!" },
+        craterhoof_behemoth: { name: "Behemoth Zoccoli Craterici (5/5 Travolgere)", isHumanoid: false, maxHP: 90, initBonus: 7, dc: 28, dmg: 14, blueMana: 0, exp: 155, gold: 60, treasures: 2, loot: "hammer_nazahn", desc: "Quando irrompe sulla strada, la sua carica devastante fa tremare il piano!" },
+        questing_beast: { name: "Bestia Errante a Tre Teste (4/4)", isHumanoid: false, maxHP: 74, initBonus: 8, dc: 27, dmg: 12, blueMana: 0, exp: 130, gold: 50, treasures: 2, loot: "sunforger", desc: "Cautela, Tocco Letale, Rapidità: la leggendaria fiera di Eldraine con un intero grimorio di abilità!" },
+        elder_gargaroth: { name: "Gargaroth Anziano (6/6 Cautela)", isHumanoid: false, maxHP: 84, initBonus: 5, dc: 28, dmg: 12, blueMana: 0, exp: 140, gold: 54, treasures: 2, loot: "pariah_shield", desc: "Bestia titanica che domina le valli selvagge travolgendo chiunque osi passarle davanti!" },
+        archon_of_cruelty: { name: "Arconte della Crudeltà (6/6 Volare)", isHumanoid: true, maxHP: 92, initBonus: 7, dc: 29, dmg: 13, blueMana: 2, exp: 165, gold: 68, treasures: 2, loot: "bolas_citadel_relic", desc: "Cavalca la sua bestia alata prosciugando speranza e punti vita (2💧 Mana Blu)!" },
+        ragavan_pirate: { name: "Ragavan, Svelto Scippatore (2/1 Pirata)", isHumanoid: true, maxHP: 36, initBonus: 10, dc: 24, dmg: 7, blueMana: 0, exp: 75, gold: 45, treasures: 2, loot: "Swiftfoot_boots", desc: "La scimmia pirata più veloce e ricca del Multiverso: scappa con l'oro e i tesori!" },
+        gishath_sun_avatar: { name: "Gishath, Avatar del Sole (7/6 Dinosauro)", isHumanoid: false, maxHP: 96, initBonus: 7, dc: 29, dmg: 14, blueMana: 0, exp: 175, gold: 72, treasures: 2, loot: "commanders_plate", desc: "Il re piumato dei dinosauri di Ixalan: Cautela, Travolgere e Rapidità!" },
+        toxrill_corrosive: { name: "Toxrill il Corrosivo (7/7 Melma)", isHumanoid: false, maxHP: 94, initBonus: 4, dc: 29, dmg: 13, blueMana: 2, exp: 170, gold: 66, treasures: 2, loot: "grafted_exoskeleton", desc: "Lumaca colossale di Innistrad che dissolve le armature nella bava acida!" },
+        griselbrand_demon: { name: "Griselbrand, Signore dei Demoni (7/7)", isHumanoid: true, maxHP: 110, initBonus: 8, dc: 30, dmg: 15, blueMana: 2, exp: 220, gold: 95, treasures: 3, loot: "mask_of_griselbrand", isBoss: true, desc: "Il più temuto dei quattro demoni di Liliana: Volare, Legame Vitale e furia abissale!" },
+        ur_dragon_avatar: { name: "L'Ur-Drago, Progenitore (10/10 Volare)", isHumanoid: false, maxHP: 124, initBonus: 8, dc: 31, dmg: 16, blueMana: 2, exp: 260, gold: 120, treasures: 3, loot: "excalibur_sword", isBoss: true, desc: "Il progenitore cosmico di tutti i draghi del Multiverso!" },
+
+        // --- 3 SUPER-BOSS MITICI ERRANTI (APPARIZIONE RARISSIMA, QUASI IMBATTIBILI, ARMA LEGGENDARIA GARANTITA!) ---
+        bfm_legend: { name: "👑 B.F.M. (Big Furry Monster 99/99 — MITICO!)", isHumanoid: false, maxHP: 195, initBonus: 9, dc: 34, dmg: 18, blueMana: 4, exp: 480, gold: 240, treasures: 5, loot: "worldslayer", isBoss: true, isMythicWandering: true, desc: "IL LEGGENDARIO MOSTRO A DUE CARTE 99/99! Un titano peloso alto come una montagna: quasi imbattibile, ma custodisce lo Sterminatore di Mondi (Worldslayer)!" },
+        emrakul_aeons_torn: { name: "👑 Emrakul, lo Strazio Eterno (15/15 — MITICO!)", isHumanoid: false, maxHP: 205, initBonus: 10, dc: 35, dmg: 19, blueMana: 4, exp: 520, gold: 260, treasures: 5, loot: "kaldra_compleat", isBoss: true, isMythicWandering: true, desc: "Il più terrificante dei Titani Eldrazi: Annientatore 6, Volare, Protezione dalle Magie e 4💧 Mana Blu! Custodisce Kaldra Compleat!" },
+        progenitus_worldsoul: { name: "👑 Progenitus, l'Anima del Mondo (10/10 — MITICO!)", isHumanoid: false, maxHP: 190, initBonus: 9, dc: 35, dmg: 18, blueMana: 4, exp: 500, gold: 250, treasures: 5, loot: "legacy_weapon", isBoss: true, isMythicWandering: true, desc: "L'Idra Avatar dei Cinque Colori dotata di Protezione da Tutto! Custodisce la leggendaria Arma dell'Eredità (Legacy Weapon)!" }
     };
 
     const RPG_STORY_NODES_PART1 = {
@@ -5511,7 +5542,7 @@
 
         // Identifica i mostri dotati di Volare (Contro di loro Volare non dà il bonus di +4 danni!)
         const isMonsterFlying = (monsterKey) => {
-            return ["storm_crow", "serra_griffin", "sengir_vampire", "akroma_angel", "shivan_dragon", "marit_lage"].includes(monsterKey);
+            return ["storm_crow", "serra_griffin", "sengir_vampire", "akroma_angel", "shivan_dragon", "marit_lage", "serra_angel_rogue", "hypnotic_specter", "mahamoti_djinn", "lord_of_the_pit", "vampire_nighthawk", "archon_of_cruelty", "griselbrand_demon", "ur_dragon_avatar", "emrakul_aeons_torn"].includes(monsterKey);
         };
 
         // Arricchisce automaticamente le abilità degli oggetti iconici con Rapidità, Doppio Attacco e Infettare!
@@ -6102,6 +6133,11 @@
                 localStorage.removeItem('rpg_party');
                 localStorage.removeItem('rpg_character');
                 localStorage.removeItem('rpg_claimed_loot');
+                localStorage.removeItem('rpg_chronicle');
+                localStorage.removeItem('rpg_unlocked_sagas');
+                localStorage.removeItem('rpg_sagas_used_zones');
+                setUnlockedSagas([]);
+                setSagasUsedByZone({});
                 localStorage.removeItem('rpg_world_clock');
                 localStorage.removeItem('rpg_pvp_full_party_backup');
                 setParty([]);
@@ -6124,6 +6160,11 @@
                     localStorage.removeItem('rpg_party');
                     localStorage.removeItem('rpg_character');
                     localStorage.removeItem('rpg_claimed_loot');
+                    localStorage.removeItem('rpg_chronicle');
+                    localStorage.removeItem('rpg_unlocked_sagas');
+                    localStorage.removeItem('rpg_sagas_used_zones');
+                    setUnlockedSagas([]);
+                    setSagasUsedByZone({});
                     localStorage.removeItem('rpg_world_clock');
                     localStorage.removeItem('rpg_pvp_full_party_backup');
                     setParty([]);
@@ -7865,12 +7906,16 @@
         const [loadingMonsterArt, setLoadingMonsterArt] = useState(false);
         const [bestiaryArtCache, setBestiaryArtCache] = useState(() => {
             try {
-                return JSON.parse(localStorage.getItem('rpg_bestiary_art_cache_v4') || "{}");
+                return JSON.parse(localStorage.getItem('rpg_bestiary_art_cache_v5') || "{}");
             } catch (e) {
                 return {};
             }
         });
 
+        const LOCAL_MONSTER_IMAGES = {
+            bfm_legend: "./bfm_legend.png"
+        };
+      
         // Tutti i 76+ mostri e Boss mappati ai nomi esatti delle carte ufficiali su Scryfall!
         const MONSTER_SCRYFALL_MAP = {
             storm_crow: "Storm Crow",
@@ -7950,7 +7995,30 @@
             darigaaz_reincarnated: "Darigaaz Reincarnated",
             mind_flayer_nghathrod: "Captain N'ghathrod",
             pvp_phyrexian_players: "Phyrexian Rebirth",
-            fallen_party_revenants: "Returned Pastcaller"
+            fallen_party_revenants: "Returned Pastcaller",
+            serra_angel_rogue: "Serra Angel",
+            hypnotic_specter: "Hypnotic Specter",
+            royal_assassin: "Royal Assassin",
+            mahamoti_djinn: "Mahamoti Djinn",
+            force_of_nature: "Force of Nature",
+            lord_of_the_pit: "Lord of the Pit",
+            balduvian_horde: "Balduvian Horde",
+            spiritmonger: "Spiritmonger",
+            psychatog: "Psychatog",
+            vampire_nighthawk: "Vampire Nighthawk",
+            wurmcoil_engine: "Wurmcoil Engine",
+            craterhoof_behemoth: "Craterhoof Behemoth",
+            questing_beast: "Questing Beast",
+            elder_gargaroth: "Elder Gargaroth",
+            archon_of_cruelty: "Archon of Cruelty",
+            ragavan_pirate: "Ragavan, Nimble Pilferer",
+            gishath_sun_avatar: "Gishath, Sun's Avatar",
+            toxrill_corrosive: "Toxrill, the Corrosive",
+            griselbrand_demon: "Griselbrand",
+            ur_dragon_avatar: "The Ur-Dragon",
+            bfm_legend: "B.F.M. (Big Furry Monster)",
+            emrakul_aeons_torn: "Emrakul, the Aeons Torn",
+            progenitus_worldsoul: "Progenitus"
         };
 
         // Scarica in 2 sole chiamate di gruppo tutti i 76 art_crop da Scryfall evitando qualsiasi blocco 429!
@@ -8003,7 +8071,7 @@
                 if (!isCancelled) {
                     setBestiaryArtCache(updatedCache);
                     try {
-                        localStorage.setItem('rpg_bestiary_art_cache_v4', JSON.stringify(updatedCache));
+                        localStorage.setItem('rpg_bestiary_art_cache_v5', JSON.stringify(updatedCache));
                     } catch (e) {}
                 }
             };
@@ -8018,6 +8086,11 @@
                 return;
             }
             const mKey = combatState.key;
+            if (LOCAL_MONSTER_IMAGES[mKey]) {
+                setMonsterArtUrl(LOCAL_MONSTER_IMAGES[mKey]);
+                setLoadingMonsterArt(false);
+                return;
+            }
             if (bestiaryArtCache && bestiaryArtCache[mKey]) {
                 setMonsterArtUrl(bestiaryArtCache[mKey]);
                 setLoadingMonsterArt(false);
@@ -8048,7 +8121,7 @@
                         setBestiaryArtCache(prev => {
                             const next = Object.assign({}, prev);
                             next[mKey] = artCrop;
-                            try { localStorage.setItem('rpg_bestiary_art_cache_v4', JSON.stringify(next)); } catch (e) {}
+                            try { localStorage.setItem('rpg_bestiary_art_cache_v5', JSON.stringify(next)); } catch (e) {}
                             return next;
                         });
                     } else {
@@ -8527,6 +8600,85 @@
         // --- 4. SPLASH ENTRATA BOSS (7s) E MUSICA DI BATTAGLIA CON FADE-OUT ---
         // ====================================================================
         const [showCityHubModal, setShowCityHubModal] = useState(false);
+        const [showBachecaModal, setShowBachecaModal] = useState(false);
+        const [showBattleOptionsModal, setShowBattleOptionsModal] = useState(false);
+        const arenaSectionRef = useRef(null);
+
+        useEffect(() => {
+            if (combatState && !encounterIntroSplash) {
+                const tScroll = setTimeout(() => {
+                    if (arenaSectionRef.current && arenaSectionRef.current.scrollIntoView) {
+                        arenaSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                }, 120);
+                return () => clearTimeout(tScroll);
+            }
+        }, [Boolean(combatState), Boolean(encounterIntroSplash)]);
+        const justBeatBossRef = useRef(false);
+        const openCityAfterWinRef = useRef(false);
+
+        const ROAMING_MONSTER_POOL = [
+            "storm_crow", "fblthp_guards", "goblin_pack", "goblin_piledriver", "bandit_rogues",
+            "brushwagg_mutant", "llanowar_troll", "tarmogoyf", "colossal_dreadmaw", "craw_wurm",
+            "sliver_swarm", "undead_lord", "sengir_vampire", "serra_griffin",
+            "serra_angel_rogue", "hypnotic_specter", "royal_assassin", "mahamoti_djinn",
+            "force_of_nature", "lord_of_the_pit", "balduvian_horde", "spiritmonger",
+            "psychatog", "vampire_nighthawk", "wurmcoil_engine", "craterhoof_behemoth",
+            "questing_beast", "elder_gargaroth", "archon_of_cruelty", "ragavan_pirate",
+            "gishath_sun_avatar", "toxrill_corrosive", "griselbrand_demon", "ur_dragon_avatar"
+        ];
+        const MYTHIC_WANDERING_BOSSES = ["bfm_legend", "emrakul_aeons_torn", "progenitus_worldsoul"];
+
+        const pickRandomEncounterKey = (mythicChance) => {
+            if (Math.random() < (mythicChance || 0.04)) {
+                return MYTHIC_WANDERING_BOSSES[Math.floor(Math.random() * MYTHIC_WANDERING_BOSSES.length)];
+            }
+            const heroLvl = character ? ((character.level || 1) + (character.secondaryLevel || 0)) : 1;
+            const maxIdx = heroLvl <= 2 ? 16 : (heroLvl <= 4 ? 26 : ROAMING_MONSTER_POOL.length);
+            const slice = ROAMING_MONSTER_POOL.slice(0, Math.min(ROAMING_MONSTER_POOL.length, maxIdx));
+            return slice[Math.floor(Math.random() * slice.length)] || "goblin_pack";
+        };
+
+        const handleGoToCityClick = () => {
+            if (combatState) return;
+            if (showCityHubModal) {
+                setShowCityHubModal(false);
+                setShowBachecaModal(false);
+                return;
+            }
+            // Se hai appena sconfitto un grande Boss, entri in Città in sicurezza (0% imboscata)
+            if (!justBeatBossRef.current && Math.random() < 0.28) {
+                const ambushKey = pickRandomEncounterKey(0.05);
+                const mName = MTG_BESTIARY[ambushKey] ? MTG_BESTIARY[ambushKey].name : "Mostro Errante";
+                openCityAfterWinRef.current = true;
+                startMonsterEncounter(ambushKey, character.currentNode);
+                setEventBanner(`🛤️⚔️ IMBOSCATA SULLA STRADA PER LA CITTÀ! Mentre vi incamminate verso le mura, **${mName}** vi sbarra il passo! Sconfiggetelo per entrare in Città!`);
+                return;
+            }
+            justBeatBossRef.current = false;
+            setShowCityHubModal(true);
+        };
+
+        // Wrapper modale dedicato per ogni bottega/servizio (così non si aprono in mezzo alla schermata!)
+        const renderDedicatedModal = (contentNode, closeFn, allowBackToCity) => ReactDOM.createPortal(
+            <div
+                onClick={closeFn}
+                className="fixed inset-0 w-screen h-[100dvh] z-[10002] bg-black/82 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
+            >
+                <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl max-h-[86dvh] overflow-y-auto rounded-2xl shadow-2xl space-y-2">
+                    {allowBackToCity && !combatState && (
+                        <button
+                            onClick={() => { closeFn(); setShowCityHubModal(true); }}
+                            className="bg-amber-500 hover:bg-amber-400 text-black font-black text-xs px-3.5 py-1.5 rounded-lg shadow border border-amber-200"
+                        >
+                            ⬅ Torna alla Mappa Città
+                        </button>
+                    )}
+                    {contentNode}
+                </div>
+            </div>,
+            document.body
+        );
         const [zoomedItemModal, setZoomedItemModal] = useState(null); // { item, shopEntry }
         const [encounterIntroSplash, setEncounterIntroSplash] = useState(null);
         const [useMasterConsole, setUseMasterConsole] = useState(() => {
@@ -8540,7 +8692,7 @@
 
         // --- CACHE IMMAGINI SCRYFALL ART CROP PER TUTTI GLI EQUIPAGGIAMENTI ---
         const [itemArtCache, setItemArtCache] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('rpg_item_art_cache_v2') || "{}"); } catch (e) { return {}; }
+            try { return JSON.parse(localStorage.getItem('rpg_item_art_cache_v3') || "{}"); } catch (e) { return {}; }
         });
 
         const ITEM_SCRYFALL_MAP = {
@@ -8630,7 +8782,10 @@
             aetherflux_reservoir: "Aetherflux Reservoir",
             panharmonicon: "Panharmonicon",
             bolas_citadel_relic: "Bolas's Citadel",
-            the_one_ring: "The One Ring"
+            the_one_ring: "The One Ring",
+            worldslayer: "Worldslayer",
+            kaldra_compleat: "Kaldra Compleat",
+            legacy_weapon: "Legacy Weapon"
         };
 
         // Pre-carica in 1 sola chiamata batch tutti gli art_crop degli equipaggiamenti (zero blocco 429!)
@@ -8681,7 +8836,7 @@
 
                 if (!isCancelled) {
                     setItemArtCache(updatedCache);
-                    try { localStorage.setItem('rpg_item_art_cache_v2', JSON.stringify(updatedCache)); } catch (e) {}
+                    try { localStorage.setItem('rpg_item_art_cache_v3', JSON.stringify(updatedCache)); } catch (e) {}
                 }
             };
             fetchBatchItemArts();
@@ -9310,7 +9465,7 @@
 
             const avgPartyLvl = sumLevels / Math.max(1, activeParty.length);
             const isSmallMob = ["goblin_pack", "bandit_rogues", "storm_crow", "fblthp_guards", "brushwagg_mutant"].includes(monsterKey);
-            const isBossMob = mTemplate.isBoss || ["sliver_queen", "phage_untouchable", "akroma_angel", "phyrexian_obliterator", "shivan_dragon", "urza_lotus_guardian", "blightsteel_colossus", "marit_lage"].includes(monsterKey);
+            const isBossMob = mTemplate.isBoss || mTemplate.isMythicWandering || ["sliver_queen", "phage_untouchable", "akroma_angel", "phyrexian_obliterator", "shivan_dragon", "urza_lotus_guardian", "blightsteel_colossus", "marit_lage"].includes(monsterKey);
 
             let scaledHP = mTemplate.maxHP;
             let scaledDC = mTemplate.dc;
@@ -9397,6 +9552,10 @@
                 log: [`👹 ${mTemplate.name} (${scaledHP} PV • CD ${scaledDC} • Danno ${scaledDmg}${flyingMonster ? " • 🦅 Volante" : " • 🐾 Terrestre"}) tira Iniziativa: ${mInitTotal}!${rogueliteScarNote}`]
             };
 
+            if (mTemplate.isMythicWandering) {
+                baseCombat.log.unshift(`🌟👑 INCONTRO MITICO ERRANTE! **${mTemplate.name}** è apparso dal nulla: una leggenda quasi imbattibile che custodisce un'arma leggendaria!`);
+            }
+          
             // --- PASSO 3 INSERITO QUI ---
             // 1. Se un eroe indossa tutti e 3 i pezzi del Set di Kaldra, schiera GRATIS l'Avatar di Kaldra 4/4!
             if (character && getEquipmentSetInfo(character).fullKaldra && !character.activeToken) {
@@ -9418,11 +9577,13 @@
             // --- FINE PASSO 3 ---
 
             // --- SPLASH CINEMATOGRAFICO DI ENTRATA MOSTRO / BOSS (7 SECONDI + MUSICA BATTAGLIA!) ---
-            const cachedSplashArt = (bestiaryArtCache && bestiaryArtCache[monsterKey])
-                ? bestiaryArtCache[monsterKey]
-                : (MONSTER_SCRYFALL_MAP[monsterKey]
-                    ? ("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(MONSTER_SCRYFALL_MAP[monsterKey]) + "&format=image&version=art_crop")
-                    : "./rpg_monster_default.png");
+            const cachedSplashArt = LOCAL_MONSTER_IMAGES[monsterKey]
+                ? LOCAL_MONSTER_IMAGES[monsterKey]
+                : ((bestiaryArtCache && bestiaryArtCache[monsterKey])
+                    ? bestiaryArtCache[monsterKey]
+                    : (MONSTER_SCRYFALL_MAP[monsterKey]
+                        ? ("https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(MONSTER_SCRYFALL_MAP[monsterKey]) + "&format=image&version=art_crop")
+                        : "./rpg_monster_default.png"));
 
             if (encounterSplashTimeoutRef.current) clearTimeout(encounterSplashTimeoutRef.current);
             setEncounterIntroSplash({
@@ -9443,6 +9604,8 @@
             setLastRollInfo(null);
             setEventBanner(null);
             setShowCityHubModal(false);
+            setShowBachecaModal(false);
+            setShowBattleOptionsModal(false);
             setShowMerchant(false);
             setShowMercenaryModal(false);
             setShowKrarkModal(false);
@@ -9464,7 +9627,6 @@
             } else {
                 setCombatState(baseCombat);
             }
-            window.scrollTo(0, 0);
         };
       
         const submitHeroInitiativeRoll = (d20Val) => {
@@ -10099,6 +10261,13 @@
                 }, 400);
             }
 
+            if (combatState.isBoss) {
+                justBeatBossRef.current = true;
+            }
+            const shouldOpenCityNow = openCityAfterWinRef.current;
+            openCityAfterWinRef.current = false;
+            setShowBattleOptionsModal(false);
+          
             setCombatState(null);
 
             const currentUpdatedActive = partyWithMvp.find(h => h.id === lastActiveHero.id) || partyWithMvp[0];
@@ -10109,7 +10278,12 @@
                 `${finalBlowMsg}\n🏆 VITTORIA CONTRO ${monsterName.toUpperCase()}!\n📊 Danni: ${dmgReportLines.join(" | ")}\n🥇 MVP: **${mvpHeroObj.name}** (+${bonusMvpExp} EXP, +${bonusMvpGold} 🪙 e +1 💎!)${plunderBanner}${rogueliteRecoveryBanner}`,
                 partyWithMvp
             );
+
+            if (shouldOpenCityNow) {
+                setShowCityHubModal(true);
+            }
         };
+
       
         // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC (Volare, Travolgere, Tocco Letale, Attacco Improvviso, Infettare)
         // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC + SCUDO PUZZLE DEI BOSS
@@ -10770,7 +10944,6 @@
             } else {
                 setCombatState(pvpCombatObj);
             }
-            window.scrollTo(0, 0);
         };
 
         // RIUNISCE E ASSIMILA TUTTI GLI EROI (SIA I VINCITORI INFETTI SIA I PURI SCONFITTI) QUANDO VINCE PHYREXIA!
@@ -10951,6 +11124,23 @@
                     localStorage.removeItem('rpg_party');
                     localStorage.removeItem('rpg_character');
                     localStorage.removeItem('rpg_claimed_loot');
+                    localStorage.removeItem('rpg_chronicle');
+                    localStorage.removeItem('rpg_unlocked_sagas');
+                    localStorage.removeItem('rpg_sagas_used_zones');
+                    setUnlockedSagas([]);
+                    setSagasUsedByZone({});
+                    setParty([]);
+                    setCharacter(null);
+                    setCombatState(null);
+                    setRpgView("create");
+                    setEventBanner("🔄 Campagna resettata: forgia una nuova Compagnia!");
+                    return;
+                }
+                if (choice.rewards.curePhyrexianHostility && party.length > 0) {
+                    const curedParty = party.map(h => Object.assign({}, h, { isPhyrexian: false, isTrapped: false }));
+                    setParty(curedParty);
+                    localStorage.setItem('rpg_party', JSON.stringify(curedParty));
+                }
                     setParty([]);
                     setCharacter(null);
                     setCombatState(null);
@@ -10992,9 +11182,25 @@
                 return;
             }
 
-            // 7. Movimento semplice
+            // 7. Movimento semplice (con possibilità random di Incontro Errante o Super-Boss Mitico lungo la strada!)
             if (choice.type !== 'roll') {
                 setPendingRollChoice(null);
+                const destKey = choice.nextNode;
+                const destObj = destKey ? RPG_STORY_NODES[destKey] : null;
+                const isSafeDestination = !destKey || destKey === character.currentNode || destKey === "start" || destKey === "victory_epilogue" || destKey === "planeswalker_nexus" || (destObj && destObj.isMerchantNode) || (destObj && destObj.isTrapNode) || (destObj && destObj.isPhyrexianTrialNode);
+                const hasSpecialReward = Boolean(choice.rewards && (choice.rewards.loot || choice.rewards.makeLegendary || choice.rewards.igniteSpark || choice.rewards.addMana || choice.rewards.unlockSpell));
+
+                if (!isSafeDestination && !hasSpecialReward && !justBeatBossRef.current && Math.random() < 0.25) {
+                    const roadMonsterKey = pickRandomEncounterKey(0.04);
+                    const roadM = MTG_BESTIARY[roadMonsterKey];
+                    startMonsterEncounter(roadMonsterKey, destKey);
+                    setEventBanner(`🧭⚔️ INCONTRO LUNGO IL CAMMINO! Mentre viaggiate verso **${destObj ? destObj.title : destKey}**, vi imbattete in **${roadM ? roadM.name : "un Mostro Errante"}**! Sconfiggetelo per proseguire!`);
+                    return;
+                }
+
+                if (destKey && destKey !== character.currentNode) {
+                    justBeatBossRef.current = false;
+                }
                 applyRewardsAndMove(character, choice.rewards, choice.nextNode);
                 return;
             }
@@ -11226,6 +11432,11 @@
                             localStorage.removeItem('rpg_party');
                             localStorage.removeItem('rpg_character');
                             localStorage.removeItem('rpg_claimed_loot');
+                            localStorage.removeItem('rpg_chronicle');
+                            localStorage.removeItem('rpg_unlocked_sagas');
+                            localStorage.removeItem('rpg_sagas_used_zones');
+                            setUnlockedSagas([]);
+                            setSagasUsedByZone({});
                             localStorage.removeItem('rpg_world_clock');
                             localStorage.removeItem('rpg_pvp_full_party_backup');
                             setParty([]);
@@ -11265,14 +11476,8 @@
             return (
                 <div className="max-w-3xl mx-auto px-6 sm:px-10 pt-20 pb-44 animate-fade space-y-4">
                     {rpgFantasyChrome}
-                    {/* BARRA COMANDI SUPERIORE PULITA (CON HUB CITTÀ & GRUPPO BATTAGLIA) */}
-                    <div className="bg-gray-800/95 p-3 rounded-xl border border-gray-600 space-y-2.5 shadow-lg">
-                        {/* RIGA 1: GESTIONE SEMPRE ATTIVA, CITTÀ & ATTIVITÀ BLOCCATE IN BATTAGLIA */}
-                        {combatState && (
-                            <div className="bg-red-950/80 border border-red-500/70 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase text-red-200 tracking-wide text-center">
-                                🔒 Combattimento in corso: Città, Caccia, Fossa, Taglie e Bivacco bloccati
-                            </div>
-                        )}
+                    {/* BARRA COMANDI SUPERIORE COMPATTA (TUTTI I SERVIZI SONO NELLA MAPPA CITTÀ) */}
+                    <div className="bg-gray-800/95 p-3 rounded-xl border border-gray-600 space-y-2 shadow-lg">
                         <div className="flex flex-wrap items-center gap-1.5">
                             <button onClick={() => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); setRpgView("sheet"); }} className="bg-amber-500 hover:bg-amber-400 text-black font-black px-3 py-2 rounded-lg text-xs shadow">
                                 🪪 Scheda & Stampa
@@ -11282,31 +11487,10 @@
                             </button>
                             <button
                                 disabled={Boolean(combatState)}
-                                onClick={() => !combatState && setShowCityHubModal(!showCityHubModal)}
+                                onClick={handleGoToCityClick}
                                 className={`font-black px-3.5 py-2 rounded-lg text-xs shadow border transition-all ${combatState ? "opacity-35 pointer-events-none grayscale select-none bg-gray-800 text-gray-400 border-gray-600" : (showCityHubModal ? "bg-amber-400 text-black border-white scale-105" : "bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 text-black border-yellow-300")}`}
                             >
                                 🏘️ Vai in Città ({character.gold || 0} 🪙)
-                            </button>
-                            <button
-                                disabled={Boolean(combatState)}
-                                onClick={() => !combatState && startMonsterEncounter(Object.keys(MTG_BESTIARY)[Math.floor(Math.random() * 6)], character.currentNode)}
-                                className={`bg-red-700 hover:bg-red-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
-                            >
-                                ⚔️ Caccia Mostri
-                            </button>
-                            <button
-                                disabled={Boolean(combatState)}
-                                onClick={() => !combatState && setShowCabalPitModal(!showCabalPitModal)}
-                                className={`bg-purple-900 hover:bg-purple-800 text-purple-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-purple-400 ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
-                            >
-                                🗼 Fossa (Rec: {cabalPitRecord})
-                            </button>
-                            <button
-                                disabled={Boolean(combatState)}
-                                onClick={() => !combatState && setShowBountyModal(!showBountyModal)}
-                                className={`bg-amber-700 hover:bg-amber-600 text-white font-black px-3 py-2 rounded-lg text-xs shadow ${combatState ? "opacity-35 pointer-events-none grayscale select-none" : ""}`}
-                            >
-                                🎯 Taglie
                             </button>
                             <button
                                 disabled={Boolean(combatState)}
@@ -11356,100 +11540,208 @@
                                 </button>
                             )}
                         </div>
-                        {/* RIGA 2: ARSENALE DI BATTAGLIA (VICINI TRA LORO) + DADI & VOCE */}
+
+                        {/* RIGA 2 SOLO DADI & NARRAZIONE */}
                         <div className="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-gray-700">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                                <span className="text-[10px] font-black uppercase text-red-400 mr-0.5">⚔️ Battaglia:</span>
-                                <button
-                                    onClick={() => setShowSagasModal(!showSagasModal)}
-                                    className="bg-amber-600 hover:bg-amber-500 text-black font-black px-2.5 py-1.5 rounded-lg text-xs shadow"
-                                >
-                                    📜 Saghe ({unlockedSagas.length}/5)
+                            <div className="flex bg-gray-900 p-1 rounded-lg border border-amber-500/60">
+                                <button onClick={() => { setDiceMode("auto"); setPendingRollChoice(null); setPendingCombatAction(null); }} className={`px-2.5 py-1 rounded text-[11px] font-black transition-all ${diceMode === "auto" ? "bg-amber-500 text-black shadow" : "text-gray-400"}`}>
+                                    🤖 Dado Auto
                                 </button>
-                                <button
-                                    onClick={() => { setSelectedAuraTargetId(character.id); setShowAurasModal(!showAurasModal); }}
-                                    className="bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-black px-2.5 py-1.5 rounded-lg text-xs shadow border border-fuchsia-300"
-                                >
-                                    ✨ Aure
-                                </button>
-                                <button
-                                    onClick={signDemonicPact}
-                                    className="bg-red-950 hover:bg-red-800 text-red-200 font-black px-2.5 py-1.5 rounded-lg text-xs shadow border border-red-500"
-                                >
-                                    😈 Patto Demoniaco
-                                </button>
-                                <button
-                                    onClick={() => setShowAppBridgeModal(!showAppBridgeModal)}
-                                    className="bg-orange-500 hover:bg-orange-400 text-black font-black px-2.5 py-1.5 rounded-lg text-xs shadow"
-                                >
-                                    🃏 Mazzi & Collezione
+                                <button onClick={() => setDiceMode("manual")} className={`px-2.5 py-1 rounded text-[11px] font-black transition-all ${diceMode === "manual" ? "bg-emerald-500 text-black shadow" : "text-gray-400"}`}>
+                                    🖐️ Dado Reale
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-1.5">
-                                <div className="flex bg-gray-900 p-1 rounded-lg border border-amber-500/60">
-                                    <button onClick={() => { setDiceMode("auto"); setPendingRollChoice(null); setPendingCombatAction(null); }} className={`px-2 py-1 rounded text-[11px] font-black transition-all ${diceMode === "auto" ? "bg-amber-500 text-black shadow" : "text-gray-400"}`}>
-                                        🤖 Dado Auto
-                                    </button>
-                                    <button onClick={() => setDiceMode("manual")} className={`px-2 py-1 rounded text-[11px] font-black transition-all ${diceMode === "manual" ? "bg-emerald-500 text-black shadow" : "text-gray-400"}`}>
-                                        🖐️ Dado Reale
-                                    </button>
-                                </div>
-
-                                <button onClick={() => toggleSpeech(`${currentNodeObj.title}. ${storyText}`)} className={`px-2.5 py-1.5 rounded-lg font-black text-xs shadow border ${isSpeaking ? "bg-red-700 border-red-400 text-white animate-pulse" : "bg-gray-700 border-gray-500 text-gray-200"}`}>
-                                    {isSpeaking ? "🛑 Ferma" : "🎙️ Narra"}
-                                </button>
-                            </div>
+                            <button onClick={() => toggleSpeech(`${currentNodeObj.title}. ${storyText}`)} className={`px-3 py-1.5 rounded-lg font-black text-xs shadow border ${isSpeaking ? "bg-red-700 border-red-400 text-white animate-pulse" : "bg-gray-700 border-gray-500 text-gray-200"}`}>
+                                {isSpeaking ? "🛑 Ferma" : "🎙️ Narra"}
+                            </button>
                         </div>
                     </div>
 
-                    {/* HUB CITTÀ / VILLAGGIO GDR (MERCANTE, LOCANDA, KRARK, FABBRO, ALCHIMIA, RUNE) */}
-                    {showCityHubModal && (
-                        <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
-                            <div className="flex justify-between items-center border-b border-gray-700 pb-2">
-                                <div>
-                                    <h3 className="text-amber-400 font-black text-base uppercase">
-                                        🏘️ Piazza della Città — Servizi per la Compagnia
-                                    </h3>
-                                    <p className="text-xs text-gray-300">
-                                        Eroe attivo: <b className="text-white">{character.name}</b> • Oro: <b className="text-yellow-400 notranslate">{character.gold || 0} 🪙</b> • Tesori: <b className="text-cyan-300 notranslate">{character.treasures || 0} 💎</b> • Cibo: <b className="text-emerald-300 notranslate">{character.food || 0} 🍖</b>
-                                    </p>
+                    {/* 1. MAPPA INTERATTIVA DELLA CITTÀ (POSIZIONATA DENTRO LA CORNICE 3D!) */}
+                    {showCityHubModal && !combatState && ReactDOM.createPortal(
+                        <div
+                            onClick={() => { setShowCityHubModal(false); setShowBachecaModal(false); }}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[38] bg-black/90 flex items-center justify-center px-5 pt-14 pb-24 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative h-full max-h-[82dvh] aspect-[941/1672] max-w-full rounded-2xl overflow-hidden border-2 border-amber-500/90 shadow-[0_0_45px_rgba(0,0,0,1)]"
+                            >
+                                <img
+                                    src="./mappa_citta.png"
+                                    alt="Mappa della Città"
+                                    className="w-full h-full object-fill select-none"
+                                />
+
+                                {/* BARRA INFO RAPIDA + CHIUDI IN ALTO SULLA MAPPA */}
+                                <div className="absolute top-2 left-2 right-2 flex justify-between items-center gap-1 z-20 pointer-events-none">
+                                    <span className="bg-black/80 border border-amber-400/80 text-amber-200 font-black text-[10px] px-2.5 py-1 rounded-full shadow notranslate pointer-events-auto">
+                                        {character.name} • {character.gold || 0}🪙 • {character.treasures || 0}💎 • {character.food || 0}🍖
+                                    </span>
+                                    <button
+                                        onClick={() => { setShowCityHubModal(false); setShowBachecaModal(false); }}
+                                        className="bg-red-900/90 hover:bg-red-700 border border-red-300 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-lg pointer-events-auto active:scale-95"
+                                    >
+                                        Esci ✖
+                                    </button>
                                 </div>
-                                <button onClick={() => setShowCityHubModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">Chiudi ✖</button>
+
+                                {/* 7 ZONE CLICCABILI CALIBRATE AL MILLIMETRO SUI CARTELLI DEL VILLAGGIO */}
+                                <button
+                                    onClick={() => openCityService("merchant")}
+                                    title="Mercante Planare"
+                                    style={{ left: "8%", top: "14%", width: "31%", height: "11%" }}
+                                    className="absolute z-10 rounded-xl border border-transparent hover:border-amber-300/80 hover:bg-amber-300/15 active:bg-amber-400/35 transition-all cursor-pointer"
+                                />
+                                <button
+                                    onClick={() => openCityService("mercenary")}
+                                    title="Locanda Mercenari"
+                                    style={{ left: "52%", top: "16%", width: "42%", height: "14%" }}
+                                    className={`absolute z-10 rounded-xl border transition-all cursor-pointer ${hasDeadCompanions ? "border-emerald-400 bg-emerald-400/20 animate-pulse" : "border-transparent hover:border-amber-300/80 hover:bg-amber-300/15 active:bg-amber-400/35"}`}
+                                />
+                                <button
+                                    onClick={() => openCityService("krark")}
+                                    title="Tavolo di Krark"
+                                    style={{ left: "8%", top: "39%", width: "26%", height: "12%" }}
+                                    className="absolute z-10 rounded-xl border border-transparent hover:border-amber-300/80 hover:bg-amber-300/15 active:bg-amber-400/35 transition-all cursor-pointer"
+                                />
+                                <button
+                                    onClick={() => openCityService("blacksmith")}
+                                    title="Fabbro Runico"
+                                    style={{ left: "69%", top: "38%", width: "29%", height: "15%" }}
+                                    className="absolute z-10 rounded-xl border border-transparent hover:border-amber-300/80 hover:bg-amber-300/15 active:bg-amber-400/35 transition-all cursor-pointer"
+                                />
+                                <button
+                                    onClick={() => openCityService("alchemy")}
+                                    title="Laboratorio Alchemico"
+                                    style={{ left: "12%", top: "54%", width: "32%", height: "16%" }}
+                                    className="absolute z-10 rounded-xl border border-transparent hover:border-amber-300/80 hover:bg-amber-300/15 active:bg-amber-400/35 transition-all cursor-pointer"
+                                />
+                                <button
+                                    onClick={() => openCityService("runes")}
+                                    title="Rune Pietre del Potere"
+                                    style={{ left: "63%", top: "61%", width: "34%", height: "15%" }}
+                                    className="absolute z-10 rounded-xl border border-transparent hover:border-amber-300/80 hover:bg-amber-300/15 active:bg-amber-400/35 transition-all cursor-pointer"
+                                />
+                                <button
+                                    onClick={() => setShowBachecaModal(true)}
+                                    title="Bacheca della Città (Fossa, Taglie, Caccia Mostri)"
+                                    style={{ left: "41%", top: "75%", width: "23%", height: "12%" }}
+                                    className="absolute z-10 rounded-xl border border-transparent hover:border-red-400/85 hover:bg-red-500/15 active:bg-red-500/35 transition-all cursor-pointer"
+                                />
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                                <button onClick={() => openCityService("merchant")} className="bg-yellow-950/70 hover:bg-yellow-900 border-2 border-yellow-500 p-3 rounded-xl text-left transition-all active:scale-95">
-                                    <span className="text-2xl block mb-1">⚖️</span>
-                                    <p className="text-yellow-300 font-black text-xs">Mercante Planare</p>
-                                    <p className="text-gray-300 text-[10px]">Compra e vendi armi, armature e pergamene</p>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* 2. BACHECA DELLA CITTÀ CON CORNICE ROSSO ARENA SOPRA IL VILLAGGIO */}
+                    {showBachecaModal && !combatState && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setShowBachecaModal(false)}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[39] bg-black/65 backdrop-blur-[2px] flex items-center justify-center p-4 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-[430px] aspect-[1230/1278] rounded-2xl overflow-hidden border-4 border-red-600 shadow-[0_0_45px_rgba(220,38,38,0.9)] bg-black"
+                            >
+                                <img
+                                    src="./bacheca_citta.png"
+                                    alt="Bacheca della Città"
+                                    className="w-full h-full object-fill select-none"
+                                />
+
+                                <button
+                                    onClick={() => setShowBachecaModal(false)}
+                                    className="absolute top-2.5 right-2.5 z-20 bg-red-900/95 hover:bg-red-700 border-2 border-red-300 text-white font-black text-xs px-3 py-1 rounded-full shadow-xl active:scale-95"
+                                >
+                                    ⬅ Villaggio
                                 </button>
-                                <button onClick={() => openCityService("mercenary")} className={`border-2 p-3 rounded-xl text-left transition-all active:scale-95 ${hasDeadCompanions ? "bg-emerald-900 border-white animate-pulse" : "bg-teal-950/70 hover:bg-teal-900 border-teal-500"}`}>
-                                    <span className="text-2xl block mb-1">🍻</span>
-                                    <p className="text-teal-200 font-black text-xs">{hasDeadCompanions ? "Sostituisci Caduto!" : "Locanda Mercenari"}</p>
-                                    <p className="text-gray-300 text-[10px]">Recluta nuovi compagni per il Party</p>
-                                </button>
-                                <button onClick={() => openCityService("krark")} className="bg-rose-950/70 hover:bg-rose-900 border-2 border-rose-500 p-3 rounded-xl text-left transition-all active:scale-95">
-                                    <span className="text-2xl block mb-1">🎰</span>
-                                    <p className="text-rose-300 font-black text-xs">Tavolo di Krark</p>
-                                    <p className="text-gray-300 text-[10px]">Scommetti 2d20 o apri Scatole di Urza</p>
-                                </button>
-                                <button onClick={() => openCityService("blacksmith")} className="bg-orange-950/70 hover:bg-orange-900 border-2 border-orange-500 p-3 rounded-xl text-left transition-all active:scale-95">
-                                    <span className="text-2xl block mb-1">⚒️</span>
-                                    <p className="text-orange-300 font-black text-xs">Fabbro Runico (+1/+3)</p>
-                                    <p className="text-gray-300 text-[10px]">Potenzia l'equipaggiamento indossato</p>
-                                </button>
-                                <button onClick={() => openCityService("alchemy")} className="bg-teal-950/70 hover:bg-teal-900 border-2 border-teal-400 p-3 rounded-xl text-left transition-all active:scale-95">
-                                    <span className="text-2xl block mb-1">🧪</span>
-                                    <p className="text-teal-300 font-black text-xs">Laboratorio Alchemico</p>
-                                    <p className="text-gray-300 text-[10px]">Distilla Elisir con Cibo e Mana</p>
-                                </button>
-                                <button onClick={() => openCityService("runes")} className="bg-cyan-950/70 hover:bg-cyan-900 border-2 border-cyan-400 p-3 rounded-xl text-left transition-all active:scale-95">
-                                    <span className="text-2xl block mb-1">💎</span>
-                                    <p className="text-cyan-300 font-black text-xs">Rune Pietre del Potere</p>
-                                    <p className="text-gray-300 text-[10px]">Incastona abilità Magic sulle tue armi</p>
-                                </button>
+
+                                {/* 3 MANIFESTI CLICCABILI CALIBRATI SULLA BACHECA */}
+                                {/* MANIFESTO 1: FOSSA */}
+                                <button
+                                    onClick={() => { setShowBachecaModal(false); setShowCityHubModal(false); setShowCabalPitModal(true); }}
+                                    title="Fossa della Cabala (Survival a Ondate)"
+                                    style={{ left: "13.5%", top: "35%", width: "24.5%", height: "35.5%" }}
+                                    className="absolute z-10 rounded-lg border-2 border-transparent hover:border-red-400 hover:bg-red-500/15 active:bg-red-500/35 transition-all cursor-pointer"
+                                />
+                                {/* MANIFESTO 2: TAGLIE */}
+                                <button
+                                    onClick={() => { setShowBachecaModal(false); setShowCityHubModal(false); setShowBountyModal(true); }}
+                                    title="Bacheca delle Taglie"
+                                    style={{ left: "38.5%", top: "26.5%", width: "26%", height: "44%" }}
+                                    className="absolute z-10 rounded-lg border-2 border-transparent hover:border-amber-300 hover:bg-amber-400/15 active:bg-amber-400/35 transition-all cursor-pointer"
+                                />
+                                {/* MANIFESTO 3: CACCIA MOSTRI */}
+                                <button
+                                    onClick={() => {
+                                        setShowBachecaModal(false);
+                                        setShowCityHubModal(false);
+                                        const huntKey = pickRandomEncounterKey(0.08);
+                                        startMonsterEncounter(huntKey, character.currentNode);
+                                    }}
+                                    title="Caccia Mostri (Include rari Super-Boss Mitici!)"
+                                    style={{ left: "65.5%", top: "38%", width: "22.5%", height: "34.5%" }}
+                                    className="absolute z-10 rounded-lg border-2 border-transparent hover:border-red-400 hover:bg-red-500/15 active:bg-red-500/35 transition-all cursor-pointer"
+                                />
                             </div>
-                        </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* 3. FINESTRA OPZIONI BATTAGLIA (APERTA DAL TASTO LAMPEGGIANTE SOLO IN ARENA) */}
+                    {showBattleOptionsModal && combatState && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setShowBattleOptionsModal(false)}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10016] bg-black/82 backdrop-blur-sm flex items-center justify-center p-4 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-w-md bg-gradient-to-b from-gray-900 via-red-950/60 to-gray-950 border-4 border-red-600 rounded-2xl p-4 shadow-[0_0_45px_rgba(220,38,38,0.75)] space-y-3"
+                            >
+                                <div className="flex justify-between items-center border-b border-red-800/70 pb-2">
+                                    <h3 className="font-rpg-title text-amber-300 font-black text-base uppercase tracking-wider">
+                                        ⚔️ Opzioni Battaglia ({character.name})
+                                    </h3>
+                                    <button onClick={() => setShowBattleOptionsModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                        Chiudi ✖
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-2.5">
+                                    <button
+                                        onClick={() => { setShowBattleOptionsModal(false); setShowSagasModal(true); }}
+                                        className="bg-amber-600 hover:bg-amber-500 text-black font-black py-3 px-4 rounded-xl text-xs uppercase shadow-lg flex justify-between items-center active:scale-95"
+                                    >
+                                        <span>📜 Schiera Saga di Magic</span>
+                                        <span className="bg-black/20 px-2 py-0.5 rounded">{unlockedSagas.length}/5</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowBattleOptionsModal(false); setSelectedAuraTargetId(character.id); setShowAurasModal(true); }}
+                                        className="bg-fuchsia-700 hover:bg-fuchsia-600 text-white font-black py-3 px-4 rounded-xl text-xs uppercase shadow-lg border border-fuchsia-300 flex justify-between items-center active:scale-95"
+                                    >
+                                        <span>✨ Lancia Aura (Incanta Creatura)</span>
+                                        <span className="text-[10px] opacity-90">Incantatori</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowBattleOptionsModal(false); signDemonicPact(); }}
+                                        className="bg-red-950 hover:bg-red-800 text-red-100 font-black py-3 px-4 rounded-xl text-xs uppercase shadow-lg border-2 border-red-500 flex justify-between items-center active:scale-95"
+                                    >
+                                        <span>😈 Stringi Patto Demoniaco</span>
+                                        <span className="text-[10px] text-red-300">🩸 4 Rintocchi</span>
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowBattleOptionsModal(false); setShowAppBridgeModal(true); }}
+                                        className="bg-orange-500 hover:bg-orange-400 text-black font-black py-3 px-4 rounded-xl text-xs uppercase shadow-lg flex justify-between items-center active:scale-95"
+                                    >
+                                        <span>🃏 Evoca Vero Comandante (Mazzi)</span>
+                                        <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded">1/Eroe</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
                     )}
 
                     {/* TIMER DI INCOSCIENZA (1 GIORNO E 4 ORE = 1 MINUTO E 4 SECONDI = 64s) */}
@@ -11469,7 +11761,7 @@
                     )}
 
                     {/* MODALE LOCANDA DEI MERCENARI (RECLUTAMENTO E SFIDA NUOVO COMPAGNO) */}
-                    {showMercenaryModal && (
+                    {showMercenaryModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-teal-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-4">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <div>
@@ -11527,8 +11819,10 @@
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    )}
+                        </div>, 
+                  () => { setShowMercenaryModal(false); setPendingMercenaryHero(null); }, 
+                  true
+                )}
 
                     {/* SELETTORE RAPIDO DELL'EROE ATTIVO */}
                     {party.length > 1 && (
@@ -11605,7 +11899,7 @@
                     )}
 
                     {/* MODALE PONTE CON I VERI MAZZI COMMANDER E IL RACCOGLITORE DELL'APP */}
-                    {showAppBridgeModal && (
+                    {showAppBridgeModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-4">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-amber-400 font-black text-sm uppercase">
@@ -11683,11 +11977,12 @@
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowAppBridgeModal(false), 
+                  false
+                )}
 
                     {/* MODALE FORGIA DEL FABBRO RUNICO (+1 / +2 / +3 SULLE ARMI PREFERITE) */}
-                    {showBlacksmithModal && (
+                    {showBlacksmithModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-orange-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-orange-400 font-black text-sm uppercase">
@@ -11721,11 +12016,12 @@
                                     );
                                 })}
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowBlacksmithModal(false), 
+                  true
+                )}
 
                     {/* MODALE BACHECA DELLE TAGLIE (CON TITOLI ONORIFICI STAMPABILI A4) */}
-                    {showBountyModal && (
+                    {showBountyModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-amber-400 font-black text-sm uppercase">
@@ -11758,11 +12054,12 @@
                                     );
                                 })}
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowBountyModal(false), 
+                  true
+                )}
 
                     {/* MODALE BIVACCO / FUOCO DA CAMPO DI GRUPPO */}
-                    {showCampfireModal && (
+                    {showCampfireModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-emerald-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-emerald-400 font-black text-sm uppercase">
@@ -11784,11 +12081,13 @@
                                     <p className="text-gray-300 text-[10px] mt-1">Tutta la Compagnia rigenera +2 Mana per ciascuno dei propri colori!</p>
                                 </button>
                             </div>
-                        </div>
+                        </div>,
+                        () => setShowCampfireModal(false),
+                        false
                     )}
 
                     {/* 1. MODALE TAVOLO D'AZZARDO DI KRARK & SCATOLA MISTERIOSA DI URZA */}
-                    {showKrarkModal && (
+                    {showKrarkModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-rose-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-rose-400 font-black text-sm uppercase">
@@ -11813,11 +12112,12 @@
                                     <p className="text-gray-200 text-[10px] mt-1">Pesca un equipaggiamento casuale (anche Raro o Leggendario)!</p>
                                 </button>
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowKrarkModal(false), 
+                  true
+                )}
 
                     {/* 2. MODALE ALCHIMIA DELLE POZIONI (1 CIBO + 1 MANA COLORATO) */}
-                    {showAlchemyModal && (
+                    {showAlchemyModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-teal-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-teal-300 font-black text-sm uppercase">
@@ -11847,11 +12147,12 @@
                                     <p className="text-gray-300 text-[10px]">Cura +15 PV e aumenta permanentemente di +1 la Costituzione (COS)!</p>
                                 </button>
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowAlchemyModal(false), 
+                  true
+                )}
 
                    {/* 3. MODALE BESTIARIO ILLUSTRATO DEL CACCIATORE (CON ART CROP SCRYFALL E ZOOM A TUTTO SCHERMO!) */}
-                    {showBestiaryModal && (
+                    {showBestiaryModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-amber-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <div>
@@ -11873,9 +12174,11 @@
                                 {Object.keys(MTG_BESTIARY).map(mKey => {
                                     const mObj = MTG_BESTIARY[mKey];
                                     const isDefeated = getUnlockedBestiaryKeys().indexOf(mKey) !== -1;
-                                    const directArtCropUrl = (bestiaryArtCache && bestiaryArtCache[mKey])
-                                        ? bestiaryArtCache[mKey]
-                                        : "./rpg_monster_default.png";
+                                    const directArtCropUrl = LOCAL_MONSTER_IMAGES[mKey]
+                                        ? LOCAL_MONSTER_IMAGES[mKey]
+                                        : ((bestiaryArtCache && bestiaryArtCache[mKey])
+                                            ? bestiaryArtCache[mKey]
+                                            : "./rpg_monster_default.png");
 
                                     return (
                                         <div
@@ -11957,7 +12260,9 @@
                                     );
                                 })}
                             </div>
-                        </div>
+                        </div>,
+                        () => setShowBestiaryModal(false),
+                        false
                     )}
 
                     {/* VISUALIZZATORE A TUTTO SCHERMO DELLA CREATURA DEL BESTIARIO */}
@@ -12134,7 +12439,7 @@
                     )}
 
                    {/* MODALE SAGHE DI MAGIC (SBLOCCATE DAI BOSS, MASSIMO 1 PER PIANO/REGIONE) */}
-                    {showSagasModal && (
+                    {showSagasModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-amber-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <div>
@@ -12175,8 +12480,9 @@
                                     })}
                                 </div>
                             )}
-                        </div>
-                    )}
+                        </div>, () => setShowSagasModal(false), 
+                  false
+                )}
 
                   {/* APPARIZIONE RANDOM DEL DEMONE TENTATORE (STEP 1 -> AVANTI -> PERGAMENA PATTO) */}
                     {demonTemptation && ReactDOM.createPortal(
@@ -12303,7 +12609,7 @@
                     )}
                    
                   {/* MODALE INCANTA CREATURA (AURE MISTICHE PER INCANTATORI) */}
-                    {showAurasModal && (
+                    {showAurasModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-fuchsia-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <div>
@@ -12355,12 +12661,13 @@
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowAurasModal(false), 
+                  false
+                )}
 
                   
                     {/* MODALE INCASTONATURA RUNE DELLE PIETRE DEL POTERE */}
-                    {showRunesModal && (
+                    {showRunesModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-cyan-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-cyan-300 font-black text-sm uppercase">
@@ -12392,11 +12699,12 @@
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowRunesModal(false), 
+                  true
+                )}
 
                     {/* MODALE FOSSA DELLA CABALA (MODALITÀ SURVIVAL A ONDATE) */}
-                    {showCabalPitModal && (
+                    {showCabalPitModal && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-purple-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3 text-center">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-purple-300 font-black text-sm uppercase">
@@ -12423,8 +12731,9 @@
                                     </button>
                                 )}
                             </div>
-                        </div>
-                    )}
+                        </div>, () => setShowCabalPitModal(false), 
+                  true
+                )}
                   
                   
                     {/* MINI-SCHEDA EROE + RISERVA DI MANA + GRIMORIO 3 SLOT MAGIE */}
@@ -12723,6 +13032,21 @@
                         </div>
                       </div>
 
+                    <div ref={arenaSectionRef} className="scroll-mt-20" />
+                    {/* PULSANTE LAMPEGGIANTE OPZIONI BATTAGLIA (COMPARE SOLO DURANTE GLI SCONTRI TRA SCHEDA E ARENA!) */}
+                    {combatState && (
+                        <button
+                            onClick={() => setShowBattleOptionsModal(true)}
+                            className="w-full bg-gradient-to-r from-red-800 via-amber-600 to-red-800 hover:from-red-700 hover:to-red-700 text-white font-rpg-title font-black py-3 px-4 rounded-xl border-2 border-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.7)] text-sm uppercase tracking-[0.18em] flex items-center justify-center gap-2 animate-pulse active:scale-95 transition-transform"
+                        >
+                            <span>⚔️</span>
+                            <span>Opzioni Battaglia</span>
+                            <span className="text-[10px] bg-black/50 px-2 py-0.5 rounded-full font-sans normal-case tracking-normal text-amber-200">
+                                Saghe • Aure • Patto • Mazzi
+                            </span>
+                        </button>
+                    )}
+
                     {/* PANNELLO TIRO DADO D8 PER LE CURE DI CHIERICO E SCIAMANO */}
                     {pendingHealSpell && (
                         <div className="bg-emerald-950 border-4 border-emerald-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3 text-center">
@@ -12755,7 +13079,7 @@
                     )}
 
                     {/* BOTTEGA DEL MERCANTE PLANARE (CON IMMAGINI SCRYFALL, ICONE SLOT, COMPATIBILITÀ E TASTO VISUALIZZA!) */}
-                    {showMerchant && (
+                    {showMerchant && renderDedicatedModal(
                         <div className="bg-gray-900 border-4 border-yellow-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-4">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <div>
@@ -12886,7 +13210,9 @@
                                     })}
                                 </div>
                             </div>
-                        </div>
+                        </div>,
+                        () => setShowMerchant(false),
+                        true
                     )}
 
                     {/* MODALE VISUALIZZA EQUIPAGGIAMENTO A TUTTO SCHERMO (IMMAGINE SCRYFALL + STAT COMPLETE + REQUISITI!) */}
@@ -13045,7 +13371,7 @@
                     )}
 
                     {/* PANNELLO TRASFERIMENTO SALVATAGGIO TRA DISPOSITIVI */}
-                    {showSaveModal && (
+                    {showSaveModal && renderDedicatedModal(
                         <div className="bg-slate-900/95 border-2 border-emerald-500 rounded-xl p-4 mb-4 shadow-2xl">
                             <div className="flex justify-between items-center mb-2">
                                 <h4 className="font-bold text-emerald-400 text-sm uppercase tracking-wider">
@@ -13090,7 +13416,9 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div>,
+                        () => setShowSaveModal(false),
+                        false
                     )}
                   
                    {/* ==================================================================== */}
