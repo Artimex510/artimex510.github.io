@@ -1856,7 +1856,13 @@
         // --- 3 ARMI MITICHE ESCLUSIVE DEI SUPER-BOSS ERRANTI ---
         worldslayer: { id: "worldslayer", name: "💥 Sterminatore di Mondi (Worldslayer)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 9, agi: 4, mag: 4, con: 6, keywords: ["Indistruttibile", "Travolgere", "Doppio Attacco"] },
         kaldra_compleat: { id: "kaldra_compleat", name: "👑 Kaldra Compleat (Arma Vivente)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 8, agi: 5, mag: 5, con: 8, keywords: ["Indistruttibile", "Attacco Improvviso", "Travolgere", "Rapidità"] },
-        legacy_weapon: { id: "legacy_weapon", name: "🌌 Arma dell'Eredità (Legacy Weapon)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 7, agi: 5, mag: 9, con: 7, keywords: ["Indistruttibile", "Cautela", "Legame Vitale"] }
+        legacy_weapon: { id: "legacy_weapon", name: "🌌 Arma dell'Eredità (Legacy Weapon)", slot: "weapon", reqLegendary: false, minLvl: 1, str: 7, agi: 5, mag: 9, con: 7, keywords: ["Indistruttibile", "Cautela", "Legame Vitale"] },
+        // --- 5 NUOVI EQUIPAGGIAMENTI CON LE NUOVE KEYWORDS (BLOCCO 1) ---
+        scythe_of_the_wretched: { id: "scythe_of_the_wretched", name: "⚔️ Falce dei Miserabili (Fendente)", slot: "weapon", reqClassGroup: "martial_rogue", minLvl: 3, str: 4, agi: 2, mag: 1, con: 2, keywords: ["Fendente", "Indomabile"] },
+        sublime_exalted_blade: { id: "sublime_exalted_blade", name: "☀️ Lama dell'Arcangelo Esaltato", slot: "weapon", reqClassGroup: "martial", minLvl: 4, str: 5, agi: 2, mag: 1, con: 2, keywords: ["Esaltato", "Attacco Improvviso"] },
+        ichormoon_gauntlet: { id: "ichormoon_gauntlet", name: "☣️ Guanto della Luna d'Icore", slot: "hands", reqClassGroup: "caster", minLvl: 4, str: 0, agi: 2, mag: 5, con: 3, keywords: ["Proliferare", "Egida"] },
+        ward_helm_serra: { id: "ward_helm_serra", name: "🛡️ Elmo dell'Egida di Serra", slot: "head", minLvl: 3, str: 1, agi: 1, mag: 2, con: 5, keywords: ["Egida", "Cautela"] },
+        undying_phylactery: { id: "undying_phylactery", name: "💀 Filatterio dell'Indomabile", slot: "artifact", minLvl: 5, str: 2, agi: 2, mag: 3, con: 4, keywords: ["Indomabile", "Legame Vitale"] }
     };
 
     // ============================================================================
@@ -1968,7 +1974,17 @@
         // --- 3 SUPER-BOSS MITICI ERRANTI (APPARIZIONE RARISSIMA, QUASI IMBATTIBILI, ARMA LEGGENDARIA GARANTITA!) ---
         bfm_legend: { name: "👑 B.F.M. (Big Furry Monster 99/99 — MITICO!)", isHumanoid: false, maxHP: 195, initBonus: 9, dc: 34, dmg: 18, blueMana: 4, exp: 480, gold: 240, treasures: 5, loot: "worldslayer", isBoss: true, isMythicWandering: true, desc: "IL LEGGENDARIO MOSTRO A DUE CARTE 99/99! Un titano peloso alto come una montagna: quasi imbattibile, ma custodisce lo Sterminatore di Mondi (Worldslayer)!" },
         emrakul_aeons_torn: { name: "👑 Emrakul, lo Strazio Eterno (15/15 — MITICO!)", isHumanoid: false, maxHP: 205, initBonus: 10, dc: 35, dmg: 19, blueMana: 4, exp: 520, gold: 260, treasures: 5, loot: "kaldra_compleat", isBoss: true, isMythicWandering: true, desc: "Il più terrificante dei Titani Eldrazi: Annientatore 6, Volare, Protezione dalle Magie e 4💧 Mana Blu! Custodisce Kaldra Compleat!" },
-        progenitus_worldsoul: { name: "👑 Progenitus, l'Anima del Mondo (10/10 — MITICO!)", isHumanoid: false, maxHP: 190, initBonus: 9, dc: 35, dmg: 18, blueMana: 4, exp: 500, gold: 250, treasures: 5, loot: "legacy_weapon", isBoss: true, isMythicWandering: true, desc: "L'Idra Avatar dei Cinque Colori dotata di Protezione da Tutto! Custodisce la leggendaria Arma dell'Eredità (Legacy Weapon)!" }
+        progenitus_worldsoul: { name: "👑 Progenitus, l'Anima del Mondo (10/10 — MITICO!)", isHumanoid: false, maxHP: 190, initBonus: 9, dc: 35, dmg: 18, blueMana: 4, exp: 500, gold: 250, treasures: 5, loot: "legacy_weapon", isBoss: true, isMythicWandering: true, desc: "L'Idra Avatar dei Cinque Colori dotata di Protezione da Tutto! Custodisce la leggendaria Arma dell'Eredità (Legacy Weapon)!" },
+
+        // --- 8 LORD & BOSS EVOCATORI DI PEDINE (MAZZI PEDINE IN ARENA!) ---
+        krenko_mob_boss: { name: "👺 Krenko, Capoclan di Via Latta (Lord Goblin)", isHumanoid: true, maxHP: 78, initBonus: 7, dc: 27, dmg: 10, blueMana: 0, exp: 165, gold: 70, treasures: 2, loot: "scythe_of_the_wretched", isBoss: true, summonerType: "krenko_goblin", desc: "Evoca ondate crescenti di Goblin con Rapidità che attaccano subito! Se non li spazzi via, ti sommergono!" },
+        wilhelt_rotcleaver: { name: "🧟 Wilhelt il Fendiputrefazione (Lord Zombi)", isHumanoid: true, maxHP: 88, initBonus: 5, dc: 28, dmg: 11, blueMana: 2, exp: 180, gold: 75, treasures: 2, loot: "undying_phylactery", isBoss: true, summonerType: "wilhelt_zombie", desc: "Evoca orde di Zombi che si potenziano a vicenda (+1 ATK per ogni Zombi vivo) e possiede 2💧 Mana Blu!" },
+        giada_font_hope: { name: "👼 Giada, Fonte di Speranza (Lord Angeli)", isHumanoid: true, maxHP: 92, initBonus: 8, dc: 29, dmg: 12, blueMana: 2, exp: 205, gold: 90, treasures: 3, loot: "sublime_exalted_blade", isBoss: true, summonerType: "giada_angel", desc: "Ogni nuovo Angelo Volante che evoca entra più forte (+4 PV e +2 Danni per ogni Angelo già in campo)!" },
+        marrow_gnawer: { name: "🐀 Rodimidollo (Marrow-Gnawer, Lord Ratti)", isHumanoid: true, maxHP: 82, initBonus: 8, dc: 27, dmg: 10, blueMana: 0, exp: 170, gold: 72, treasures: 2, loot: "ichormoon_gauntlet", isBoss: true, summonerType: "rat_infect", desc: "Evoca Ratti con Infettare (Veleno da Arena)! Finché ci sono 2+ Ratti vivi, Rodimidollo guadagna +2 CD!" },
+        edgar_markov: { name: "🧛 Edgar Markov, Patriarca Vampiro (Lord Vampiri)", isHumanoid: true, maxHP: 104, initBonus: 8, dc: 30, dmg: 13, blueMana: 2, exp: 225, gold: 100, treasures: 3, loot: "sword_light_shadow", isBoss: true, summonerType: "edgar_vampire", desc: "Il capostipite di Innistrad: ogni pedina Vampiro che ti colpisce cura Edgar Markov dei danni inflitti!" },
+        locust_god: { name: "🦗 Il Dio Locusta di Amonkhet (Lord Insetti)", isHumanoid: false, maxHP: 108, initBonus: 9, dc: 30, dmg: 13, blueMana: 4, exp: 240, gold: 110, treasures: 3, loot: "ward_helm_serra", isBoss: true, summonerType: "locust_haste", desc: "Divinità Izzet con 4💧 Mana Blu: evoca sciami di Locuste Volanti con Rapidità che colpiscono immediatamente!" },
+        slimefoot_stowaway: { name: "🍄 Piedeviscido (Slimefoot, Lord Saprolingi)", isHumanoid: true, maxHP: 74, initBonus: 5, dc: 26, dmg: 9, blueMana: 0, exp: 145, gold: 58, treasures: 2, loot: "ichormoon_gauntlet", isBoss: false, summonerType: "saproling_bomb", desc: "I suoi Saprolingi lo curano se lasciati vivi, ma esplodono per 2 danni quando li uccidi!" },
+        chatterfang_general: { name: "🐿️ Zannaciancia (Chatterfang, Generale Scoiattoli)", isHumanoid: true, maxHP: 86, initBonus: 8, dc: 28, dmg: 11, blueMana: 0, exp: 185, gold: 80, treasures: 2, loot: "scythe_of_the_wretched", isBoss: true, summonerType: "squirrel_shield", desc: "Evoca Scoiattoli che si sacrificano automaticamente per parare i tuoi colpi diretti contro Chatterfang!" }
     };
 
     const RPG_STORY_NODES_PART1 = {
@@ -5236,6 +5252,28 @@
                 id: "barbarian_sorcery_G", name: "Rivolta di Garruk (Garruk's Uprising)", timing: "sorcery", costColor: "G", costAmount: 2, oneShot: false,
                 effectType: "class_tactical", healSelf: 6, dmg: 12, addPoison: 2,
                 desc: "Stregoneria Barbaro (2🌳): Cura +6 PV, infligge 12 danni selvaggi e applica +2 Segnalini Veleno!"
+            },
+
+            // --- 4 MAGIE SPAZZATA / BOARDWIPE (CONTRO I LORD EVOCATORI DI PEDINE!) ---
+            pyroclasm_aoe: {
+                id: "pyroclasm_aoe", name: "🔥 Piroclasma (Pyroclasm — AoE)", timing: "sorcery", costColor: "R", costAmount: 1, oneShot: false,
+                effectType: "aoe_sweep", dmg: 10, tokenDmg: 15,
+                desc: "Stregoneria AoE (1🔥): Infligge 10 danni al Boss e 15 danni a TUTTE le Pedine nemiche in campo!"
+            },
+            toxic_deluge_aoe: {
+                id: "toxic_deluge_aoe", name: "☣️ Diluvio Tossico (Toxic Deluge — AoE)", timing: "sorcery", costColor: "B", costAmount: 2, oneShot: false,
+                effectType: "aoe_sweep", selfDmg: 4, dmg: 14, tokenDmg: 26, addPoison: 2,
+                desc: "Stregoneria AoE (2💀 + 4 PV): Infligge 14 danni (+2 Veleno) al Boss e 26 danni a TUTTE le Pedine nemiche!"
+            },
+            wrath_of_god_aoe: {
+                id: "wrath_of_god_aoe", name: "☀️ Ira di Dio (Wrath of God — One-Shot)", timing: "sorcery", costColor: "W", costAmount: 2, oneShot: true,
+                effectType: "aoe_sweep", dmg: 22, destroyAllTokens: true,
+                desc: "Stregoneria ONE-SHOT (2☀️): Distrugge istantaneamente TUTTE le Pedine nemiche e infligge 22 danni puri al Boss!"
+            },
+            blasphemous_act_aoe: {
+                id: "blasphemous_act_aoe", name: "🌋 Atto Blasfemo (Blasphemous Act — AoE)", timing: "sorcery", costColor: "R", costAmount: 2, oneShot: false,
+                effectType: "aoe_sweep", dmg: 16, tokenDmg: 30, bonusPerToken: 4,
+                desc: "Stregoneria AoE (2🔥): 30 danni a TUTTE le Pedine + 16 danni al Boss (+4 danni extra per ogni Pedina in campo)!"
             }
         };
 
@@ -5331,7 +5369,18 @@
             { type: "item", id: "bolas_citadel_relic", cost: 490, minLvl: 8 },
             { type: "item", id: "sword_wealth_power", cost: 530, minLvl: 9 },
             { type: "item", id: "excalibur_sword", cost: 680, minLvl: 10 },
-            { type: "item", id: "the_one_ring", cost: 750, minLvl: 10 }
+            { type: "item", id: "the_one_ring", cost: 750, minLvl: 10 },
+            // --- MAGIE SPAZZATA (AoE) & NUOVI EQUIPAGGIAMENTI BLOCCO 1 ---
+            { type: "spell", id: "pyroclasm_aoe", name: "📜 Pergamena AoE: Piroclasma (1🔥)", cost: 85, minLvl: 1, desc: "Spazza le pedine nemiche (15 danni a tutte + 10 al Boss)!" },
+            { type: "spell", id: "toxic_deluge_aoe", name: "📜 Pergamena AoE: Diluvio Tossico (2💀)", cost: 120, minLvl: 2, desc: "26 danni a tutte le pedine + 14 danni e Veleno al Boss!" },
+            { type: "spell", id: "blasphemous_act_aoe", name: "📜 Pergamena AoE: Atto Blasfemo (2🔥)", cost: 135, minLvl: 3, desc: "30 danni a tutte le pedine e danni maggiorati sul Boss!" },
+            { type: "spell", id: "wrath_of_god_aoe", name: "📜 Pergamena ONE-SHOT: Ira di Dio (2☀️)", cost: 150, minLvl: 3, desc: "Distrugge TUTTE le pedine istantaneamente + 22 danni al Boss!" },
+            { type: "item", id: "ward_helm_serra", cost: 165, minLvl: 3 },
+            { type: "item", id: "scythe_of_the_wretched", cost: 215, minLvl: 3 },
+            { type: "item", id: "sublime_exalted_blade", cost: 235, minLvl: 4 },
+            { type: "item", id: "ichormoon_gauntlet", cost: 255, minLvl: 4 },
+            { type: "item", id: "undying_phylactery", cost: 295, minLvl: 5 }
+        ];
         ];
 
         const EQUIP_SLOTS = [
@@ -5542,7 +5591,7 @@
 
         // Identifica i mostri dotati di Volare (Contro di loro Volare non dà il bonus di +4 danni!)
         const isMonsterFlying = (monsterKey) => {
-            return ["storm_crow", "serra_griffin", "sengir_vampire", "akroma_angel", "shivan_dragon", "marit_lage", "serra_angel_rogue", "hypnotic_specter", "mahamoti_djinn", "lord_of_the_pit", "vampire_nighthawk", "archon_of_cruelty", "griselbrand_demon", "ur_dragon_avatar", "emrakul_aeons_torn"].includes(monsterKey);
+            return ["storm_crow", "serra_griffin", "sengir_vampire", "akroma_angel", "shivan_dragon", "marit_lage", "serra_angel_rogue", "hypnotic_specter", "mahamoti_djinn", "lord_of_the_pit", "vampire_nighthawk", "archon_of_cruelty", "griselbrand_demon", "ur_dragon_avatar", "emrakul_aeons_torn", "giada_font_hope", "locust_god"].includes(monsterKey);
         };
 
         // Arricchisce automaticamente le abilità degli oggetti iconici con Rapidità, Doppio Attacco e Infettare!
@@ -6574,6 +6623,56 @@
                 return;
             }
 
+            if (spell.effectType === "aoe_sweep") {
+                if (!combatState) {
+                    return alert(`"${spell.name}" è una magia Spazzata (AoE): usala in Arena per spazzare via le Pedine nemiche!`);
+                }
+                if (spell.selfDmg) {
+                    updatedCaster.currentHP = Math.max(1, updatedCaster.currentHP - spell.selfDmg);
+                }
+                saveCharState(updatedCaster);
+
+                const curTokens = Array.isArray(combatState.enemyTokens) ? combatState.enemyTokens : [];
+                const bossBonus = spell.bonusPerToken ? (spell.bonusPerToken * curTokens.length) : 0;
+                const totalBossDmg = (spell.dmg || 10) + bossBonus;
+                let destroyedCount = 0;
+                let survivingTokens = [];
+
+                if (spell.destroyAllTokens) {
+                    destroyedCount = curTokens.length;
+                    survivingTokens = [];
+                } else {
+                    curTokens.forEach(tok => {
+                        const rem = tok.currentHP - (spell.tokenDmg || 15);
+                        if (rem <= 0) destroyedCount++;
+                        else survivingTokens.push(Object.assign({}, tok, { currentHP: rem }));
+                    });
+                }
+
+                const nextMHP = Math.max(0, combatState.currentHP - totalBossDmg);
+                const nextPoison = (combatState.poisonCounters || 0) + (spell.addPoison || 0);
+                let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
+                dmgMap[updatedCaster.id] = (dmgMap[updatedCaster.id] || 0) + totalBossDmg + (destroyedCount * 6);
+
+                const aoeMsg = `🌪️🔥 SPAZZATA AoE! **${updatedCaster.name}** lancia **${spell.name}**: **${totalBossDmg} danni** a ${combatState.name}${curTokens.length > 0 ? ` e **${destroyedCount}/${curTokens.length} Pedine spazzate via**!` : "!"}`;
+                setEventBanner(aoeMsg);
+
+                if (nextMHP <= 0) {
+                    finishCombatVictory(updatedCaster, dmgMap, aoeMsg);
+                } else {
+                    setCombatState(Object.assign({}, combatState, {
+                        currentHP: nextMHP,
+                        poisonCounters: nextPoison,
+                        enemyTokens: survivingTokens,
+                        selectedTargetId: "boss",
+                        puzzleArmorActive: spell.destroyAllTokens ? false : combatState.puzzleArmorActive,
+                        damageDealtByHero: dmgMap,
+                        log: [aoeMsg].concat(combatState.log).slice(0, 8)
+                    }));
+                }
+                return;
+            }
+          
             if (spell.effectType === "phase_out") {
                 setTeferiPhaseOut(true);
                 saveCharState(updatedCaster);
@@ -7906,7 +8005,7 @@
         const [loadingMonsterArt, setLoadingMonsterArt] = useState(false);
         const [bestiaryArtCache, setBestiaryArtCache] = useState(() => {
             try {
-                return JSON.parse(localStorage.getItem('rpg_bestiary_art_cache_v5') || "{}");
+                return JSON.parse(localStorage.getItem('rpg_bestiary_art_cache_v6') || "{}");
             } catch (e) {
                 return {};
             }
@@ -8018,7 +8117,25 @@
             ur_dragon_avatar: "The Ur-Dragon",
             bfm_legend: "B.F.M. (Big Furry Monster)",
             emrakul_aeons_torn: "Emrakul, the Aeons Torn",
-            progenitus_worldsoul: "Progenitus"
+            progenitus_worldsoul: "Progenitus",
+            // 8 Lord Evocatori
+            krenko_mob_boss: "Krenko, Mob Boss",
+            wilhelt_rotcleaver: "Wilhelt, the Rotcleaver",
+            giada_font_hope: "Giada, Font of Hope",
+            marrow_gnawer: "Marrow-Gnawer",
+            edgar_markov: "Edgar Markov",
+            locust_god: "The Locust God",
+            slimefoot_stowaway: "Slimefoot, the Stowaway",
+            chatterfang_general: "Chatterfang, Squirrel General",
+            // 8 Artwork Scryfall per le Pedine Evocate
+            tok_goblin: "Goblin Bushwhacker",
+            tok_zombie: "Gravecrawler",
+            tok_angel: "Resplendent Angel",
+            tok_rat: "Relentless Rats",
+            tok_vampire: "Vampire of the Dire Moon",
+            tok_locust: "Xantid Swarm",
+            tok_saproling: "Saproling Migration",
+            tok_squirrel: "Squirrel Mob"
         };
 
         // Scarica in 2 sole chiamate di gruppo tutti i 76 art_crop da Scryfall evitando qualsiasi blocco 429!
@@ -8071,7 +8188,7 @@
                 if (!isCancelled) {
                     setBestiaryArtCache(updatedCache);
                     try {
-                        localStorage.setItem('rpg_bestiary_art_cache_v5', JSON.stringify(updatedCache));
+                        localStorage.setItem('rpg_bestiary_art_cache_v6', JSON.stringify(updatedCache));
                     } catch (e) {}
                 }
             };
@@ -8121,7 +8238,7 @@
                         setBestiaryArtCache(prev => {
                             const next = Object.assign({}, prev);
                             next[mKey] = artCrop;
-                            try { localStorage.setItem('rpg_bestiary_art_cache_v5', JSON.stringify(next)); } catch (e) {}
+                            try { localStorage.setItem('rpg_bestiary_art_cache_v6', JSON.stringify(next)); } catch (e) {}
                             return next;
                         });
                     } else {
@@ -8614,7 +8731,9 @@
             "force_of_nature", "lord_of_the_pit", "balduvian_horde", "spiritmonger",
             "psychatog", "vampire_nighthawk", "wurmcoil_engine", "craterhoof_behemoth",
             "questing_beast", "elder_gargaroth", "archon_of_cruelty", "ragavan_pirate",
-            "gishath_sun_avatar", "toxrill_corrosive", "griselbrand_demon", "ur_dragon_avatar"
+            "gishath_sun_avatar", "toxrill_corrosive", "griselbrand_demon", "ur_dragon_avatar",
+            "krenko_mob_boss", "wilhelt_rotcleaver", "giada_font_hope", "marrow_gnawer",
+            "edgar_markov", "locust_god", "slimefoot_stowaway", "chatterfang_general"
         ];
         const MYTHIC_WANDERING_BOSSES = ["bfm_legend", "emrakul_aeons_torn", "progenitus_worldsoul"];
 
@@ -8693,7 +8812,7 @@
 
         // --- CACHE IMMAGINI SCRYFALL ART CROP PER TUTTI GLI EQUIPAGGIAMENTI ---
         const [itemArtCache, setItemArtCache] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('rpg_item_art_cache_v3') || "{}"); } catch (e) { return {}; }
+            try { return JSON.parse(localStorage.getItem('rpg_item_art_cache_v4') || "{}"); } catch (e) { return {}; }
         });
 
         const ITEM_SCRYFALL_MAP = {
@@ -8786,7 +8905,12 @@
             the_one_ring: "The One Ring",
             worldslayer: "Worldslayer",
             kaldra_compleat: "Kaldra Compleat",
-            legacy_weapon: "Legacy Weapon"
+            legacy_weapon: "Legacy Weapon",
+            scythe_of_the_wretched: "Scythe of the Wretched",
+            sublime_exalted_blade: "Sublime Archangel",
+            ichormoon_gauntlet: "Ichormoon Gauntlet",
+            ward_helm_serra: "Serra's Blessing",
+            undying_phylactery: "Undying Malice"
         };
 
         // Pre-carica in 1 sola chiamata batch tutti gli art_crop degli equipaggiamenti (zero blocco 429!)
@@ -8837,7 +8961,7 @@
 
                 if (!isCancelled) {
                     setItemArtCache(updatedCache);
-                    try { localStorage.setItem('rpg_item_art_cache_v3', JSON.stringify(updatedCache)); } catch (e) {}
+                    try { localStorage.setItem('rpg_item_art_cache_v4', JSON.stringify(updatedCache)); } catch (e) {}
                 }
             };
             fetchBatchItemArts();
@@ -9374,7 +9498,9 @@
             { id: "rune_deathtouch", name: "☠️ Runa del Veleno di Urborg", kw: "Tocco Letale", stat: "agi", bonus: 1, desc: "Aggiunge Tocco Letale e +1 AGI all'arma" },
             { id: "rune_first_strike", name: "⚡ Runa del Fulmine di Keld", kw: "Attacco Improvviso", stat: "str", bonus: 1, desc: "Aggiunge Attacco Improvviso e +1 FOR all'arma" },
             { id: "rune_trample", name: "🦏 Runa del Behemoth", kw: "Travolgere", stat: "con", bonus: 2, desc: "Aggiunge Travolgere e +2 COS all'arma" },
-            { id: "rune_vigilance", name: "🛡️ Runa dell'Angelo di Serra", kw: "Cautela", stat: "mag", bonus: 2, desc: "Aggiunge Cautela e +2 MAG all'arma" }
+            { id: "rune_vigilance", name: "🛡️ Runa dell'Angelo di Serra", kw: "Cautela", stat: "mag", bonus: 2, desc: "Aggiunge Cautela e +2 MAG all'arma" },
+            { id: "rune_cleave", name: "⚔️ Runa del Fendente", kw: "Fendente", stat: "str", bonus: 1, desc: "Aggiunge Fendente (50% danni a tutte le Pedine nemiche) e +1 FOR" },
+            { id: "rune_ward", name: "✨ Runa dell'Egida", kw: "Egida", stat: "con", bonus: 2, desc: "Aggiunge Egida (-3 danni subiti) e +2 COS" }
         ];
 
         const socketRuneIntoWeapon = (runeObj) => {
@@ -9442,6 +9568,96 @@
                     });
                 });
             }, 60);
+        };
+
+        // ============================================================================
+        // DATABASE PEDINE EVOCATE DAI LORD/BOSS (BLOCCO 1 — MAZZI PEDINE IN ARENA!)
+        // ============================================================================
+        const ENEMY_TOKENS_DB = {
+            krenko_goblin: {
+                artKey: "tok_goblin", fallbackCard: "Goblin Bushwhacker", name: "Goblin Predone",
+                baseHP: 10, baseDmg: 4, haste: true, flying: false, maxPerWave: 3, escalateCount: true,
+                badge: "⚡ Rapidità"
+            },
+            wilhelt_zombie: {
+                artKey: "tok_zombie", fallbackCard: "Gravecrawler", name: "Zombi Putrido",
+                baseHP: 14, baseDmg: 5, haste: false, flying: false, maxPerWave: 2, swarmAtkBoost: true,
+                badge: "🧟 Orda (+1 ATK/Zombi)"
+            },
+            giada_angel: {
+                artKey: "tok_angel", fallbackCard: "Resplendent Angel", name: "Angelo Celeste",
+                baseHP: 18, baseDmg: 6, haste: false, flying: true, maxPerWave: 1, giadaScale: true,
+                badge: "🦅 Volare • ✨ Scala Giada"
+            },
+            rat_infect: {
+                artKey: "tok_rat", fallbackCard: "Relentless Rats", name: "Ratto Infetto",
+                baseHP: 9, baseDmg: 4, haste: false, flying: false, maxPerWave: 2, infect: true, swarmShieldBoss: true,
+                badge: "☣️ Infettare • 🛡️ Scudo Lord"
+            },
+            edgar_vampire: {
+                artKey: "tok_vampire", fallbackCard: "Vampire of the Dire Moon", name: "Vampiro Servitore",
+                baseHP: 14, baseDmg: 5, haste: false, flying: false, maxPerWave: 1, lifelinkBoss: true,
+                badge: "🩸 Legame Vitale (Cura Boss)"
+            },
+            locust_haste: {
+                artKey: "tok_locust", fallbackCard: "Xantid Swarm", name: "Locusta Izzet",
+                baseHP: 10, baseDmg: 4, haste: true, flying: true, maxPerWave: 2,
+                badge: "⚡ Rapidità • 🦅 Volare"
+            },
+            saproling_bomb: {
+                artKey: "tok_saproling", fallbackCard: "Saproling Migration", name: "Saprolingio",
+                baseHP: 11, baseDmg: 3, haste: false, flying: false, maxPerWave: 2, healBossOnAlive: 3, explodeOnDeath: 2,
+                badge: "🌿 Cura Boss • 💥 Esplode"
+            },
+            squirrel_shield: {
+                artKey: "tok_squirrel", fallbackCard: "Squirrel Mob", name: "Scoiattolo Guardiano",
+                baseHP: 10, baseDmg: 4, haste: false, flying: false, maxPerWave: 2, chumpBlockBoss: true,
+                badge: "🛡️ Para Colpi sul Boss"
+            }
+        };
+
+        const createEnemyTokensForSummoner = (summonerType, currentTokens, waveNum, avgLvl) => {
+            const tpl = ENEMY_TOKENS_DB[summonerType];
+            if (!tpl) return { tokens: [], msg: "" };
+            const existing = Array.isArray(currentTokens) ? currentTokens : [];
+            const freeSlots = Math.max(0, 5 - existing.length);
+            if (freeSlots === 0) return { tokens: [], msg: "" };
+
+            let countToSpawn = tpl.escalateCount ? Math.min(tpl.maxPerWave, Math.max(1, waveNum)) : tpl.maxPerWave;
+            countToSpawn = Math.min(freeSlots, countToSpawn);
+
+            const lvl = Math.max(1, Math.round(avgLvl || 1));
+            let spawned = [];
+            for (let i = 0; i < countToSpawn; i++) {
+                const alreadyCount = existing.length + spawned.length;
+                const giadaHP = tpl.giadaScale ? (alreadyCount * 4) : 0;
+                const giadaAtk = tpl.giadaScale ? (alreadyCount * 2) : 0;
+                const tMaxHP = tpl.baseHP + (lvl * 2) + giadaHP;
+                const tDmg = tpl.baseDmg + Math.floor(lvl / 2) + giadaAtk;
+                spawned.push({
+                    id: "etok_" + Date.now() + "_" + Math.floor(Math.random() * 10000) + "_" + i,
+                    artKey: tpl.artKey,
+                    fallbackCard: tpl.fallbackCard,
+                    name: tpl.name + (tpl.giadaScale && alreadyCount > 0 ? " (+" + giadaAtk + "/+" + giadaHP + ")" : ""),
+                    maxHP: tMaxHP,
+                    currentHP: tMaxHP,
+                    dmg: tDmg,
+                    haste: Boolean(tpl.haste),
+                    summoningSickness: !tpl.haste,
+                    flying: Boolean(tpl.flying),
+                    swarmAtkBoost: Boolean(tpl.swarmAtkBoost),
+                    infect: Boolean(tpl.infect),
+                    swarmShieldBoss: Boolean(tpl.swarmShieldBoss),
+                    lifelinkBoss: Boolean(tpl.lifelinkBoss),
+                    healBossOnAlive: tpl.healBossOnAlive || 0,
+                    explodeOnDeath: tpl.explodeOnDeath || 0,
+                    chumpBlockBoss: Boolean(tpl.chumpBlockBoss),
+                    badge: tpl.badge
+                });
+            }
+
+            const msg = `📯 EVOCAZIONE PEDINE! Compaiono **${spawned.length}× ${tpl.name}** (${spawned[0].maxHP} PV • ${spawned[0].dmg} ATK${tpl.haste ? " • ⚡ Attaccano SUBITO!" : " • 💤 Attaccano dal prossimo turno!"})`;
+            return { tokens: spawned, msg: msg };
         };
       
         const startMonsterEncounter = (monsterKey, customWinNode = null) => {
@@ -9517,6 +9733,12 @@
             const baseCombat = {
                 key: monsterKey,
                 name: mTemplate.name,
+                summonerType: mTemplate.summonerType || null,
+                enemyTokens: [],
+                summonWaveCount: 0,
+                selectedTargetId: "boss",
+                undyingUsedByHero: {},
+                avgPartyLvlRef: avgPartyLvl,
                 isHumanoid: mTemplate.isHumanoid || false,
                 isFlying: flyingMonster,
                 monsterFled: false,
@@ -9555,6 +9777,15 @@
 
             if (mTemplate.isMythicWandering) {
                 baseCombat.log.unshift(`🌟👑 INCONTRO MITICO ERRANTE! **${mTemplate.name}** è apparso dal nulla: una leggenda quasi imbattibile che custodisce un'arma leggendaria!`);
+            }
+
+          if (mTemplate.summonerType) {
+                const initSpawn = createEnemyTokensForSummoner(mTemplate.summonerType, [], 1, avgPartyLvl);
+                if (initSpawn.tokens.length > 0) {
+                    baseCombat.enemyTokens = initSpawn.tokens.map(t => Object.assign({}, t, { summoningSickness: true }));
+                    baseCombat.summonWaveCount = 1;
+                    baseCombat.log.unshift(initSpawn.msg);
+                }
             }
           
             // --- PASSO 3 INSERITO QUI ---
@@ -9918,29 +10149,105 @@
             }
         };
 
-        // TURNO DEL MOSTRO (Con applicazione pratica di CAUTELA = METÀ DANNI SUBITI!)
+        // TURNO DEL MOSTRO + PEDINE EVOCATE + EGIDA & INDOMABILE (BLOCCO 1)
         const executeMonsterTurn = () => {
             if (!combatState || combatState.phase !== "battle") return;
-            const currentPartyList = party.length > 0 ? [...party] : [{ ...character }];
+            let currentPartyList = party.length > 0 ? party.map(h => Object.assign({}, h)) : [Object.assign({}, character)];
             let turnLog = [...combatState.log];
+            let nextBossHP = combatState.currentHP;
+            let nextTokens = Array.isArray(combatState.enemyTokens) ? combatState.enemyTokens.map(t => Object.assign({}, t)) : [];
+            let nextWaveCount = combatState.summonWaveCount || 0;
+            let arenaPoisonMap = Object.assign({}, combatState.arenaPoisonByHero || {});
+            let undyingUsed = Object.assign({}, combatState.undyingUsedByHero || {});
 
             if (teferiPhaseOut) {
                 setTeferiPhaseOut(false);
-                turnLog.unshift(`☀️⏳ ${combatState.name} attacca a vuoto! Tutta la Compagnia è **Fuori Fase (Teferi's Protection)**!`);
-                advanceToNextTurn({ ...combatState, log: turnLog }, currentPartyList);
+                nextTokens = nextTokens.map(t => Object.assign({}, t, { summoningSickness: false }));
+                turnLog.unshift(`☀️⏳ ${combatState.name} e le sue pedine attaccano a vuoto! Tutta la Compagnia è **Fuori Fase (Protezione di Teferi)**!`);
+                advanceToNextTurn(Object.assign({}, combatState, { enemyTokens: nextTokens, log: turnLog }), currentPartyList);
                 return;
             }
 
             if (counterspellShield) {
                 setCounterspellShield(false);
-                turnLog.unshift(`💧🛡️ Difesa/Evasione attiva! L'assalto di ${combatState.name} viene **completamente evitato**!`);
-                advanceToNextTurn({ ...combatState, log: turnLog }, currentPartyList);
+                nextTokens = nextTokens.map(t => Object.assign({}, t, { summoningSickness: false }));
+                turnLog.unshift(`💧🛡️ Difesa/Contromagia attiva! L'assalto di ${combatState.name} viene **completamente evitato**!`);
+                advanceToNextTurn(Object.assign({}, combatState, { enemyTokens: nextTokens, log: turnLog }), currentPartyList);
                 return;
             }
 
-            const consciousTargets = currentPartyList.filter(h => h.status === "alive" && h.currentHP > 0);
+            // Helper interno: applica un colpo di Pedina su un eroe cosciente (rispettando Egida, Cautela, Famiglio e Indomabile!)
+            const applySingleTokenStrike = (tok, extraSwarmBonus) => {
+                const consciousNow = currentPartyList.filter(h => h.status === "alive" && h.currentHP > 0);
+                if (consciousNow.length === 0) return;
+                const tgt = consciousNow[Math.floor(Math.random() * consciousNow.length)];
+                const tgtSt = getFinalStats(tgt);
+
+                let tDmg = (tok.dmg || 4) + (extraSwarmBonus || 0);
+                if (tgt.raceId === 'nano') tDmg = Math.max(1, tDmg - 2);
+                if (tgtSt.keywords.includes("Egida")) tDmg = Math.max(1, tDmg - 3);
+                if (tgtSt.keywords.includes("Cautela")) tDmg = Math.max(1, Math.floor(tDmg / 2));
+
+                if (tgt.currentHP - tDmg <= 0 && tgt.activeToken) {
+                    const savedName = tgt.activeToken.name;
+                    currentPartyList = currentPartyList.map(h => h.id === tgt.id ? Object.assign({}, h, { activeToken: null }) : h);
+                    turnLog.unshift(`🐾🛡️ **${savedName}** si sacrifica bloccando l'attacco di **${tok.name}** su ${tgt.name}!`);
+                    return;
+                }
+
+                let nextHP = Math.max(0, tgt.currentHP - tDmg);
+                let fell = nextHP === 0;
+                let undyingNote = "";
+
+                if (fell && tgtSt.keywords.includes("Indomabile") && !undyingUsed[tgt.id]) {
+                    undyingUsed[tgt.id] = true;
+                    nextHP = 6;
+                    fell = false;
+                    undyingNote = " 🔥💀 [INDOMABILE: si rialza con 6 PV!]";
+                }
+
+                if (tok.infect) {
+                    arenaPoisonMap[tgt.id] = (arenaPoisonMap[tgt.id] || 0) + 1;
+                }
+                if (tok.lifelinkBoss && tDmg > 0) {
+                    nextBossHP = Math.min(combatState.maxHP, nextBossHP + tDmg);
+                }
+
+                currentPartyList = currentPartyList.map(h => {
+                    if (h.id !== tgt.id) return h;
+                    return Object.assign({}, h, {
+                        currentHP: nextHP,
+                        status: fell ? "unconscious" : "alive",
+                        deathSuccesses: fell ? 0 : h.deathSuccesses,
+                        deathFailures: fell ? 0 : h.deathFailures
+                    });
+                });
+
+                turnLog.unshift(`⚔️ Pedina **${tok.name}** colpisce **${tgt.name}** per **${tDmg} danni**!${tok.lifelinkBoss ? ` (🩸 +${tDmg} PV al Boss)` : ""}${tok.infect ? " (☣️ +1 Veleno)" : ""}${undyingNote} (${tgt.name}: ${nextHP} PV)`);
+            };
+
+            // FASE 1: LE PEDINE GIÀ PRONTE (SENZA DEBOLEZZA DA EVOCAZIONE) ATTACCANO!
+            if (nextTokens.length > 0) {
+                const zombieAliveCount = nextTokens.filter(t => t.swarmAtkBoost).length;
+                nextTokens.forEach(tok => {
+                    if (tok.healBossOnAlive > 0) {
+                        nextBossHP = Math.min(combatState.maxHP, nextBossHP + tok.healBossOnAlive);
+                        turnLog.unshift(`🌿 **${tok.name}** rigenera **+${tok.healBossOnAlive} PV** a ${combatState.name}!`);
+                    }
+                    if (!tok.summoningSickness) {
+                        const zBoost = tok.swarmAtkBoost ? Math.max(0, zombieAliveCount - 1) : 0;
+                        applySingleTokenStrike(tok, zBoost);
+                    }
+                });
+                // A fine fase, tutte le vecchie pedine perdono la debolezza da evocazione
+                nextTokens = nextTokens.map(t => Object.assign({}, t, { summoningSickness: false }));
+            }
+
+            let consciousTargets = currentPartyList.filter(h => h.status === "alive" && h.currentHP > 0);
             if (consciousTargets.length === 0) {
+                savePartyState(currentPartyList);
                 if (diceMode === "manual") {
+                    setCombatState(Object.assign({}, combatState, { currentHP: nextBossHP, enemyTokens: nextTokens, arenaPoisonByHero: arenaPoisonMap, undyingUsedByHero: undyingUsed, log: turnLog }));
                     setPendingMonsterBehaviorManual(true);
                 } else {
                     executeMonsterDecisionOnUnconsciousParty(Math.floor(Math.random() * 6) + 1);
@@ -9948,6 +10255,35 @@
                 return;
             }
 
+            // FASE 2: SE È UN LORD EVOCATORE, PUÒ SPENDERE IL TURNO PER EVOCARE NUOVE PEDINE!
+            if (combatState.summonerType && nextTokens.length < 5) {
+                const summonProb = nextTokens.length === 0 ? 0.85 : 0.45;
+                if (Math.random() < summonProb) {
+                    nextWaveCount += 1;
+                    const spawnRes = createEnemyTokensForSummoner(combatState.summonerType, nextTokens, nextWaveCount, combatState.avgPartyLvlRef || 1);
+                    if (spawnRes.tokens.length > 0) {
+                        turnLog.unshift(spawnRes.msg);
+                        spawnRes.tokens.forEach(newTok => {
+                            if (newTok.haste) {
+                                applySingleTokenStrike(newTok, 0);
+                            }
+                        });
+                        nextTokens = nextTokens.concat(spawnRes.tokens);
+                        savePartyState(currentPartyList);
+                        advanceToNextTurn(Object.assign({}, combatState, {
+                            currentHP: nextBossHP,
+                            enemyTokens: nextTokens,
+                            summonWaveCount: nextWaveCount,
+                            arenaPoisonByHero: arenaPoisonMap,
+                            undyingUsedByHero: undyingUsed,
+                            log: turnLog
+                        }), currentPartyList);
+                        return;
+                    }
+                }
+            }
+
+            // FASE 3: ATTACCO DIRETTO DEL MOSTRO / BOSS
             const mRoll = Math.floor(Math.random() * 20) + 1;
             const isCrit = mRoll === 20;
             const isMiss = mRoll <= 4;
@@ -9964,8 +10300,9 @@
             }
 
             if (isMiss) {
+                savePartyState(currentPartyList);
                 turnLog.unshift(`🛡️ ${combatState.name} sferra un colpo (Dado ${mRoll}), ma manca il bersaglio!`);
-                advanceToNextTurn({ ...combatState, log: turnLog }, currentPartyList);
+                advanceToNextTurn(Object.assign({}, combatState, { currentHP: nextBossHP, enemyTokens: nextTokens, arenaPoisonByHero: arenaPoisonMap, undyingUsedByHero: undyingUsed, log: turnLog }), currentPartyList);
                 return;
             }
 
@@ -9975,6 +10312,12 @@
             let rawDmg = combatState.dmg + (isCrit ? 5 : 0);
             if (chosenTarget.raceId === 'nano') rawDmg = Math.max(1, rawDmg - 2);
 
+            let wardNote = "";
+            if (targetStats.keywords.includes("Egida")) {
+                rawDmg = Math.max(1, rawDmg - 3);
+                wardNote = " ✨ [EGIDA -3 danni!]";
+            }
+
             let vigilanceNote = "";
             let finalDmg = rawDmg;
             if (targetStats.keywords.includes("Cautela")) {
@@ -9982,43 +10325,33 @@
                 vigilanceNote = ` 🛡️ [CAUTELA dimezza i danni da ${rawDmg} a ${finalDmg}!]`;
             }
 
-            // SE IL COLPO DEL MOSTRO MANDEREBBE A 0 PV L'EROE E L'EROE HA UN FAMIGLIO ATTIVO, IL FAMIGLIO SI SACRIFICA SALVANDOLO!
-         if (chosenTarget.currentHP - finalDmg <= 0 && chosenTarget.activeToken) {
-             const savedByTokenName = chosenTarget.activeToken.name;
-             const savedParty = currentPartyList.map(h => h.id === chosenTarget.id ? Object.assign({}, h, { activeToken: null }) : h);
-             savePartyState(savedParty);
-             turnLog.unshift(`🐾🛡️ EROICO SACRIFICIO (CHUMP BLOCK)! Il colpo mortale di ${combatState.name} (${finalDmg} danni) stava per abbattere **${chosenTarget.name}**, ma **${savedByTokenName}** si sacrifica assorbendo il 100% del danno!`);
-             advanceToNextTurn(Object.assign({}, combatState, { log: turnLog }), savedParty);
-             return;
-         }
-          
-            // ABILITÀ SPECIALI DEL BOSS (TOCCO LETALE, VELENO DA ARENA, DISINCANTARE, FRANTUMARE!)
+            if (chosenTarget.currentHP - finalDmg <= 0 && chosenTarget.activeToken) {
+                const savedByTokenName = chosenTarget.activeToken.name;
+                const savedParty = currentPartyList.map(h => h.id === chosenTarget.id ? Object.assign({}, h, { activeToken: null }) : h);
+                savePartyState(savedParty);
+                turnLog.unshift(`🐾🛡️ EROICO SACRIFICIO (CHUMP BLOCK)! Il colpo mortale di ${combatState.name} (${finalDmg} danni) stava per abbattere **${chosenTarget.name}**, ma **${savedByTokenName}** si sacrifica assorbendo il 100% del danno!`);
+                advanceToNextTurn(Object.assign({}, combatState, { currentHP: nextBossHP, enemyTokens: nextTokens, arenaPoisonByHero: arenaPoisonMap, undyingUsedByHero: undyingUsed, log: turnLog }), savedParty);
+                return;
+            }
+
             const bossTraits = getBossSpecialTraits(combatState.key, combatState.isBoss);
             let specialBossNotes = [];
             let auraDestroyedNow = false;
             let shatteredSlotKey = null;
             let shatteredItemName = "";
-            let arenaPoisonMap = Object.assign({}, combatState.arenaPoisonByHero || {});
 
-            // 1. TOCCO LETALE DEL BOSS (su tiro 18-20: +8 danni necrotici extra se l'eroe non è Indistruttibile!)
             if (bossTraits.deathtouch && mRoll >= 18 && !targetStats.keywords.includes("Indistruttibile")) {
                 finalDmg += 8;
                 specialBossNotes.push("☠️ TOCCO LETALE (+8 danni necrotici!)");
             }
-
-            // 2. VELENO DA ARENA (rimane solo finché dura questa battaglia!)
             if (bossTraits.poison) {
                 arenaPoisonMap[chosenTarget.id] = (arenaPoisonMap[chosenTarget.id] || 0) + 1;
-                specialBossNotes.push(`☣️ +1 Veleno Arena (Tot: ${arenaPoisonMap[chosenTarget.id]} • svanisce a fine scontro!)`);
+                specialBossNotes.push(`☣️ +1 Veleno Arena (Tot: ${arenaPoisonMap[chosenTarget.id]})`);
             }
-
-            // 3. DISINCANTARE (su tiro 16+: distrugge l'Aura Incanta Creatura attiva sull'eroe!)
             if (bossTraits.disenchant && chosenTarget.activeAura && mRoll >= 16) {
                 auraDestroyedNow = true;
                 specialBossNotes.push(`✨💥 DISINCANTARE! Il Boss distrugge l'Aura **${chosenTarget.activeAura.name}** di ${chosenTarget.name}!`);
             }
-
-            // 4. FRANTUMARE ARTEFATTO/EQUIP (su critico o colpo pesante >=18: distrugge 1 equip non-Indistruttibile!)
             if (bossTraits.shatter && mRoll >= 18 && finalDmg >= 12) {
                 const isTargetArtificer = chosenTarget.classId === "artefice" || chosenTarget.secondaryClassId === "artefice";
                 if (isTargetArtificer || targetStats.keywords.includes("Indistruttibile")) {
@@ -10036,22 +10369,29 @@
                 }
             }
 
-            const newHP = Math.max(0, chosenTarget.currentHP - finalDmg);
-            const fellUnconscious = newHP === 0;
+            let newHP = Math.max(0, chosenTarget.currentHP - finalDmg);
+            let fellUnconscious = newHP === 0;
+
+            // NUOVA KEYWORD INDOMABILE (UNDYING): 1 volta per battaglia si rialza subito con 6 PV!
+            if (fellUnconscious && targetStats.keywords.includes("Indomabile") && !undyingUsed[chosenTarget.id]) {
+                undyingUsed[chosenTarget.id] = true;
+                newHP = 6;
+                fellUnconscious = false;
+                specialBossNotes.push("🔥💀 INDOMABILE (UNDYING): sfida la morte e si rialza con 6 PV!");
+            }
 
             const nextParty = currentPartyList.map(h => {
                 if (h.id === chosenTarget.id) {
                     let nextEq = Object.assign({}, h.equipped || {});
                     if (shatteredSlotKey) nextEq[shatteredSlotKey] = null;
-                    return {
-                        ...h,
+                    return Object.assign({}, h, {
                         equipped: nextEq,
                         activeAura: auraDestroyedNow ? null : h.activeAura,
                         currentHP: newHP,
                         status: fellUnconscious ? "unconscious" : "alive",
                         deathSuccesses: fellUnconscious ? 0 : h.deathSuccesses,
                         deathFailures: fellUnconscious ? 0 : h.deathFailures
-                    };
+                    });
                 }
                 return h;
             });
@@ -10069,10 +10409,16 @@
             }
 
             const specialStr = specialBossNotes.length > 0 ? " • " + specialBossNotes.join(" • ") : "";
-            turnLog.unshift(`👹 ${combatState.name} attacca **${chosenTarget.name}** (Dado ${mRoll}${isCrit ? " CRITICO!" : ""}) infliggendo **${finalDmg} danni**!${vigilanceNote}${specialStr} (${chosenTarget.name}: ${newHP} PV)${fellUnconscious ? ` 🩸 **${chosenTarget.name} CADE INCOSCIENTE A 0 PV!**` : ""}`);
+            turnLog.unshift(`👹 ${combatState.name} attacca **${chosenTarget.name}** (Dado ${mRoll}${isCrit ? " CRITICO!" : ""}) infliggendo **${finalDmg} danni**!${wardNote}${vigilanceNote}${specialStr} (${chosenTarget.name}: ${newHP} PV)${fellUnconscious ? ` 🩸 **${chosenTarget.name} CADE INCOSCIENTE A 0 PV!**` : ""}`);
 
-            advanceToNextTurn({ ...combatState, arenaPoisonByHero: arenaPoisonMap, log: turnLog }, nextParty);
-          };
+            advanceToNextTurn(Object.assign({}, combatState, {
+                currentHP: nextBossHP,
+                enemyTokens: nextTokens,
+                arenaPoisonByHero: arenaPoisonMap,
+                undyingUsedByHero: undyingUsed,
+                log: turnLog
+            }), nextParty);
+        };
           
         const finishCombatVictory = (lastActiveHero, dmgMap, finalBlowMsg) => {
             // Se era il Duello PvP tra compagni e hanno vinto i Puri, riunisce e purifica tutta la Compagnia!
@@ -10285,9 +10631,8 @@
         };
 
       
-        // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC (Volare, Travolgere, Tocco Letale, Attacco Improvviso, Infettare)
-        // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC + SCUDO PUZZLE DEI BOSS
-        const calculateSingleStrikeOutcome = (heroChar, actionStat, rawD20, currentMonsterHP, isSecondStrike = false) => {
+        // CALCOLO SINGOLO COLPO CON TUTTE LE KEYWORDS MAGIC + PEDINE NEMICHE + ESALTATO/FENDENTE/PROLIFERARE
+        const calculateSingleStrikeOutcome = (heroChar, actionStat, rawD20, currentTargetHP, isSecondStrike = false, targetTokenObj = null) => {
             const stats = getFinalStats(heroChar);
             const baseStatVal = stats[actionStat] || 10;
             const humanBonus = heroChar.raceId === 'umano' ? 1 : 0;
@@ -10295,35 +10640,49 @@
             const treasureBonus = (!isSecondStrike && treasureBoostActive) ? 5 : 0;
             const growthBonus = (!isSecondStrike && giantGrowthActive) ? 6 : 0;
 
-            const total = rawD20 + baseStatVal + humanBonus + firstStrikeRollBonus + treasureBonus + growthBonus;
+            // NUOVA KEYWORD ESALTATO (EXALTED): +3 al D20 e +5 Danni se sei Solo o primo ad attaccare nel round!
+            const exaltedActive = stats.keywords.includes("Esaltato") && (party.length <= 1 || (combatState.actedThisRound || []).length === 0);
+            const exaltedRoll = exaltedActive ? 3 : 0;
+
+            // Scudo Sciame Ratti: se ci sono 2+ Ratti vivi, il Boss guadagna +2 CD!
+            const ratShieldCount = (!targetTokenObj && Array.isArray(combatState.enemyTokens))
+                ? combatState.enemyTokens.filter(t => t.swarmShieldBoss).length
+                : 0;
+            const effectiveDC = targetTokenObj
+                ? Math.max(14, combatState.dc - 4)
+                : (combatState.dc + (ratShieldCount >= 2 ? 2 : 0));
+
+            const total = rawD20 + baseStatVal + humanBonus + firstStrikeRollBonus + treasureBonus + growthBonus + exaltedRoll;
 
             let breakdownParts = [`Dado (${rawD20})`, `${actionStat.toUpperCase()} (${baseStatVal})`];
             if (humanBonus) breakdownParts.push(`Umano (+1)`);
             if (firstStrikeRollBonus) breakdownParts.push(`Att.Imp (+2)`);
+            if (exaltedRoll) breakdownParts.push(`Esaltato (+3)`);
             if (treasureBonus) breakdownParts.push(`Tesoro (+5)`);
             if (growthBonus) breakdownParts.push(`Crescita (+6)`);
             const formulaStr = `${breakdownParts.join("+")} = ${total}`;
 
+            const targetName = targetTokenObj ? ("Pedina " + targetTokenObj.name) : combatState.name;
             const isCrit = rawD20 === 20;
             const isFumble = rawD20 === 1 && !treasureBonus;
-            const hit = isCrit || (!isFumble && total >= combatState.dc);
+            const hit = isCrit || (!isFumble && total >= effectiveDC);
 
             if (!hit) {
-                return { hit: false, isCrit: false, isFumble: isFumble, dmg: 0, poisonAdded: 0, text: `❌ ${ isSecondStrike ? "[2° Colpo Doppio Attacco] " : "" }${heroChar.name} manca [${formulaStr} vs CD ${combatState.dc}]!` };
+                return { hit: false, isCrit: false, isFumble: isFumble, dmg: 0, poisonAdded: 0, hasCleave: false, hasProliferate: false, text: `❌ ${isSecondStrike ? "[2° Colpo Doppio Attacco] " : ""}${heroChar.name} manca **${targetName}** [${formulaStr} vs CD ${effectiveDC}${ratShieldCount >= 2 ? " • 🐀+2 Scudo Ratti" : ""}]!` };
             }
 
-            let dmg = Math.max(5, Math.round(baseStatVal * 0.55) + Math.floor(rawD20 / 4)) + (treasureBonus ? 8 : 0) + (growthBonus ? 8 : 0);
+            let dmg = Math.max(5, Math.round(baseStatVal * 0.55) + Math.floor(rawD20 / 4)) + (treasureBonus ? 8 : 0) + (growthBonus ? 8 : 0) + (exaltedActive ? 5 : 0);
             let kwNotes = [];
 
-            // 1. ATTACCO IMPROVVISO: +2 danni base a tutti!
+            if (exaltedActive) kwNotes.push("☀️ Esaltato +5");
             if (stats.keywords.includes("Attacco Improvviso")) {
                 dmg += 2;
                 kwNotes.push("Att.Improvviso +2");
             }
 
-            // 2. VOLARE: +4 danni contro mostri che NON volano
+            const targetFlies = targetTokenObj ? Boolean(targetTokenObj.flying) : combatState.isFlying;
             if (stats.keywords.includes("Volare")) {
-                if (!combatState.isFlying) {
+                if (!targetFlies) {
                     dmg += 4;
                     kwNotes.push("🦅 Volare vs Terrestre +4");
                 } else {
@@ -10331,56 +10690,62 @@
                 }
             }
 
-            // 3. TRAVOLGERE (Trample): Danni extra pari all'eccedenza del tiro rispetto alla CD del mostro!
             if (stats.keywords.includes("Travolgere")) {
-                const excess = Math.max(0, total - combatState.dc);
+                const excess = Math.max(0, total - effectiveDC);
                 if (excess > 0) {
                     dmg += excess;
-                    kwNotes.push(`🦏 Travolgere +${excess} (Eccedenza su CD ${combatState.dc})`);
+                    kwNotes.push(`🦏 Travolgere +${excess}`);
                 }
             }
 
-            // 4. TOCCO LETALE (Deathtouch bilanciato!)
             if (stats.keywords.includes("Tocco Letale")) {
-                const executeThreshold = Math.round(combatState.maxHP * 0.25);
-                if (!combatState.isBoss && (isCrit || (currentMonsterHP - dmg) <= executeThreshold)) {
-                    dmg = currentMonsterHP;
-                    kwNotes.push("☠️ TOCCO LETALE (Esecuzione Mortale!)");
-                } else if (combatState.isBoss && isCrit) {
-                    dmg += 25;
-                    kwNotes.push("☠️ Tocco Letale Critico su Boss +25");
+                if (targetTokenObj) {
+                    dmg = currentTargetHP;
+                    kwNotes.push("☠️ TOCCO LETALE (Pedina eliminata!)");
                 } else {
-                    const necrosis = Math.max(4, Math.min(18, Math.round(currentMonsterHP * 0.15)));
-                    dmg += necrosis;
-                    kwNotes.push(`☠️ Tocco Letale (15% PV) +${necrosis}`);
+                    const executeThreshold = Math.round(combatState.maxHP * 0.25);
+                    if (!combatState.isBoss && (isCrit || (currentTargetHP - dmg) <= executeThreshold)) {
+                        dmg = currentTargetHP;
+                        kwNotes.push("☠️ TOCCO LETALE (Esecuzione Mortale!)");
+                    } else if (combatState.isBoss && isCrit) {
+                        dmg += 25;
+                        kwNotes.push("☠️ Tocco Letale Critico su Boss +25");
+                    } else {
+                        const necrosis = Math.max(4, Math.min(18, Math.round(currentTargetHP * 0.15)));
+                        dmg += necrosis;
+                        kwNotes.push(`☠️ Tocco Letale (15% PV) +${necrosis}`);
+                    }
                 }
             }
 
-            if (isCrit && dmg < currentMonsterHP) {
+            if (isCrit && dmg < currentTargetHP) {
                 dmg = Math.round(dmg * 1.6);
                 kwNotes.push("🌟 CRITICO!");
             }
 
-            // 5. INFETTARE / VELENO (Infect / Poison)
             let poisonAdded = 0;
-            if (stats.keywords.includes("Infettare") || stats.keywords.includes("Tocco Letale")) {
+            if (!targetTokenObj && (stats.keywords.includes("Infettare") || stats.keywords.includes("Tocco Letale"))) {
                 poisonAdded = stats.keywords.includes("Infettare") ? 2 : 1;
                 kwNotes.push(`☣️ +${poisonAdded} Veleno`);
             }
 
-            // 6. MECCANICA BOSS PUZZLE: Finché lo Scudo Esterno del Boss è attivo, gli attacchi normali fanno solo il 30% dei danni!
-            if (combatState.puzzleArmorActive && !isCrit) {
+            if (!targetTokenObj && combatState.puzzleArmorActive && !isCrit) {
                 dmg = Math.max(2, Math.round(dmg * 0.3));
-                kwNotes.push("🧩 [SCUDO PUZZLE ATTIVO: Danni ridotti del 70%! Usa la Manovra Puzzle!]");
+                kwNotes.push("🧩 [SCUDO PUZZLE: -70% danni!]");
             }
 
-            const notesStr = kwNotes.length > 0 ? ` (${kwNotes.join(" • ")})` : "";
-            const text = `✅ ${isSecondStrike ? "⚔️⚔️ [2° Colpo DOPPIO ATTACCO] " : ""}${heroChar.name} [${formulaStr} vs CD ${combatState.dc}]: Infligge **${dmg} danni**!${notesStr}`;
+            const hasCleave = stats.keywords.includes("Fendente");
+            const hasProliferate = stats.keywords.includes("Proliferare");
+            if (hasCleave) kwNotes.push("⚔️ Fendente (50% AoE Pedine)");
+            if (hasProliferate) kwNotes.push("☣️ Proliferare (+1 Veleno & +1 Mana)");
 
-            return { hit: true, isCrit: isCrit, isFumble: false, dmg: dmg, poisonAdded: poisonAdded, text: text };
+            const notesStr = kwNotes.length > 0 ? ` (${kwNotes.join(" • ")})` : "";
+            const text = `✅ ${isSecondStrike ? "⚔️⚔️ [2° Colpo DOPPIO ATTACCO] " : ""}${heroChar.name} colpisce **${targetName}** [${formulaStr} vs CD ${effectiveDC}]: **${dmg} danni**!${notesStr}`;
+
+            return { hit: true, isCrit: isCrit, isFumble: false, dmg: dmg, poisonAdded: poisonAdded, hasCleave: hasCleave, hasProliferate: hasProliferate, text: text };
         };
 
-        // ESECUZIONE ATTACCO (Supporta DOPPIO ATTACCO e RAPIDITÀ!)
+        // ESECUZIONE ATTACCO (Supporta PEDINE NEMICHE, SCUDO SCOIATTOLO, FENDENTE, PROLIFERARE, DOPPIO ATTACCO e RAPIDITÀ!)
         const resolveCombatTurn = (actionStat, d20Value) => {
             if (!combatState || combatState.phase !== "battle") return;
             const stats = getFinalStats(character);
@@ -10388,87 +10753,150 @@
 
             let newMonsterHP = combatState.currentHP;
             let newPoison = combatState.poisonCounters || 0;
-            let newHero = { ...character };
+            let newEnemyTokens = Array.isArray(combatState.enemyTokens) ? combatState.enemyTokens.map(t => Object.assign({}, t)) : [];
+            let nextSelectedTargetId = combatState.selectedTargetId || "boss";
+            let newHero = Object.assign({}, character);
             let turnLog = [...combatState.log];
-            let dmgMap = { ...(combatState.damageDealtByHero || {}) };
+            let dmgMap = Object.assign({}, combatState.damageDealtByHero || {});
 
-            // Se siamo in modalità Dado Manuale e questo è il 1° colpo di un Doppio Attacco, chiedi il 2° dado!
+            // Helper che applica un singolo strike su Boss o Pedina + Fendente + Proliferare + Scudo Scoiattolo
+            const applyStrikeToBoard = (rawRoll, isSecond) => {
+                let targetTok = null;
+                if (nextSelectedTargetId !== "boss") {
+                    targetTok = newEnemyTokens.find(t => t.id === nextSelectedTargetId) || null;
+                    if (!targetTok) nextSelectedTargetId = "boss";
+                }
+                const targetHP = targetTok ? targetTok.currentHP : newMonsterHP;
+                const outcome = calculateSingleStrikeOutcome(newHero, actionStat, rawRoll, targetHP, isSecond, targetTok);
+                turnLog.unshift(outcome.text);
+
+                if (outcome.isCrit) {
+                    triggerEpicImpact("crit_gold");
+                    if (!combatState.worldEnchantment) {
+                        const weRes = maybeTriggerRandomWorldEnchantment(combatState, "20 Naturale Critico");
+                        if (weRes.enchanted) {
+                            combatState.worldEnchantment = weRes.enchanted;
+                            turnLog.unshift(weRes.msg);
+                        }
+                    }
+                }
+                if (outcome.isFumble) {
+                    newHero.currentHP = Math.max(0, newHero.currentHP - 3);
+                    if (newHero.currentHP === 0) newHero.status = "unconscious";
+                }
+
+                if (!outcome.hit) return outcome;
+
+                if (stats.keywords.includes("Legame Vitale")) {
+                    const healL = outcome.isCrit ? 5 : 2;
+                    newHero.currentHP = Math.min(stats.maxHP, newHero.currentHP + healL);
+                    turnLog.unshift(`🩸 Legame Vitale cura ${newHero.name} di +${healL} PV!`);
+                }
+                if (newHero.activeAura && newHero.activeAura.id === "curiosity_aura") {
+                    const mainC = (newHero.manaIdentity && newHero.manaIdentity[0]) ? newHero.manaIdentity[0] : "U";
+                    let pMap = Object.assign({}, newHero.manaPool || {});
+                    pMap[mainC] = Math.min(12, (pMap[mainC] || 0) + 1);
+                    newHero.manaPool = pMap;
+                    turnLog.unshift(`💧✨ Curiosità Arcana fa guadagnare +1 Mana ${mainC} a ${newHero.name}!`);
+                }
+                if (outcome.hasProliferate) {
+                    newPoison += 1;
+                    const pCol = (newHero.manaIdentity && newHero.manaIdentity[0]) ? newHero.manaIdentity[0] : "G";
+                    let pPool = Object.assign({}, newHero.manaPool || {});
+                    pPool[pCol] = Math.min(12, (pPool[pCol] || 0) + 1);
+                    newHero.manaPool = pPool;
+                }
+
+                // Applicazione danno su Pedina oppure su Boss (con Scudo Scoiattolo!)
+                if (targetTok) {
+                    targetTok.currentHP -= outcome.dmg;
+                    dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + outcome.dmg;
+                    if (targetTok.currentHP <= 0) {
+                        turnLog.unshift(`💀 Pedina **${targetTok.name}** distrutta!`);
+                        if (targetTok.explodeOnDeath > 0) {
+                            newHero.currentHP = Math.max(1, newHero.currentHP - targetTok.explodeOnDeath);
+                            turnLog.unshift(`🍄💥 **${targetTok.name}** esplode morendo infliggendo -${targetTok.explodeOnDeath} PV a ${newHero.name}!`);
+                        }
+                        newEnemyTokens = newEnemyTokens.filter(t => t.id !== targetTok.id);
+                        nextSelectedTargetId = "boss";
+                    }
+                } else {
+                    const squirrelIdx = newEnemyTokens.findIndex(t => t.chumpBlockBoss);
+                    if (squirrelIdx !== -1 && !outcome.isCrit) {
+                        const deadSq = newEnemyTokens[squirrelIdx];
+                        newEnemyTokens.splice(squirrelIdx, 1);
+                        dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + Math.min(outcome.dmg, deadSq.maxHP);
+                        turnLog.unshift(`🐿️🛡️ SCUDO SCOIATTOLO! **${deadSq.name}** si lancia davanti a ${combatState.name} assorbendo tutto il colpo!`);
+                    } else {
+                        newMonsterHP = Math.max(0, newMonsterHP - outcome.dmg);
+                        newPoison += outcome.poisonAdded;
+                        dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + outcome.dmg;
+                    }
+                }
+
+                // FENDENTE (CLEAVE): 50% dei danni anche a tutte le altre Pedine nemiche vive!
+                if (outcome.hasCleave && newEnemyTokens.length > 0) {
+                    const splash = Math.max(3, Math.floor(outcome.dmg * 0.5));
+                    let killedByCleave = 0;
+                    let survived = [];
+                    newEnemyTokens.forEach(tk => {
+                        if (targetTok && tk.id === targetTok.id) {
+                            survived.push(tk);
+                            return;
+                        }
+                        tk.currentHP -= splash;
+                        if (tk.currentHP <= 0) {
+                            killedByCleave++;
+                            if (tk.explodeOnDeath > 0) {
+                                newHero.currentHP = Math.max(1, newHero.currentHP - tk.explodeOnDeath);
+                            }
+                        } else {
+                            survived.push(tk);
+                        }
+                    });
+                    newEnemyTokens = survived;
+                    turnLog.unshift(`⚔️🌪️ FENDENTE! Onda d'urto da **${splash} danni** sulle Pedine nemiche (${killedByCleave} eliminate)!`);
+                }
+
+                return outcome;
+            };
+
+            // Doppio Attacco in modalità Dado Manuale (1° colpo -> chiede 2° dado)
             if (hasDoubleStrike && diceMode === "manual" && !combatState.doubleStrikePendingSecondRoll) {
-                const firstRes = calculateSingleStrikeOutcome(newHero, actionStat, d20Value, newMonsterHP, false);
+                applyStrikeToBoard(d20Value, false);
                 if (treasureBoostActive) setTreasureBoostActive(false);
                 if (giantGrowthActive) setGiantGrowthActive(false);
 
-                newMonsterHP = Math.max(0, newMonsterHP - firstRes.dmg);
-                newPoison += firstRes.poisonAdded;
-                dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + firstRes.dmg;
-                turnLog.unshift(firstRes.text);
-
                 if (newMonsterHP <= 0) {
                     setPendingCombatAction(null);
-                    finishCombatVictory(newHero, dmgMap, firstRes.text);
+                    finishCombatVictory(newHero, dmgMap, turnLog[0]);
                     return;
                 }
 
-                // Chiede ora il 2° lancio del dado per Doppio Attacco!
-                setCombatState({
-                    ...combatState,
+                const updatedPartyMid = (party.length > 0 ? party : [newHero]).map(p => p.id === newHero.id ? newHero : p);
+                savePartyState(updatedPartyMid);
+
+                setCombatState(Object.assign({}, combatState, {
                     currentHP: newMonsterHP,
                     poisonCounters: newPoison,
+                    enemyTokens: newEnemyTokens,
+                    selectedTargetId: nextSelectedTargetId,
                     damageDealtByHero: dmgMap,
                     doubleStrikePendingSecondRoll: actionStat,
-                    log: [`⚔️⚔️ DOPPIO ATTACCO ATTIVO! Tira ora il **2° Dado D20** per il secondo colpo di ${newHero.name}!`, ...turnLog].slice(0, 8)
-                });
+                    log: [`⚔️⚔️ DOPPIO ATTACCO ATTIVO! Tira ora il **2° Dado D20** per il secondo colpo di ${newHero.name}!`].concat(turnLog).slice(0, 8)
+                }));
                 return;
             }
 
-            // Esecuzione standard (o 2° colpo manuale di Doppio Attacco, oppure 1°+2° colpo automatico!)
             const isManualSecond = Boolean(combatState.doubleStrikePendingSecondRoll);
-            const firstOutcome = calculateSingleStrikeOutcome(newHero, actionStat, d20Value, newMonsterHP, isManualSecond);
+            applyStrikeToBoard(d20Value, isManualSecond);
 
             if (treasureBoostActive) setTreasureBoostActive(false);
             if (giantGrowthActive) setGiantGrowthActive(false);
 
-            newMonsterHP = Math.max(0, newMonsterHP - firstOutcome.dmg);
-            newPoison += firstOutcome.poisonAdded;
-            dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + firstOutcome.dmg;
-            turnLog.unshift(firstOutcome.text);
-          if (firstOutcome.isCrit) {
-                triggerEpicImpact("crit_gold");
-                if (!combatState.worldEnchantment) {
-                    const weRes = maybeTriggerRandomWorldEnchantment(combatState, "20 Naturale Critico");
-                    if (weRes.enchanted) {
-                        combatState.worldEnchantment = weRes.enchanted;
-                        turnLog.unshift(weRes.msg);
-                    }
-                }
-            }
-
-            if (firstOutcome.isFumble) {
-                newHero.currentHP = Math.max(0, newHero.currentHP - 3);
-                if (newHero.currentHP === 0) newHero.status = "unconscious";
-            }
-            if (firstOutcome.hit && stats.keywords.includes("Legame Vitale")) {
-                const healL = firstOutcome.isCrit ? 5 : 2;
-                newHero.currentHP = Math.min(stats.maxHP, newHero.currentHP + healL);
-                turnLog.unshift(`🩸 Legame Vitale cura ${newHero.name} di +${healL} PV!`);
-            }
-            if (firstOutcome.hit && newHero.activeAura && newHero.activeAura.id === "curiosity_aura") {
-                const mainC = (newHero.manaIdentity && newHero.manaIdentity[0]) ? newHero.manaIdentity[0] : "U";
-                let pMap = Object.assign({}, newHero.manaPool || {});
-                pMap[mainC] = Math.min(12, (pMap[mainC] || 0) + 1);
-                newHero.manaPool = pMap;
-                turnLog.unshift(`💧✨ Curiosità Arcana fa guadagnare +1 Mana ${mainC} a ${newHero.name}!`);
-            }
-
-
-            // Se ha Doppio Attacco ed è in Dado Auto, tira automaticamente anche il 2° dado D20!
             if (hasDoubleStrike && diceMode === "auto" && newMonsterHP > 0) {
                 const secondD20 = Math.floor(Math.random() * 20) + 1;
-                const secondOutcome = calculateSingleStrikeOutcome(newHero, actionStat, secondD20, newMonsterHP, true);
-                newMonsterHP = Math.max(0, newMonsterHP - secondOutcome.dmg);
-                newPoison += secondOutcome.poisonAdded;
-                dmgMap[newHero.id] = (dmgMap[newHero.id] || 0) + secondOutcome.dmg;
-                turnLog.unshift(secondOutcome.text);
+                applyStrikeToBoard(secondD20, true);
             }
 
             setPendingCombatAction(null);
@@ -10481,11 +10909,8 @@
             const updatedPartyList = (party.length > 0 ? party : [newHero]).map(p => p.id === newHero.id ? newHero : p);
             savePartyState(updatedPartyList);
 
-            // Segna che questo eroe ha già agito in questo round
             const newActedList = [...(combatState.actedThisRound || []), newHero.id];
 
-            // CASO SPECIALE RAPIDITÀ (Haste):
-            // Se Rock ha usato Rapidità per attaccare al posto di Rin (prima di Rin), ora il turno TORNA A RIN!
             if (combatState.hasteOverrideHeroId === newHero.id) {
                 const scheduledCombatant = combatState.turnOrder[combatState.currentTurnIdx];
                 if (scheduledCombatant && scheduledCombatant.type === "hero") {
@@ -10495,28 +10920,30 @@
                         localStorage.setItem('rpg_character', JSON.stringify(originalHero));
                     }
                 }
-                setCombatState({
-                    ...combatState,
+                setCombatState(Object.assign({}, combatState, {
                     currentHP: newMonsterHP,
                     poisonCounters: newPoison,
+                    enemyTokens: newEnemyTokens,
+                    selectedTargetId: nextSelectedTargetId,
                     damageDealtByHero: dmgMap,
                     actedThisRound: newActedList,
                     hasteOverrideHeroId: null,
                     doubleStrikePendingSecondRoll: null,
-                    log: [`⚡ Rapidità completata da ${newHero.name}! Ora l'azione torna regolarmente a **${scheduledCombatant ? scheduledCombatant.name : "Compagnia"}**!`, ...turnLog].slice(0, 8)
-                });
+                    log: [`⚡ Rapidità completata da ${newHero.name}! Ora l'azione torna regolarmente a **${scheduledCombatant ? scheduledCombatant.name : "Compagnia"}**!`].concat(turnLog).slice(0, 8)
+                }));
                 return;
             }
 
-            advanceToNextTurn({
-                ...combatState,
+            advanceToNextTurn(Object.assign({}, combatState, {
                 currentHP: newMonsterHP,
                 poisonCounters: newPoison,
+                enemyTokens: newEnemyTokens,
+                selectedTargetId: nextSelectedTargetId,
                 damageDealtByHero: dmgMap,
                 actedThisRound: newActedList,
                 doubleStrikePendingSecondRoll: null,
                 log: turnLog
-            }, updatedPartyList);
+            }), updatedPartyList);
         };
       
         const executeRollCalculation = (choice, d20Value) => {
@@ -13042,6 +13469,92 @@
                         </button>
                     )}
 
+                    {/* CAMPO DI BATTAGLIA NEMICO: PEDINE EVOCATE & SELETTORE BERSAGLIO (BLOCCO 1) */}
+                    {combatState && (combatState.summonerType || (combatState.enemyTokens && combatState.enemyTokens.length > 0)) && (
+                        <div className="bg-gradient-to-b from-red-950/90 to-gray-950 border-2 border-red-500/80 rounded-2xl p-3 shadow-xl space-y-2.5 animate-fade">
+                            <div className="flex flex-wrap justify-between items-center gap-2 border-b border-red-800/60 pb-2">
+                                <div>
+                                    <h4 className="text-red-300 font-black text-xs uppercase tracking-wider">
+                                        📯 Campo di Battaglia Nemico — Pedine Evocate ({(combatState.enemyTokens || []).length}/5)
+                                    </h4>
+                                    <p className="text-[10px] text-gray-300">
+                                        Tocca il Boss o una Pedina per scegliere il bersaglio del tuo prossimo attacco (o usa una magia AoE / Fendente!).
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setCombatState(Object.assign({}, combatState, { selectedTargetId: "boss" }))}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-black border-2 transition-all active:scale-95 ${
+                                        (combatState.selectedTargetId || "boss") === "boss"
+                                            ? "bg-amber-400 text-black border-white shadow-[0_0_15px_rgba(251,191,36,0.8)]"
+                                            : "bg-gray-900 text-gray-300 border-gray-600 hover:border-amber-400"
+                                    }`}
+                                >
+                                    🎯 Mira al BOSS
+                                </button>
+                            </div>
+
+                            {(!combatState.enemyTokens || combatState.enemyTokens.length === 0) ? (
+                                <p className="text-center text-xs text-emerald-300 font-bold py-1">
+                                    ✅ Nessuna Pedina nemica in campo al momento — via libera sul Boss!
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {combatState.enemyTokens.map(tok => {
+                                        const isSelected = combatState.selectedTargetId === tok.id;
+                                        const tokImg = (bestiaryArtCache && bestiaryArtCache[tok.artKey])
+                                            ? bestiaryArtCache[tok.artKey]
+                                            : ("https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(tok.fallbackCard || "Goblin") + "&format=image&version=art_crop");
+                                        return (
+                                            <div
+                                                key={tok.id}
+                                                onClick={() => setCombatState(Object.assign({}, combatState, { selectedTargetId: tok.id }))}
+                                                className={`rounded-xl overflow-hidden border-2 cursor-pointer transition-all active:scale-95 flex flex-col justify-between ${
+                                                    isSelected
+                                                        ? "bg-red-900/80 border-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.9)] scale-[1.02]"
+                                                        : "bg-gray-900/90 border-red-800/80 hover:border-red-400"
+                                                }`}
+                                            >
+                                                <div className="relative h-20 w-full bg-black overflow-hidden">
+                                                    <img
+                                                        src={tokImg}
+                                                        alt={tok.name}
+                                                        onError={(e) => {
+                                                            if (e.target.getAttribute("src") !== "./rpg_monster_default.png") {
+                                                                e.target.src = "./rpg_monster_default.png";
+                                                            }
+                                                        }}
+                                                        className="w-full h-full object-cover object-center"
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30" />
+                                                    <span className={`absolute top-1 left-1 text-[9px] font-black px-1.5 py-0.5 rounded shadow ${
+                                                        tok.summoningSickness ? "bg-indigo-900/90 text-indigo-200" : "bg-red-600 text-white"
+                                                    }`}>
+                                                        {tok.summoningSickness ? "💤 Pross. Turno" : "⚔️ Pronta!"}
+                                                    </span>
+                                                    {isSelected && (
+                                                        <span className="absolute top-1 right-1 bg-amber-400 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow">
+                                                            🎯 TARGET
+                                                        </span>
+                                                    )}
+                                                    <p className="absolute bottom-1 left-1.5 right-1.5 text-white font-black text-[11px] truncate drop-shadow">
+                                                        {tok.name}
+                                                    </p>
+                                                </div>
+                                                <div className="p-1.5 space-y-0.5 text-[10px]">
+                                                    <div className="flex justify-between font-black">
+                                                        <span className="text-red-300">❤️ {tok.currentHP}/{tok.maxHP}</span>
+                                                        <span className="text-amber-300">⚔️ {tok.dmg} ATK</span>
+                                                    </div>
+                                                    <p className="text-gray-300 text-[9px] truncate">{tok.badge}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                  
                     {/* PANNELLO TIRO DADO D8 PER LE CURE DI CHIERICO E SCIAMANO */}
                     {pendingHealSpell && (
                         <div className="bg-emerald-950 border-4 border-emerald-400 rounded-2xl p-4 shadow-2xl animate-fade space-y-3 text-center">
