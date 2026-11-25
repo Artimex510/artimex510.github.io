@@ -76,6 +76,32 @@
       50% { transform: scale(1.07); box-shadow: 0 0 26px rgba(220, 38, 38, 1); }
     }
     .blood-drop-btn { animation: bloodPulse 1.8s infinite ease-in-out; }
+    /* Animazioni Triade Planare (Piazzamento, Ribaltamento 3D, Onda d'urto e Combo) */
+    @keyframes triadSlam {
+      0% { transform: scale(1.28) translateY(-14px); opacity: 0.2; }
+      65% { transform: scale(0.94) translateY(2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes triadFlip3D {
+      0% { transform: perspective(600px) rotateY(0deg) scale(1); }
+      45% { transform: perspective(600px) rotateY(90deg) scale(1.16); filter: brightness(1.8); }
+      100% { transform: perspective(600px) rotateY(360deg) scale(1); filter: brightness(1); }
+    }
+    @keyframes triadRing {
+      0% { transform: scale(0.65); opacity: 0.95; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+    @keyframes triadShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-5px) rotate(-0.5deg); }
+      40% { transform: translateX(5px) rotate(0.5deg); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    .triad-slam { animation: triadSlam 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+    .triad-flip { animation: triadFlip3D 0.58s ease-in-out forwards; }
+    .triad-ring { animation: triadRing 0.55s ease-out forwards; }
+    .triad-shake { animation: triadShake 0.42s ease-in-out; }
 
     /* Barra superiore trasparente sopra la cornice 3D solo dentro il GDR */
     body.in-rpg-mode .rpg-top-header {
@@ -6849,6 +6875,10 @@
             if (char.isLegendary) bonus += 2;
             if (char.sparkIgnited) bonus += 4;
             if (char.ascensionForm) bonus += 2;
+            const p9Count = Array.isArray(unlockedPower9) ? unlockedPower9.length : 0;
+            if (p9Count >= 9) bonus += 4;
+            else if (p9Count >= 6) bonus += 2;
+            else if (p9Count >= 3) bonus += 1;
 
             let eqStr = 0; let eqAgi = 0; let eqMag = 0; let eqCon = 0;
             let activeKeywords = char.mtgKeywords ? [...char.mtgKeywords] : [];
@@ -7163,6 +7193,8 @@
                 localStorage.removeItem('rpg_sagas_used_zones');
                 setUnlockedSagas([]);
                 setSagasUsedByZone({});
+                localStorage.removeItem('rpg_power9');
+                setUnlockedPower9([]);
                 localStorage.removeItem('rpg_world_clock');
                 localStorage.removeItem('rpg_pvp_full_party_backup');
                 setParty([]);
@@ -7190,6 +7222,8 @@
                     localStorage.removeItem('rpg_sagas_used_zones');
                     setUnlockedSagas([]);
                     setSagasUsedByZone({});
+                    localStorage.removeItem('rpg_power9');
+                    setUnlockedPower9([]);
                     localStorage.removeItem('rpg_world_clock');
                     localStorage.removeItem('rpg_pvp_full_party_backup');
                     setParty([]);
@@ -8167,6 +8201,26 @@
 
             if (!updatedActiveHero) updatedActiveHero = updatedPartyList[0];
 
+           const p9NodeTriggers = {
+                lotus_sanctum_victory: "black_lotus",
+                tolaria_victory_vault: "ancestral_recall",
+                nghathrod_victory: "time_walk",
+                dark_depths_victory: "time_walk",
+                jamuraa_victory_sanctum: "mox_pearl",
+                theros_victory: "mox_pearl",
+                ravnica_ch2: "mox_sapphire",
+                kamigawa_ch2: "mox_sapphire",
+                iceage_victory_thaw: "mox_jet",
+                shiv_dragon_throne: "mox_ruby",
+                obelisk_spark_trial: "mox_ruby",
+                llanowar_multani_shrine: "mox_emerald",
+                eldraine_victory: "mox_emerald"
+            };
+            if (p9NodeTriggers[requestedNode]) {
+                const p9Note = unlockPowerNineCard(p9NodeTriggers[requestedNode]);
+                if (p9Note) allMessages.push(p9Note);
+            }
+          
             if (allMessages.length > 0) setEventBanner(allMessages.join("\n"));
             else setEventBanner(null);
 
@@ -9754,6 +9808,364 @@
         const [showCityHubModal, setShowCityHubModal] = useState(false);
         const [showBachecaModal, setShowBachecaModal] = useState(false);
         const [showBattleOptionsModal, setShowBattleOptionsModal] = useState(false);
+
+        // ============================================================================
+        // --- LIBRO DELLE POWER NINE (ALBUM 3x3) & TRIADE PLANARE (CON EFFETTI 3D) ---
+        // ============================================================================
+        const [showPower9Modal, setShowPower9Modal] = useState(false);
+        const [zoomedPower9Card, setZoomedPower9Card] = useState(null);
+        const [unlockedPower9, setUnlockedPower9] = useState(() => {
+            try { return JSON.parse(localStorage.getItem('rpg_power9') || "[]"); } catch (e) { return []; }
+        });
+
+        // 3 Varianti di retro carte (Nuova, Vissuta, Antichissima)
+        const CARD_BACK_VARIANTS = [
+            "./bg_card_back_standard.png",
+            "./bg_card_back_worn.png",
+            "./bg_card_back_ancient.png"
+        ];
+        const getRandomCardBack = () => CARD_BACK_VARIANTS[Math.floor(Math.random() * CARD_BACK_VARIANTS.length)];
+        const getDeterministicCardBack = (seedStr) => {
+            let sum = 0;
+            const s = String(seedStr || "card");
+            for (let i = 0; i < s.length; i++) sum += s.charCodeAt(i);
+            return CARD_BACK_VARIANTS[sum % CARD_BACK_VARIANTS.length];
+        };
+
+        const POWER_9_DB = [
+            { id: "black_lotus", name: "Black Lotus", cardName: "Black Lotus", clue: "Completa la Gauntlet segreta di Argoth (Atto II — Guerra dei Fratelli).", powerText: "Il fiore più leggendario del Multiverso (Alpha 1993).", img: "https://api.scryfall.com/cards/named?exact=Black+Lotus&format=image&version=normal" },
+            { id: "ancestral_recall", name: "Ancestral Recall", cardName: "Ancestral Recall", clue: "Libera l'Accademia di Tolaria dalla Regina dei Tramutanti (Atto II).", powerText: "Conoscenza pura dell'era primordiale.", img: "https://api.scryfall.com/cards/named?exact=Ancestral+Recall&format=image&version=normal" },
+            { id: "time_walk", name: "Time Walk", cardName: "Time Walk", clue: "Sconfiggi il Capitano N'ghathrod sul Vascello Abissale o Marit Lage a Dark Depths.", powerText: "Piega il flusso dei turni al tuo volere.", img: "https://api.scryfall.com/cards/named?exact=Time+Walk&format=image&version=normal" },
+            { id: "timetwister", name: "Timetwister", cardName: "Timetwister", clue: "Batti l'Arcimago Mascherato (Difficile) alla Triade Planare nella Locanda!", powerText: "Trofeo del Campione supremo di carte della Locanda.", img: "https://api.scryfall.com/cards/named?exact=Timetwister&format=image&version=normal" },
+            { id: "mox_pearl", name: "Mox Pearl", cardName: "Mox Pearl", clue: "Salva Jamuraa da Kaervek oppure doma gli Dei di Theros (Atto VI).", powerText: "Gemma primordiale di Mana Bianco (☀️).", img: "https://api.scryfall.com/cards/named?exact=Mox+Pearl&format=image&version=normal" },
+            { id: "mox_sapphire", name: "Mox Sapphire", cardName: "Mox Sapphire", clue: "Risolvi il Labirinto di Ravnica o salva Kamigawa da O-Kagachi.", powerText: "Gemma primordiale di Mana Blu (💧).", img: "https://api.scryfall.com/cards/named?exact=Mox+Sapphire&format=image&version=normal" },
+            { id: "mox_jet", name: "Mox Jet", cardName: "Mox Jet", clue: "Porta il disgelo su Terisiare battendo Lim-Dûl, oppure abbatti un Super-Boss Mitico Errante (B.F.M. / Emrakul / Progenitus).", powerText: "Gemma primordiale di Mana Nero (💀).", img: "https://api.scryfall.com/cards/named?exact=Mox+Jet&format=image&version=normal" },
+            { id: "mox_ruby", name: "Mox Ruby", cardName: "Mox Ruby", clue: "Supera l'Ondata 3 nella Fossa della Cabala oppure conquista i Vulcani di Shiv.", powerText: "Gemma primordiale di Mana Rosso (🔥).", img: "https://api.scryfall.com/cards/named?exact=Mox+Ruby&format=image&version=normal" },
+            { id: "mox_emerald", name: "Mox Emerald", cardName: "Mox Emerald", clue: "Ricevi la benedizione di Multani a Llanowar oppure sconfiggi Oko su Eldraine.", powerText: "Gemma primordiale di Mana Verde (🌳).", img: "https://api.scryfall.com/cards/named?exact=Mox+Emerald&format=image&version=normal" }
+        ];
+
+        const unlockPowerNineCard = (p9Id) => {
+            if (!p9Id) return "";
+            const pObj = POWER_9_DB.find(p => p.id === p9Id);
+            if (!pObj) return "";
+            let current = [];
+            try { current = JSON.parse(localStorage.getItem('rpg_power9') || "[]"); } catch (e) { current = []; }
+            if (current.indexOf(p9Id) !== -1) return "";
+            const next = current.concat([p9Id]);
+            setUnlockedPower9(next);
+            try { localStorage.setItem('rpg_power9', JSON.stringify(next)); } catch (e) {}
+            return `\n📖👑 POWER NINE SBLOCCATA (${next.length}/9)! Hai aggiunto **${pObj.name}** al tuo Libro delle Power Nine!`;
+        };
+
+        // --- TRIADE PLANARE (MINIGIOCO 3x3 SU bg_tavolo.png CON EFFETTI VISIVI E SONORI) ---
+        const [showCardGameModal, setShowCardGameModal] = useState(false);
+        const [triadOpponent, setTriadOpponent] = useState(null);
+        const [triadState, setTriadState] = useState(null);
+        const [triadFx, setTriadFx] = useState({ slammedIdx: null, flippedIds: [], comboCount: 0, shaking: false });
+        const triadAudioCtxRef = useRef(null);
+
+        // Coordinate percentuali calibrate sulle 9 caselle centrali di bg_tavolo.png (1200x896)
+        const TAVOLO_SLOTS = [
+            { left: "28.6%", top: "14.9%", width: "12.2%", height: "21.4%" },
+            { left: "43.7%", top: "14.9%", width: "12.4%", height: "21.4%" },
+            { left: "59.0%", top: "14.9%", width: "12.3%", height: "21.4%" },
+            { left: "28.6%", top: "39.3%", width: "12.2%", height: "21.3%" },
+            { left: "43.7%", top: "39.3%", width: "12.4%", height: "21.3%" },
+            { left: "59.0%", top: "39.3%", width: "12.3%", height: "21.3%" },
+            { left: "28.6%", top: "63.5%", width: "12.2%", height: "21.3%" },
+            { left: "43.7%", top: "63.5%", width: "12.4%", height: "21.3%" },
+            { left: "59.0%", top: "63.5%", width: "12.3%", height: "21.3%" }
+        ];
+
+        const TRIAD_OPPONENTS = {
+            oste: {
+                id: "oste", name: "Jago, Oste della Locanda", diffLabel: "FACILE", diffColor: "bg-emerald-600 text-white",
+                img: "./bg_oste.png", rewardDesc: "+35 🪙 Oro e +2 🍖 Cibi",
+                quote: "«Siediti pure! Un boccale di birra e cinque carte sul tavolo!»",
+                deck: ["storm_crow", "fblthp_guards", "goblin_pack", "bandit_rogues", "brushwagg_mutant", "llanowar_troll"]
+            },
+            cavaliere: {
+                id: "cavaliere", name: "Sir Valerius di Benalia", diffLabel: "MEDIO", diffColor: "bg-amber-500 text-black",
+                img: "./bg_cavaliere.png", rewardDesc: "+75 🪙 Oro e 1 Reliquia Casuale",
+                quote: "«Mostrami se la tua mente è affilata quanto la tua spada.»",
+                deck: ["serra_angel_rogue", "sengir_vampire", "mahamoti_djinn", "zhalfirin_knight_corrupt", "tarmogoyf", "spiritmonger"]
+            },
+            arcimago: {
+                id: "arcimago", name: "L'Arcimago Mascherato", diffLabel: "DIFFICILE", diffColor: "bg-purple-600 text-white",
+                img: "./bg_arcimago.png", rewardDesc: "+160 🪙 Oro + Power Nine TIMETWISTER!",
+                quote: "«Ho già calcolato le tue prossime sette mosse, viandante...»",
+                deck: ["akroma_angel", "shivan_dragon", "zur_enchanter_ice", "nicol_bolas_dragon_god", "emrakul_aeons_torn", "valgavoth_terror_eater"]
+            }
+        };
+
+        const playTriadSfx = (sfxType) => {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!triadAudioCtxRef.current) triadAudioCtxRef.current = new AudioCtx();
+                const ctx = triadAudioCtxRef.current;
+                if (ctx.state === "suspended") ctx.resume();
+                const now = ctx.currentTime;
+
+                if (sfxType === "place") {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(175, now);
+                    osc.frequency.exponentialRampToValueAtTime(55, now + 0.09);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(now); osc.stop(now + 0.12);
+                } else if (sfxType === "flip_good" || sfxType === "combo") {
+                    const notes = sfxType === "combo" ? [523, 659, 784, 1046] : [440, 660];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = "sine";
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                        gain.gain.setValueAtTime(0.18, now + idx * 0.07);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.22);
+                        osc.connect(gain); gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.07); osc.stop(now + idx * 0.07 + 0.24);
+                    });
+                } else if (sfxType === "flip_bad") {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(240, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.22);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (sfxType === "win") {
+                    [523, 659, 784, 1046].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = "triangle";
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+                        gain.gain.setValueAtTime(0.22, now + idx * 0.11);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.35);
+                        osc.connect(gain); gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.11); osc.stop(now + idx * 0.11 + 0.38);
+                    });
+                }
+            } catch (e) {}
+        };
+
+        const computeTriadValues = (mKey) => {
+            const m = MTG_BESTIARY[mKey] || { maxHP: 40, dmg: 6, dc: 24, initBonus: 5 };
+            const clamp = (v) => Math.max(1, Math.min(10, Math.round(v)));
+            const nVal = clamp((m.dmg || 6) * 0.52 + (m.isBoss ? 1.5 : 0));
+            const eVal = clamp((m.initBonus || 5) * 0.9);
+            const sVal = clamp((m.maxHP || 40) / 17);
+            const oVal = clamp(((m.dc || 24) - 18) * 0.65);
+            return { N: nVal, E: eVal, S: sVal, O: oVal };
+        };
+
+        const formatTriadNum = (n) => (n >= 10 ? "A" : String(n));
+
+        const getTriadCardArt = (mKey) => {
+            if (LOCAL_MONSTER_IMAGES[mKey]) return LOCAL_MONSTER_IMAGES[mKey];
+            if (bestiaryArtCache && bestiaryArtCache[mKey]) return bestiaryArtCache[mKey];
+            if (MONSTER_SCRYFALL_MAP[mKey]) {
+                return "https://api.scryfall.com/cards/named?fuzzy=" + encodeURIComponent(MONSTER_SCRYFALL_MAP[mKey]) + "&format=image&version=art_crop";
+            }
+            return "./rpg_monster_default.png";
+        };
+
+        const startTriadMatch = (oppKey) => {
+            const opp = TRIAD_OPPONENTS[oppKey] || TRIAD_OPPONENTS.oste;
+            setTriadOpponent(oppKey);
+
+            const baseStarter = ["storm_crow", "goblin_pack", "bandit_rogues", "brushwagg_mutant", "llanowar_troll"];
+            const unlocked = getUnlockedBestiaryKeys();
+            let myPool = unlocked.slice();
+            baseStarter.forEach(k => { if (myPool.indexOf(k) === -1) myPool.push(k); });
+            myPool.sort((a, b) => {
+                const va = computeTriadValues(a); const vb = computeTriadValues(b);
+                return (vb.N + vb.E + vb.S + vb.O) - (va.N + va.E + va.S + va.O);
+            });
+            const topMyPool = myPool.slice(0, Math.max(5, Math.min(9, myPool.length))).sort(() => Math.random() - 0.5).slice(0, 5);
+            const oppPool = opp.deck.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+
+            const makeHand = (keys, owner) => keys.map((k, idx) => ({
+                uid: owner + "_" + k + "_" + idx + "_" + Date.now(),
+                key: k,
+                name: (MTG_BESTIARY[k] && MTG_BESTIARY[k].name) ? MTG_BESTIARY[k].name.split("(")[0].trim() : k,
+                values: computeTriadValues(k),
+                backImg: getRandomCardBack(),
+                owner: owner,
+                played: false
+            }));
+
+            setTriadFx({ slammedIdx: null, flippedIds: [], comboCount: 0, shaking: false });
+            setTriadState({
+                board: [null, null, null, null, null, null, null, null, null],
+                playerHand: makeHand(topMyPool, "player"),
+                enemyHand: makeHand(oppPool, "enemy"),
+                selectedIdx: 0,
+                turn: "player",
+                finished: false,
+                rewardBanner: "",
+                message: "Tocca una tua carta sotto e poi una casella illuminata sul tavolo!"
+            });
+        };
+
+        const evaluateTriadCaptures = (boardArr, placedIdx, placedCard) => {
+            const col = placedIdx % 3;
+            const row = Math.floor(placedIdx / 3);
+            const checks = [
+                { idx: placedIdx - 3, mySide: "N", theirSide: "S", ok: row > 0 },
+                { idx: placedIdx + 3, mySide: "S", theirSide: "N", ok: row < 2 },
+                { idx: placedIdx - 1, mySide: "O", theirSide: "E", ok: col > 0 },
+                { idx: placedIdx + 1, mySide: "E", theirSide: "O", ok: col < 2 }
+            ];
+            let flipped = [];
+            checks.forEach(ch => {
+                if (ch.ok && boardArr[ch.idx] && boardArr[ch.idx].owner !== placedCard.owner) {
+                    if (placedCard.values[ch.mySide] > boardArr[ch.idx].values[ch.theirSide]) {
+                        boardArr[ch.idx] = Object.assign({}, boardArr[ch.idx], { owner: placedCard.owner });
+                        flipped.push(boardArr[ch.idx].uid);
+                    }
+                }
+            });
+            return flipped;
+        };
+
+        const finishTriadMatch = (finalBoard, oppKey) => {
+            const pScore = finalBoard.filter(c => c && c.owner === "player").length;
+            const eScore = finalBoard.filter(c => c && c.owner === "enemy").length;
+            let msg = "";
+            let rewMsg = "";
+
+            if (pScore > eScore) {
+                playTriadSfx("win");
+                msg = `🏆 VITTORIA (${pScore} a ${eScore})! Hai dominato il tavolo!`;
+                if (character) {
+                    let updated = Object.assign({}, character);
+                    if (oppKey === "oste") {
+                        updated.gold = (updated.gold || 0) + 35;
+                        updated.food = (updated.food || 0) + 2;
+                        rewMsg = "🎁 Premio di Jago: +35 Monete d'Oro 🪙 e +2 Pedine Cibo 🍖!";
+                    } else if (oppKey === "cavaliere") {
+                        updated.gold = (updated.gold || 0) + 75;
+                        const prizePool = ["jester_cap", "pirate_cutlass", "crystal_slipper", "ward_helm_serra", "icy_manipulator"];
+                        const prizeId = prizePool[Math.floor(Math.random() * prizePool.length)];
+                        const prizeItem = adaptLootForCharacter(RPG_ITEMS_DB[prizeId], updated);
+                        updated.inventory = (updated.inventory || []).concat([prizeItem]);
+                        rewMsg = `🎁 Premio di Sir Valerius: +75 Oro 🪙 e **${prizeItem.name}** (nello Zaino)!`;
+                    } else {
+                        updated.gold = (updated.gold || 0) + 160;
+                        const p9Msg = unlockPowerNineCard("timetwister");
+                        rewMsg = "🎁 Premio dell'Arcimago: +160 Monete d'Oro 🪙!" + (p9Msg || " (Power Nine Timetwister già nel tuo Libro!)");
+                    }
+                    saveCharState(updated);
+                    setEventBanner(`🃏🏆 TRIADE PLANARE VINTA! ${rewMsg}`);
+                }
+            } else if (pScore < eScore) {
+                playTriadSfx("flip_bad");
+                msg = `💀 SCONFITTA (${pScore} a ${eScore}). Ritenta la sfida!`;
+            } else {
+                msg = `⚖️ PAREGGIO (${pScore} a ${eScore})! Partita tiratissima!`;
+            }
+
+            setTriadState(prev => prev ? Object.assign({}, prev, { board: finalBoard, finished: true, turn: "done", message: msg, rewardBanner: rewMsg }) : null);
+        };
+
+        const runTriadAiTurn = (curState, oppKey) => {
+            const emptySlots = [];
+            curState.board.forEach((c, i) => { if (!c) emptySlots.push(i); });
+            const availCards = curState.enemyHand.map((c, i) => ({ card: c, idx: i })).filter(x => !x.card.played);
+
+            if (emptySlots.length === 0 || availCards.length === 0) {
+                finishTriadMatch(curState.board, oppKey);
+                return;
+            }
+
+            let bestMove = { slot: emptySlots[Math.floor(Math.random() * emptySlots.length)], handIdx: availCards[0].idx, score: -1 };
+            if (oppKey !== "oste") {
+                availCards.forEach(item => {
+                    emptySlots.forEach(slotIdx => {
+                        const simBoard = curState.board.slice();
+                        const simCard = Object.assign({}, item.card, { owner: "enemy" });
+                        simBoard[slotIdx] = simCard;
+                        const flips = evaluateTriadCaptures(simBoard, slotIdx, simCard).length;
+                        const bonusCenter = (oppKey === "arcimago" && slotIdx === 4) ? 0.5 : 0;
+                        const moveScore = flips + bonusCenter + Math.random() * (oppKey === "cavaliere" ? 0.9 : 0.15);
+                        if (moveScore > bestMove.score) {
+                            bestMove = { slot: slotIdx, handIdx: item.idx, score: moveScore };
+                        }
+                    });
+                });
+            }
+
+            const newBoard = curState.board.slice();
+            const newEnemyHand = curState.enemyHand.map((c, i) => i === bestMove.handIdx ? Object.assign({}, c, { played: true }) : c);
+            const playedCard = Object.assign({}, newEnemyHand[bestMove.handIdx], { owner: "enemy" });
+            newBoard[bestMove.slot] = playedCard;
+
+            const flippedIds = evaluateTriadCaptures(newBoard, bestMove.slot, playedCard);
+            playTriadSfx(flippedIds.length > 0 ? "flip_bad" : "place");
+            setTriadFx({ slammedIdx: bestMove.slot, flippedIds: flippedIds, comboCount: flippedIds.length >= 2 ? flippedIds.length : 0, shaking: flippedIds.length >= 2 });
+            setTimeout(() => setTriadFx({ slammedIdx: null, flippedIds: [], comboCount: 0, shaking: false }), 750);
+
+            const boardFull = newBoard.every(c => c !== null);
+            const nextAvailIdx = curState.playerHand.findIndex(c => !c.played);
+
+            if (boardFull) {
+                setTriadState(Object.assign({}, curState, { board: newBoard, enemyHand: newEnemyHand }));
+                setTimeout(() => finishTriadMatch(newBoard, oppKey), 500);
+            } else {
+                setTriadState(Object.assign({}, curState, {
+                    board: newBoard,
+                    enemyHand: newEnemyHand,
+                    turn: "player",
+                    selectedIdx: nextAvailIdx,
+                    message: flippedIds.length > 0
+                        ? `😈 L'avversario piazza ${playedCard.name} e ribalta ${flippedIds.length} tua/e carta/e! Tocca a te!`
+                        : `🃏 L'avversario piazza ${playedCard.name}. Tocca a te!`
+                }));
+            }
+        };
+
+        const handleTriadSlotClick = (slotIdx) => {
+            if (!triadState || triadState.finished || triadState.turn !== "player") return;
+            if (triadState.board[slotIdx] !== null) return;
+            if (triadState.selectedIdx === null || triadState.selectedIdx < 0) return;
+
+            const chosen = triadState.playerHand[triadState.selectedIdx];
+            if (!chosen || chosen.played) return;
+
+            const newBoard = triadState.board.slice();
+            const newPlayerHand = triadState.playerHand.map((c, i) => i === triadState.selectedIdx ? Object.assign({}, c, { played: true }) : c);
+            const placedCard = Object.assign({}, chosen, { owner: "player" });
+            newBoard[slotIdx] = placedCard;
+
+            const flippedIds = evaluateTriadCaptures(newBoard, slotIdx, placedCard);
+            playTriadSfx(flippedIds.length >= 2 ? "combo" : (flippedIds.length === 1 ? "flip_good" : "place"));
+            setTriadFx({ slammedIdx: slotIdx, flippedIds: flippedIds, comboCount: flippedIds.length >= 2 ? flippedIds.length : 0, shaking: flippedIds.length >= 2 });
+            setTimeout(() => setTriadFx({ slammedIdx: null, flippedIds: [], comboCount: 0, shaking: false }), 750);
+
+            const boardFull = newBoard.every(c => c !== null);
+            const nextState = Object.assign({}, triadState, {
+                board: newBoard,
+                playerHand: newPlayerHand,
+                selectedIdx: null,
+                turn: boardFull ? "done" : "enemy",
+                message: flippedIds.length >= 2
+                    ? `🔥 COMBO ×${flippedIds.length}! ${placedCard.name} ribalta ${flippedIds.length} carte insieme!`
+                    : (flippedIds.length === 1 ? `✨ RIBALTAMENTO! ${placedCard.name} converte una carta nemica!` : `🎴 ${placedCard.name} schierata! L'avversario sta riflettendo...`)
+            });
+            setTriadState(nextState);
+
+            if (boardFull) {
+                setTimeout(() => finishTriadMatch(newBoard, triadOpponent), 550);
+            } else {
+                setTimeout(() => runTriadAiTurn(nextState, triadOpponent), 850);
+            }
+        };
         
         const justBeatBossRef = useRef(false);
         const openCityAfterWinRef = useRef(false);
@@ -11729,6 +12141,12 @@
                 }, 400);
             }
 
+            if (combatState.isCabalPitWave && combatState.isCabalPitWave >= 3) {
+                rogueliteRecoveryBanner += unlockPowerNineCard("mox_ruby");
+            }
+            if (combatState.key === "bfm_legend" || combatState.key === "emrakul_aeons_torn" || combatState.key === "progenitus_worldsoul") {
+                rogueliteRecoveryBanner += unlockPowerNineCard("mox_jet");
+            }
             if (combatState.isBoss) {
                 justBeatBossRef.current = true;
             }
@@ -12678,6 +13096,8 @@
                     localStorage.removeItem('rpg_sagas_used_zones');
                     setUnlockedSagas([]);
                     setSagasUsedByZone({});
+                    localStorage.removeItem('rpg_power9');
+                    setUnlockedPower9([]);
                     setParty([]);
                     setCharacter(null);
                     setCombatState(null);
@@ -12998,6 +13418,8 @@
                             localStorage.removeItem('rpg_sagas_used_zones');
                             setUnlockedSagas([]);
                             setSagasUsedByZone({});
+                            localStorage.removeItem('rpg_power9');
+                            setUnlockedPower9([]);
                             localStorage.removeItem('rpg_world_clock');
                             localStorage.removeItem('rpg_pvp_full_party_backup');
                             setParty([]);
@@ -13065,6 +13487,12 @@
                                 className="bg-slate-700 hover:bg-slate-600 text-amber-300 font-black px-3 py-2 rounded-lg text-xs shadow border border-amber-500/50"
                             >
                                 👹 Bestiario ({getUnlockedBestiaryKeys().length})
+                            </button>
+                            <button
+                                onClick={() => setShowPower9Modal(true)}
+                                className="bg-amber-900/90 hover:bg-amber-800 text-amber-200 font-black px-3 py-2 rounded-lg text-xs shadow border border-amber-400/70"
+                            >
+                                📖 Power 9 ({unlockedPower9.length}/9)
                             </button>
                             <button
                                 onClick={() => setShowSaveModal(!showSaveModal)}
@@ -13312,6 +13740,313 @@
                         document.body
                     )}
 
+                    {/* 4. LIBRO DELLE POWER NINE (ALBUM 3x3 A CARTA INTERA SCRYFALL + 3 RETRO RANDOM) */}
+                    {showPower9Modal && ReactDOM.createPortal(
+                        <div
+                            onClick={() => { setShowPower9Modal(false); setZoomedPower9Card(null); }}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10018] bg-black/88 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-w-xl max-h-[88dvh] overflow-y-auto bg-gradient-to-b from-[#1e120a] via-gray-950 to-[#140b06] border-4 border-amber-500 rounded-2xl p-4 shadow-[0_0_50px_rgba(245,158,11,0.5)] space-y-3"
+                            >
+                                <div className="flex justify-between items-center border-b border-amber-700/60 pb-2">
+                                    <div>
+                                        <h3 className="font-rpg-title text-amber-300 font-black text-base uppercase tracking-wider">
+                                            📖 Libro delle Power Nine ({unlockedPower9.length}/9)
+                                        </h3>
+                                        <p className="text-[11px] text-amber-100/80">
+                                            Bonus Passivo: {unlockedPower9.length >= 9 ? "👑 +4 a tutte le Stat!" : (unlockedPower9.length >= 6 ? "✨ +2 a tutte le Stat!" : (unlockedPower9.length >= 3 ? "🔮 +1 a tutte le Stat!" : "Raccogli 3/6/9 carte per bonus permanenti!"))}
+                                        </p>
+                                    </div>
+                                    <button onClick={() => setShowPower9Modal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
+                                        Chiudi ✖
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2.5">
+                                    {POWER_9_DB.map(card => {
+                                        const owned = unlockedPower9.indexOf(card.id) !== -1;
+                                        const backImgSrc = getDeterministicCardBack(card.id);
+                                        return (
+                                            <div
+                                                key={card.id}
+                                                onClick={() => setZoomedPower9Card(Object.assign({}, card, { owned: owned }))}
+                                                className={`relative rounded-xl overflow-hidden border-2 cursor-pointer transition-transform active:scale-95 aspect-[63/88] ${
+                                                    owned
+                                                        ? "border-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.65)] hover:scale-105"
+                                                        : "border-amber-900/70 bg-black hover:border-amber-500"
+                                                }`}
+                                            >
+                                                {owned ? (
+                                                    <img src={card.img} alt={card.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="relative w-full h-full">
+                                                        <img
+                                                            src={backImgSrc}
+                                                            alt="Carta Bloccata"
+                                                            onError={(e) => { e.target.style.display = "none"; }}
+                                                            className="w-full h-full object-cover opacity-70"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center p-2 text-center">
+                                                            <span className="text-xl mb-0.5 drop-shadow">🔒</span>
+                                                            <span className="text-[10px] font-black text-amber-300 leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">{card.name}</span>
+                                                            <span className="text-[8px] text-amber-100/80 mt-0.5">Tocca per indizio</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {zoomedPower9Card && (
+                                    <div className="bg-black/85 border-2 border-amber-400 rounded-xl p-3 space-y-2 animate-fade">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="text-amber-300 font-black text-sm">{zoomedPower9Card.name}</h4>
+                                            <button onClick={() => setZoomedPower9Card(null)} className="text-xs text-gray-400">Chiudi</button>
+                                        </div>
+                                        {zoomedPower9Card.owned ? (
+                                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                                                <img src={zoomedPower9Card.img} alt={zoomedPower9Card.name} className="w-40 rounded-lg border border-amber-300 shadow-2xl" />
+                                                <p className="text-xs text-emerald-300 font-bold">✅ SBLOCCATA! {zoomedPower9Card.powerText}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-amber-100 italic">
+                                                🕵️ <b>Indizio:</b> «{zoomedPower9Card.clue}»
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* 5. MINIGIOCO TRIADE PLANARE (3 AVVERSARI + bg_tavolo.png + 3 RETRO RANDOM + EFFETTI 3D!) */}
+                    {showCardGameModal && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setShowCardGameModal(false)}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10018] bg-black/90 backdrop-blur-sm flex items-center justify-center p-2.5 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-w-2xl max-h-[92dvh] overflow-y-auto bg-gradient-to-b from-[#1a1009] via-gray-950 to-black border-4 border-amber-600 rounded-2xl p-3.5 shadow-[0_0_55px_rgba(217,119,6,0.5)] space-y-3"
+                            >
+                                <div className="flex justify-between items-center border-b border-amber-800/70 pb-2">
+                                    <h3 className="font-rpg-title text-amber-300 font-black text-sm sm:text-base uppercase tracking-wider">
+                                        🃏 Triade Planare — Taverna di Dominaria
+                                    </h3>
+                                    <div className="flex items-center gap-1.5">
+                                        {triadState && (
+                                            <button onClick={() => { setTriadState(null); setTriadOpponent(null); }} className="bg-amber-700 hover:bg-amber-600 text-white text-[11px] font-black px-2.5 py-1 rounded-lg">
+                                                ⬅ Avversari
+                                            </button>
+                                        )}
+                                        <button onClick={() => setShowCardGameModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                            Chiudi ✖
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {!triadState ? (
+                                    <div className="space-y-3">
+                                        <p className="text-xs text-amber-100/90 text-center">
+                                            Tocca il ritratto dell'avversario che vuoi sfidare! Il tuo mazzo pesca automaticamente le creature più forti dal tuo <b>Bestiario</b> ({getUnlockedBestiaryKeys().length} sbloccate).
+                                        </p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            {["oste", "cavaliere", "arcimago"].map(oKey => {
+                                                const opp = TRIAD_OPPONENTS[oKey];
+                                                return (
+                                                    <div
+                                                        key={oKey}
+                                                        onClick={() => startTriadMatch(oKey)}
+                                                        className="bg-gray-900 border-2 border-amber-500/70 hover:border-amber-300 rounded-2xl overflow-hidden cursor-pointer shadow-xl transition-transform hover:scale-[1.02] active:scale-95 flex flex-col justify-between"
+                                                    >
+                                                        <div className="relative w-full aspect-[3/4] bg-black overflow-hidden">
+                                                            <img
+                                                                src={opp.img}
+                                                                alt={opp.name}
+                                                                onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
+                                                                className="w-full h-full object-cover object-top"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
+                                                            <span className={`absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-full shadow ${opp.diffColor}`}>
+                                                                {opp.diffLabel}
+                                                            </span>
+                                                            <p className="absolute bottom-2 left-2 right-2 text-white font-rpg-title font-black text-sm leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                                                                {opp.name}
+                                                            </p>
+                                                        </div>
+                                                        <div className="p-2.5 space-y-1 text-center">
+                                                            <p className="text-[10px] text-gray-300 italic">{opp.quote}</p>
+                                                            <p className="text-[10px] font-black text-amber-300 pt-1 border-t border-gray-800">
+                                                                🏆 {opp.rewardDesc}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2.5">
+                                        {/* BARRA PUNTEGGIO & MESSAGGIO */}
+                                        <div className="flex items-center justify-between gap-2 bg-gray-900/90 border border-amber-700/70 rounded-xl px-3 py-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow">
+                                                    TU: {triadState.board.filter(c => c && c.owner === "player").length}
+                                                </span>
+                                                <span className="text-amber-400 font-black text-xs">VS</span>
+                                                <span className="bg-red-700 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow">
+                                                    {TRIAD_OPPONENTS[triadOpponent].name.split(",")[0]}: {triadState.board.filter(c => c && c.owner === "enemy").length}
+                                                </span>
+                                            </div>
+                                            <span className="text-[11px] font-bold text-amber-200 text-right leading-tight">
+                                                {triadState.message}
+                                            </span>
+                                        </div>
+
+                                        {/* MANO COPERTA AVVERSARIO (CON I 3 RETRO RANDOM VISSUTI/NUOVI/ANTICHI!) */}
+                                        <div className="flex items-center justify-between bg-black/60 border border-red-900/60 rounded-xl px-2.5 py-1.5">
+                                            <span className="text-[10px] font-black uppercase text-red-300">
+                                                🟥 Mano Avversario:
+                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                {triadState.enemyHand.map(ec => (
+                                                    <div
+                                                        key={ec.uid}
+                                                        className={`w-8 h-11 rounded overflow-hidden border transition-all ${ec.played ? "opacity-15 grayscale border-gray-700" : "border-red-500/80 shadow-md"}`}
+                                                    >
+                                                        <img
+                                                            src={ec.backImg}
+                                                            alt="Carta Coperta"
+                                                            onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* PLANCIA bg_tavolo.png CON I 9 SLOT CALIBRATI + EFFETTI 3D */}
+                                        <div className={`relative w-full aspect-[1200/896] rounded-xl overflow-hidden border-2 border-amber-600/80 shadow-2xl ${triadFx.shaking ? "triad-shake" : ""}`}>
+                                            <img src="./bg_tavolo.png" alt="Tavolo Triade Planare" className="w-full h-full object-fill select-none" />
+
+                                            {triadFx.comboCount >= 2 && (
+                                                <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+                                                    <span className="bg-gradient-to-r from-red-600 via-amber-400 to-red-600 text-black font-rpg-title font-black text-lg sm:text-2xl px-5 py-1.5 rounded-full border-2 border-white shadow-[0_0_30px_rgba(251,191,36,1)] animate-bounce">
+                                                        🔥 COMBO ×{triadFx.comboCount}! 🔥
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {TAVOLO_SLOTS.map((pos, idx) => {
+                                                const card = triadState.board[idx];
+                                                const canPlace = !card && triadState.turn === "player" && triadState.selectedIdx !== null && !triadState.finished;
+                                                const isSlammed = triadFx.slammedIdx === idx;
+                                                const isFlipped = card && triadFx.flippedIds.indexOf(card.uid) !== -1;
+
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        onClick={() => handleTriadSlotClick(idx)}
+                                                        style={{ left: pos.left, top: pos.top, width: pos.width, height: pos.height }}
+                                                        className={`absolute rounded-md transition-all flex items-center justify-center ${
+                                                            canPlace ? "cursor-pointer ring-2 ring-amber-300/80 bg-amber-400/15 animate-pulse hover:bg-amber-400/30" : ""
+                                                        }`}
+                                                    >
+                                                        {isSlammed && (
+                                                            <div className={`absolute inset-0 rounded-md border-4 pointer-events-none z-20 triad-ring ${card && card.owner === "player" ? "border-cyan-300" : "border-red-400"}`} />
+                                                        )}
+
+                                                        {card && (
+                                                            <div className={`relative w-full h-full rounded-md overflow-hidden border-2 shadow-lg ${
+                                                                card.owner === "player"
+                                                                    ? "border-cyan-300 bg-blue-950 shadow-[0_0_12px_rgba(56,189,248,0.85)]"
+                                                                    : "border-red-400 bg-red-950 shadow-[0_0_12px_rgba(248,113,113,0.85)]"
+                                                            } ${isSlammed ? "triad-slam" : ""} ${isFlipped ? "triad-flip" : ""}`}>
+                                                                <img
+                                                                    src={getTriadCardArt(card.key)}
+                                                                    alt={card.name}
+                                                                    onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                                    className="w-full h-full object-cover object-center opacity-90"
+                                                                />
+                                                                <div className={`absolute inset-0 ${card.owner === "player" ? "bg-blue-600/25" : "bg-red-700/30"}`} />
+                                                                <span className="absolute top-0 left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.N)}</span>
+                                                                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.S)}</span>
+                                                                <span className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.O)}</span>
+                                                                <span className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.E)}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* LA TUA MANO (5 CARTE SOTTO IL TAVOLO) */}
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black uppercase text-cyan-300">
+                                                🟦 La tua Mano (Tocca una carta, poi tocca una casella illuminata sul tavolo):
+                                            </p>
+                                            <div className="grid grid-cols-5 gap-1.5">
+                                                {triadState.playerHand.map((c, idx) => {
+                                                    const isSel = triadState.selectedIdx === idx && !c.played;
+                                                    return (
+                                                        <div
+                                                            key={c.uid}
+                                                            onClick={() => !c.played && triadState.turn === "player" && setTriadState(Object.assign({}, triadState, { selectedIdx: idx }))}
+                                                            className={`relative rounded-lg overflow-hidden border-2 aspect-[3/4] transition-all ${
+                                                                c.played
+                                                                    ? "opacity-25 grayscale border-gray-700 cursor-default"
+                                                                    : (isSel
+                                                                        ? "border-amber-300 -translate-y-1.5 shadow-[0_0_16px_rgba(251,191,36,0.95)] cursor-pointer"
+                                                                        : "border-cyan-500/70 hover:border-amber-300 cursor-pointer")
+                                                            }`}
+                                                        >
+                                                            <img
+                                                                src={getTriadCardArt(c.key)}
+                                                                alt={c.name}
+                                                                onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-blue-900/15 to-black/30" />
+                                                            <span className="absolute top-0.5 left-1/2 -translate-x-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.N)}</span>
+                                                            <span className="absolute left-0.5 top-1/2 -translate-y-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.O)}</span>
+                                                            <span className="absolute right-0.5 top-1/2 -translate-y-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.E)}</span>
+                                                            <span className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.S)}</span>
+                                                            <p className="absolute bottom-0.5 left-0.5 right-0.5 text-[8px] font-black text-amber-200 truncate text-center">
+                                                                {c.name}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {triadState.rewardBanner && (
+                                            <div className="bg-emerald-950/90 border-2 border-emerald-400 rounded-xl p-2.5 text-center text-xs font-black text-emerald-200 animate-fade">
+                                                {triadState.rewardBanner}
+                                            </div>
+                                        )}
+
+                                        {triadState.finished && (
+                                            <div className="flex gap-2">
+                                                <button onClick={() => startTriadMatch(triadOpponent)} className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow">
+                                                    🔄 Rivincita
+                                                </button>
+                                                <button onClick={() => { setTriadState(null); setTriadOpponent(null); }} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-black py-2.5 rounded-xl text-xs uppercase border border-gray-600">
+                                                    👥 Cambia Avversario
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+                  
                     {/* TIMER DI INCOSCIENZA (1 GIORNO E 4 ORE = 1 MINUTO E 4 SECONDI = 64s) */}
                     {dormantTimer > 0 && (
                         <div className="bg-indigo-950 border-4 border-cyan-400 rounded-2xl p-5 text-center space-y-3 shadow-2xl animate-fade">
@@ -13339,6 +14074,13 @@
                                 <button onClick={() => { setShowMercenaryModal(false); setPendingMercenaryHero(null); }} className="bg-gray-700 text-white text-xs font-bold px-3 py-1 rounded">Chiudi ✖</button>
                             </div>
 
+                            <button
+                                onClick={() => { setShowMercenaryModal(false); setTriadOpponent(null); setTriadState(null); setShowCardGameModal(true); }}
+                                className="w-full bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 hover:from-amber-500 hover:to-amber-500 text-black font-rpg-title font-black py-3 px-4 rounded-xl border-2 border-amber-200 shadow-lg text-xs sm:text-sm uppercase tracking-wider flex items-center justify-between active:scale-95"
+                            >
+                                <span>🃏 Sfida al Tavolo: Triade Planare (3 Avversari)</span>
+                                <span className="bg-black/25 px-2 py-0.5 rounded-full text-[10px]">Vinci Oro & Timetwister!</span>
+                            </button>
                             {!pendingMercenaryHero ? (
                                 <div className="space-y-3">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
