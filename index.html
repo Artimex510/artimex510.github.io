@@ -2204,7 +2204,8 @@
             text: "Entrate sotto le altissime volte di vetro policromo della Cattedrale di Benalia. Davanti all'altare della dea Serra, l'arcangelo **Lyra Alba-Portatrice (Lyra Dawnbringer)** prega avvolta da una luce calda che lenisce le ferite dei giusti.\n\nDa una grata laterale dietro il confessionale sentite però provenire rumori sospetti dai canali sotterranei dei Bassifondi.",
             choices: [
                 { text: "🙏 Inginocchiati davanti a Lyra per ricevere la Benedizione dell'Alba (+15 PV, +40 EXP)", type: "move", nextNode: "benalia_undercity", rewards: { heal: 15, exp: 40, karma: 1 }, oncePerCampaignLoot: "lyra_blessing" },
-                { text: "🔎 Esamina le antiche vetrate di Serra per assorbire una scintilla di Mana Bianco (MAG CD 22)", type: "roll", stat: "mag", dc: 22, successNode: "benalia_undercity", failNode: "benalia_undercity", failDamage: 3, failText: "Il riverbero solare delle vetrate vi abbaglia la vista!", rewards: { unlockMana: "W", exp: 50, gold: 20 }, oncePerCampaignLoot: "serra_glass_mana" }
+                { text: "🔎 Esamina le antiche vetrate di Serra per assorbire una scintilla di Mana Bianco (MAG CD 22)", type: "roll", stat: "mag", dc: 22, successNode: "benalia_undercity", failNode: "benalia_undercity", failDamage: 3, failText: "Il riverbero solare delle vetrate vi abbaglia la vista!", rewards: { unlockMana: "W", exp: 50, gold: 20 }, oncePerCampaignLoot: "serra_glass_mana" },
+                { text: "🔥☀️ [ENIGMA ELEMENTALE] Accendi i 4 Bracieri della Luce di Serra (+Tesori & Mox Pearl!)", type: "interactive_puzzle", puzzleId: "puzzle_elemental_obelisks" }
             ]
         },
 
@@ -2532,7 +2533,8 @@
             title: "La Culla di Gea (Gaea's Cradle)",
             text: "Raggiungete un anfiteatro naturale di bellezza mozzafiato: è la leggendaria **Culla di Gea (Gaea's Cradle)**, dove nacquero i primi spiriti arborei di Dominaria e dove Urza e Multani strinsero il patto per far crescere il seme vivente della nave *Cavalcavento*.\n\nL'energia verde che scaturisce dalla terra rigenera le ferite della vostra Compagnia!",
             choices: [
-                { text: "🌳 Medita nella Culla di Gea (+25 PV a tutti, +85 EXP, +1 Tesoro) e prosegui verso Molimo", type: "move", nextNode: "yavimaya_molimo_awakening", rewards: { heal: 25, exp: 85, treasures: 1 }, oncePerCampaignLoot: "gaeas_cradle_blessing" }
+                { text: "🌳 Medita nella Culla di Gea (+25 PV a tutti, +85 EXP, +1 Tesoro) e prosegui verso Molimo", type: "move", nextNode: "yavimaya_molimo_awakening", rewards: { heal: 25, exp: 85, treasures: 1 }, oncePerCampaignLoot: "gaeas_cradle_blessing" },
+                { text: "🌿✨ [ENIGMA MULTI-SOLUZIONE] Esplora il Santuario delle Radici Antiche (Mox Emerald!)", type: "interactive_puzzle", puzzleId: "puzzle_multisol_roots" }
             ]
         },
 
@@ -2811,7 +2813,8 @@
             text: "Prima di entrare nella Biblioteca, attraversate il santuario sospeso sopra il cratere dove il traditore phyrexiano **Kerrick (K'rrik)** fece esplodere la prima macchina del tempo di Urza, scatenando il cataclisma di **Frattura (Sunder)** e la **Spirale Temporale (Time Spiral)**.\n\nFrammenti di pergamene sospese nell'aria offrono la conoscenza dell'incantesimo *Predestinare (Opt)* e *Contromagia*.",
             choices: [
                 { text: "📜 Assorbi il sapere della Spirale Temporale (+Predestinare, +75 EXP, +15 PV)", type: "move", nextNode: "tolaria_chrono_maze", rewards: { unlockSpell: "opt_cantrip", exp: 75, heal: 15 }, oncePerCampaignLoot: "time_spiral_scroll" },
-                { text: "💎 Raccogli i cristalli di crono-mana dal cratere (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "tolaria_chrono_maze", failNode: "tolaria_chrono_maze", failDamage: 5, failText: "Una faglia d'acqua veloce vi taglia di striscio le mani!", rewards: { exp: 80, gold: 50, treasures: 1 }, oncePerCampaignLoot: "sunder_crystals" }
+                { text: "💎 Raccogli i cristalli di crono-mana dal cratere (AGI CD 25)", type: "roll", stat: "agi", dc: 25, successNode: "tolaria_chrono_maze", failNode: "tolaria_chrono_maze", failDamage: 5, failText: "Una faglia d'acqua veloce vi taglia di striscio le mani!", rewards: { exp: 80, gold: 50, treasures: 1 }, oncePerCampaignLoot: "sunder_crystals" },
+                { text: "🔐📖 [ENIGMA ESCAPE ROOM] Apri il Caveau a 3 Fasi della Guerra dei Fratelli (Ancestral Recall!)", type: "interactive_puzzle", puzzleId: "puzzle_lore_escape" }
             ]
         },
 
@@ -5423,7 +5426,8 @@
                 { text: "🍷 Nettare dell'Olimpo di Theros (-20 Oro -> +40 PV a tutta la Compagnia e +2 Cibi)", type: "move", costGold: 20, nextNode: "theros_meletis_bazaar", rewards: { heal: 40, foods: 2 } },
                 { text: "🐍 Marcia verso Setessa per sfidare l'Idra POLUKRANOS (Arco di Nylea!)", type: "move", nextNode: "theros_setessa_hydra" },
                 { text: "💀 Scendi nell'Ade verso ASHIOK ed EREBOS (Bidente di Thassa & Frusta di Erebos!)", type: "move", nextNode: "theros_underworld_trap" },
-                { text: "🔥 Scala il Monte Velus per affrontare PURFOROS (Martello di Purforos!)", type: "move", nextNode: "theros_velus_purphoros" }
+                { text: "🔥 Scala il Monte Velus per affrontare PURFOROS (Martello di Purforos!)", type: "move", nextNode: "theros_velus_purphoros" },
+                { text: "🔥☀️ [ENIGMA ELEMENTALE] Accendi i 4 Bracieri della Luce di Serra (+Tesori & Mox Pearl!)", type: "interactive_puzzle", puzzleId: "puzzle_elemental_obelisks" }
             ]
         },
 
@@ -5634,7 +5638,8 @@
                 { text: "🛒 Apri il Mercato di Ardenvale (Compra Oggetti / Vendi dal tuo Zaino)", type: "shop", nextNode: "eldraine_court_bazaar" },
                 { text: "🥧 Torta di Marzapane di Eldraine (-20 Oro -> +40 PV a tutti e +2 Cibi)", type: "move", costGold: 20, nextNode: "eldraine_court_bazaar", rewards: { heal: 40, foods: 2 } },
                 { text: "❄️ Marcia verso la Fortezza di Ghiaccio della Regina HYLDA!", type: "move", nextNode: "eldraine_hylda_frost" },
-                { text: "🍎 Infiltrati nel Bosco del Sonno Stregato verso la Strega ERIETTE!", type: "move", nextNode: "eldraine_slumber_trap" }
+                { text: "🍎 Infiltrati nel Bosco del Sonno Stregato verso la Strega ERIETTE!", type: "move", nextNode: "eldraine_slumber_trap" },
+                { text: "🌿✨ [ENIGMA MULTI-SOLUZIONE] Esplora il Santuario delle Radici Antiche (Mox Emerald!)", type: "interactive_puzzle", puzzleId: "puzzle_multisol_roots" }
             ]
         },
 
@@ -9560,6 +9565,516 @@
         // --- 3. BESTIARIO ILLUSTRATO (+1 STAT OGNI 5), 4. ALCHIMIA DELLE POZIONI ---
         // ============================================================================
         const [showKrarkModal, setShowKrarkModal] = useState(false);
+        // ============================================================================
+        // --- 1. DADI DEI PLANESWALKER (STILE ORLOG AL TAVOLO DI KRARK)            ---
+        // --- 2. MOTORE ENIGMI INTERATTIVI (ELEMENTALI, ESCAPE ROOM, MULTI-SOL.)   ---
+        // ============================================================================
+        const [showOrlogModal, setShowOrlogModal] = useState(false);
+        const [orlogBet, setOrlogBet] = useState(25);
+        const [orlogState, setOrlogState] = useState(null);
+
+        const ORLOG_FACES = [
+            { id: "sword", icon: "⚔️", label: "Spada", gold: false },
+            { id: "bolt", icon: "⚡", label: "Fulmine", gold: true },
+            { id: "shield", icon: "🛡️", label: "Scudo", gold: false },
+            { id: "ward", icon: "🔮", label: "Barriera", gold: true },
+            { id: "steal", icon: "🖐️", label: "Furto", gold: false },
+            { id: "mana", icon: "✨", label: "Mana +2", gold: true }
+        ];
+
+        const ORLOG_FAVORS = [
+            { id: "chandra", name: "🔥 Furia di Chandra", cost: 3, desc: "Infligge 3 danni diretti non bloccabili!" },
+            { id: "gideon", name: "☀️ Egida di Gideon", cost: 4, desc: "Cura +4 PV (max 15) prima dei danni!" },
+            { id: "jace", name: "💧 Inganno di Jace", cost: 5, desc: "Ruba 2 ✨ Favore e infligge 4 danni diretti!" }
+        ];
+
+        const rollFiveOrlogDice = (existingDice) => {
+            const out = [];
+            for (let i = 0; i < 5; i++) {
+                if (existingDice && existingDice[i] && existingDice[i].locked) {
+                    out.push(Object.assign({}, existingDice[i]));
+                } else {
+                    const f = ORLOG_FACES[Math.floor(Math.random() * ORLOG_FACES.length)];
+                    out.push({ idx: i, face: f, locked: false });
+                }
+            }
+            return out;
+        };
+
+        const startOrlogGame = (betVal) => {
+            if (!character) return;
+            const wager = betVal || 25;
+            if ((character.gold || 0) < wager) {
+                return alert("Ti servono almeno " + wager + " Monete d'Oro (🪙) per sederti al tavolo dei Dadi dei Planeswalker!");
+            }
+            setOrlogBet(wager);
+            setShowKrarkModal(false);
+            setShowOrlogModal(true);
+            if (typeof playTriadSfx === "function") playTriadSfx("place");
+            setOrlogState({
+                playerHP: 15,
+                enemyHP: 15,
+                playerFavor: 0,
+                enemyFavor: 0,
+                round: 1,
+                rollsLeft: 2,
+                playerDice: rollFiveOrlogDice(null),
+                enemyDice: rollFiveOrlogDice(null),
+                selectedFavorId: null,
+                finished: false,
+                rewardMsg: "",
+                log: ["🎲 Round 1 iniziato! Tocca i dadi che vuoi BLOCCARE (🔒) e rilancia gli altri, oppure Risolvi il Round!"]
+            });
+        };
+
+        const toggleOrlogDieLock = (dieIdx) => {
+            if (!orlogState || orlogState.finished) return;
+            const nextDice = orlogState.playerDice.map((d, i) => i === dieIdx ? Object.assign({}, d, { locked: !d.locked }) : d);
+            setOrlogState(Object.assign({}, orlogState, { playerDice: nextDice }));
+        };
+
+        const rerollOrlogUnlockedDice = () => {
+            if (!orlogState || orlogState.finished || orlogState.rollsLeft <= 0) return;
+            if (typeof playTriadSfx === "function") playTriadSfx("place");
+            const nextPlayerDice = rollFiveOrlogDice(orlogState.playerDice);
+            // Anche l'IA di Krark tiene dadi forti (Spade, Fulmini, Mana) e rilancia il resto
+            const aiLocked = orlogState.enemyDice.map(d => Object.assign({}, d, {
+                locked: d.face.id === "sword" || d.face.id === "bolt" || d.face.id === "mana"
+            }));
+            const nextEnemyDice = rollFiveOrlogDice(aiLocked);
+            setOrlogState(Object.assign({}, orlogState, {
+                playerDice: nextPlayerDice,
+                enemyDice: nextEnemyDice,
+                rollsLeft: orlogState.rollsLeft - 1
+            }));
+        };
+
+        const resolveOrlogRound = () => {
+            if (!orlogState || orlogState.finished) return;
+            const countFaces = (diceArr) => {
+                let c = { sword: 0, bolt: 0, shield: 0, ward: 0, steal: 0, mana: 0, goldStars: 0 };
+                diceArr.forEach(d => {
+                    c[d.face.id] = (c[d.face.id] || 0) + 1;
+                    if (d.face.gold) c.goldStars += 1;
+                });
+                return c;
+            };
+
+            const pC = countFaces(orlogState.playerDice);
+            const eC = countFaces(orlogState.enemyDice);
+
+            let pFav = orlogState.playerFavor + (pC.mana * 2) + pC.goldStars;
+            let eFav = orlogState.enemyFavor + (eC.mana * 2) + eC.goldStars;
+
+            // Furto di Favore (Mano Ladra)
+            const pSteal = Math.min(eFav, pC.steal);
+            eFav -= pSteal; pFav += pSteal;
+            const eSteal = Math.min(pFav, eC.steal);
+            pFav -= eSteal; eFav += eSteal;
+
+            let pHP = orlogState.playerHP;
+            let eHP = orlogState.enemyHP;
+            let notes = [];
+
+            // Potere Favore scelto dal giocatore
+            if (orlogState.selectedFavorId) {
+                const favObj = ORLOG_FAVORS.find(f => f.id === orlogState.selectedFavorId);
+                if (favObj && pFav >= favObj.cost) {
+                    pFav -= favObj.cost;
+                    if (favObj.id === "chandra") {
+                        eHP = Math.max(0, eHP - 3);
+                        notes.push("🔥 Furia di Chandra (-3 PV diretti a Krark!)");
+                    } else if (favObj.id === "gideon") {
+                        pHP = Math.min(15, pHP + 4);
+                        notes.push("☀️ Egida di Gideon (+4 PV!)");
+                    } else if (favObj.id === "jace") {
+                        const stolenJ = Math.min(eFav, 2);
+                        eFav -= stolenJ; pFav += stolenJ;
+                        eHP = Math.max(0, eHP - 4);
+                        notes.push("💧 Inganno di Jace (-4 PV diretti & ruba " + stolenJ + "✨!)");
+                    }
+                }
+            }
+
+            // Krark usa il suo potere se ha >= 4 Favore
+            if (eFav >= 4 && eHP > 0) {
+                if (eHP <= 6) {
+                    eFav -= 4;
+                    eHP = Math.min(15, eHP + 3);
+                    notes.push("😈 Krark invoca Rigenerazione (+3 PV)");
+                } else {
+                    eFav -= 3;
+                    pHP = Math.max(0, pHP - 3);
+                    notes.push("😈 Krark invoca Fiammata (-3 PV diretti!)");
+                }
+            }
+
+            // Scontro Dadi: Spade vs Scudi e Fulmini vs Barriere
+            const dmgToEnemy = Math.max(0, pC.sword - eC.shield) + Math.max(0, pC.bolt - eC.ward);
+            const dmgToPlayer = Math.max(0, eC.sword - pC.shield) + Math.max(0, eC.bolt - pC.ward);
+
+            eHP = Math.max(0, eHP - dmgToEnemy);
+            pHP = Math.max(0, pHP - dmgToPlayer);
+
+            const roundSummary = `Round ${orlogState.round}: Infliggi **${dmgToEnemy} danni** (⚔️${pC.sword} ⚡${pC.bolt} vs 🛡️${eC.shield} 🔮${eC.ward}), subisci **${dmgToPlayer} danni**${notes.length > 0 ? " • " + notes.join(" • ") : ""}`;
+
+            if (eHP <= 0 || pHP <= 0) {
+                let finishedMsg = "";
+                let rewMsg = "";
+                if (eHP <= 0 && (pHP > 0 || pHP >= eHP)) {
+                    if (typeof playTriadSfx === "function") playTriadSfx("win");
+                    const winNet = orlogBet === 50 ? 65 : 30;
+                    let updated = Object.assign({}, character, {
+                        gold: (character.gold || 0) + winNet,
+                        treasures: (character.treasures || 0) + 1
+                    });
+                    rewMsg = `🏆 VITTORIA AI DADI! Guadagni +${winNet} Monete d'Oro 🪙 netti e +1 Pedina Tesoro 💎!`;
+                    if (orlogBet >= 50 && pHP >= 10) {
+                        const bonusPool = ["jester_cap", "icy_manipulator", "crystal_slipper", "ward_helm_serra"];
+                        const pickedId = bonusPool[Math.floor(Math.random() * bonusPool.length)];
+                        if (RPG_ITEMS_DB[pickedId]) {
+                            const prizeIt = adaptLootForCharacter(RPG_ITEMS_DB[pickedId], updated);
+                            updated.inventory = (updated.inventory || []).concat([prizeIt]);
+                            rewMsg += ` 🌟 Vittoria Schiacciante: vinci anche **${prizeIt.name}**!`;
+                        }
+                    }
+                    saveCharState(updated);
+                    setEventBanner("🎲🏆 DADI DEI PLANESWALKER: " + rewMsg);
+                    finishedMsg = "🏆 HAI BATTUTO KRARK AI DADI RUNICI!";
+                } else {
+                    if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                    const lostGold = Math.min(character.gold || 0, orlogBet);
+                    saveCharState(Object.assign({}, character, { gold: (character.gold || 0) - lostGold }));
+                    finishedMsg = "💀 SCONFITTA! Krark intasca la tua puntata di " + lostGold + " Monete d'Oro!";
+                }
+
+                setOrlogState(Object.assign({}, orlogState, {
+                    playerHP: pHP,
+                    enemyHP: eHP,
+                    playerFavor: pFav,
+                    enemyFavor: eFav,
+                    selectedFavorId: null,
+                    finished: true,
+                    rewardMsg: rewMsg || finishedMsg,
+                    log: [finishedMsg, roundSummary].concat(orlogState.log).slice(0, 6)
+                }));
+                return;
+            }
+
+            if (typeof playTriadSfx === "function") playTriadSfx(dmgToEnemy > dmgToPlayer ? "flip_good" : "place");
+            setOrlogState({
+                playerHP: pHP,
+                enemyHP: eHP,
+                playerFavor: pFav,
+                enemyFavor: eFav,
+                round: orlogState.round + 1,
+                rollsLeft: 2,
+                playerDice: rollFiveOrlogDice(null),
+                enemyDice: rollFiveOrlogDice(null),
+                selectedFavorId: null,
+                finished: false,
+                rewardMsg: "",
+                log: [roundSummary].concat(orlogState.log).slice(0, 6)
+            });
+        };
+
+        // ============================================================================
+        // --- MOTORE ENIGMI INTERATTIVI NEI NODI (ELEMENTALE, ESCAPE ROOM, MULTI)  ---
+        // ============================================================================
+        const [activePuzzleState, setActivePuzzleState] = useState(null);
+
+        const getPartyCombinedKeywords = () => {
+            const list = party.length > 0 ? party : (character ? [character] : []);
+            let kws = [];
+            list.forEach(h => {
+                if (!h || h.status === "dead") return;
+                const st = getFinalStats(h);
+                (st.keywords || []).forEach(k => { if (kws.indexOf(k) === -1) kws.push(k); });
+            });
+            return kws;
+        };
+
+        const INTERACTIVE_PUZZLES_DB = {
+            puzzle_elemental_obelisks: {
+                id: "puzzle_elemental_obelisks",
+                type: "elemental",
+                title: "🔥💧 Enigma Elementale: I 4 Bracieri della Luce",
+                subtitle: "Accendi tutti e 4 i Bracieri usando il Mana, le Abilità della Compagnia, la Magia o una Pedina Tesoro!",
+                rewardSummary: "+95 EXP, +55 🪙 Oro, +1 💎 Tesoro, +20 PV e Power Nine Mox Pearl!",
+                braziers: [
+                    { key: "W", name: "Braciere del Sole", icon: "☀️", manaColor: "W", altKeywords: ["Volare", "Cautela", "Egida", "Esaltato"] },
+                    { key: "U", name: "Braciere della Marea", icon: "💧", manaColor: "U", altKeywords: ["Imbloccabile", "Proliferare"] },
+                    { key: "R", name: "Braciere della Fiamma", icon: "🔥", manaColor: "R", altKeywords: ["Attacco Improvviso", "Rapidità", "Fendente"] },
+                    { key: "G", name: "Braciere della Radice", icon: "🌳", manaColor: "G", altKeywords: ["Travolgere", "Tocco Letale", "Legame Vitale"] }
+                ]
+            },
+            puzzle_lore_escape: {
+                id: "puzzle_lore_escape",
+                type: "escape_room",
+                title: "🔐 Escape Room di Tolaria: Il Caveau della Guerra dei Fratelli",
+                subtitle: "Supera 3 sigilli cronologici progressivi: ogni intuizione apre l'indizio successivo!",
+                rewardSummary: "+130 EXP, +75 🪙 Oro, +2 💎 Tesori e Power Nine Ancestral Recall!",
+                stages: [
+                    {
+                        stepTitle: "Fase 1 di 3 — Lo Scavo di Koilos",
+                        riddle: "«Tutto ebbe inizio quando i due fratelli apprendisti di Tocasia spezzarono un'unica reliquia Thran in due metà opposte, scatenando una guerra millenaria. Quali erano le due pietre?»",
+                        hint: "Indizio: Una incarnava la Potenza (Urza) e l'altra la Debolezza (Mishra).",
+                        options: [
+                            { label: "💎 Mightstone & Weakstone (Potenza e Debolezza)", correct: true },
+                            { label: "🌋 Rubino di Shiv & Zaffiro di Tolaria", correct: false },
+                            { label: "⚔️ Spada di Kaldra & Elmo di Kaldra", correct: false }
+                        ]
+                    },
+                    {
+                        stepTitle: "Fase 2 di 3 — Il Giorno della Cenere su Argoth",
+                        riddle: "«Il primo sigillo scatta rivelando un calice inciso: su Argoth, pur di fermare Mishra corrotto da Phyrexia, Urza attivò un artefatto capace di radere al suolo l'isola e accendere la propria Scintilla. Quale?»",
+                        hint: "Indizio: Un antico calice noto come il Sylex di...",
+                        options: [
+                            { label: "💿 Il Disco di Nevinyrral", correct: false },
+                            { label: "🏆 Il Sylex di Golgothian (Golgothian Sylex)", correct: true },
+                            { label: "🌞 Il Sole Immortale", correct: false }
+                        ]
+                    },
+                    {
+                        stepTitle: "Fase 3 di 3 — Il Custode dell'Eredità",
+                        riddle: "«L'ultima porta d'argento vibra! Per completare l'Arma dell'Eredità contro Yawgmoth, Urza forgiò un viaggiatore del tempo fatto di metallo puro. Pronuncia il suo nome per aprire il Caveau!»",
+                        hint: "Indizio: È il Golem d'Argento che libererete nelle Grotte di Koilos.",
+                        options: [
+                            { label: "⚙️ Memnarch, Guardiano di Argentum", correct: false },
+                            { label: "🤖 Karn, il Golem d'Argento", correct: true },
+                            { label: "🐉 Nicol Bolas, Drago Antico", correct: false }
+                        ]
+                    }
+                ]
+            },
+            puzzle_multisol_roots: {
+                id: "puzzle_multisol_roots",
+                type: "multi_solution",
+                title: "🌿 Enigma Multi-Soluzione: Il Santuario delle Radici Antiche",
+                subtitle: "Ogni ostacolo può essere superato in 3 modi diversi: scegli la strada più adatta al tuo gruppo!",
+                rewardSummary: "+120 EXP, +65 🪙 Oro, +2 🍖 Cibi, +1 💎 Tesoro e Power Nine Mox Emerald!",
+                obstacles: [
+                    {
+                        id: "obs_thorns",
+                        title: "1. Il Portone Avvolto dai Rovi Viventi",
+                        desc: "Spessi rovi spinosi sbarrano l'arco d'ingresso del santuario.",
+                        methods: [
+                            { type: "keyword", label: "⚔️ Recidi con [Fendente / Travolgere]", keywords: ["Fendente", "Travolgere"] },
+                            { type: "mana", label: "🔥 Brucia i rovi (Spendi 1 Mana Rosso 🔥)", color: "R" },
+                            { type: "stat", label: "💪 Strappa i rovi a mani nude (FOR CD 24)", stat: "str", dc: 24 }
+                        ]
+                    },
+                    {
+                        id: "obs_seal",
+                        title: "2. La Chiave Sospesa sulla Volta Alta",
+                        desc: "Un cristallo runico brilla a dieci metri d'altezza tra i rami intrecciati.",
+                        methods: [
+                            { type: "keyword", label: "🦅 Raggiungi con [Volare / Rapidità]", keywords: ["Volare", "Rapidità"] },
+                            { type: "mana", label: "💧 Afferralo con telecinesi (Spendi 1 Mana Blu 💧 o Bianco ☀️)", color: "U_OR_W" },
+                            { type: "stat", label: "🤸 Arrampicati sui tronchi (AGI CD 24)", stat: "agi", dc: 24 }
+                        ]
+                    },
+                    {
+                        id: "obs_guardian",
+                        title: "3. L'Antico Spirito Silvano Affamato",
+                        desc: "Un guardiano di muschio ti scruta prima di aprire il forziere centrale.",
+                        methods: [
+                            { type: "keyword", label: "🛡️ Rassicuralo con [Cautela / Legame Vitale / Egida]", keywords: ["Cautela", "Legame Vitale", "Egida"] },
+                            { type: "food", label: "🍖 Offri 1 Pedina Cibo come tributo pacifico" },
+                            { type: "stat", label: "🔮 Parla la lingua delle foreste (MAG CD 24)", stat: "mag", dc: 24 }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        const openInteractivePuzzle = (puzzleId) => {
+            const pDef = INTERACTIVE_PUZZLES_DB[puzzleId];
+            if (!pDef) return;
+            const claimed = getClaimedLootMap();
+            if (claimed["solved_" + puzzleId]) {
+                setEventBanner("✅ Avete già risolto e saccheggiato questo Enigma (" + pDef.title + ") in questa campagna!");
+                return;
+            }
+            setActivePuzzleState({
+                id: puzzleId,
+                litKeys: [],
+                stageIdx: 0,
+                showHint: false,
+                solvedObs: [],
+                feedback: pDef.subtitle
+            });
+        };
+
+        const completeInteractivePuzzle = (puzzleId) => {
+            const claimed = getClaimedLootMap();
+            if (claimed["solved_" + puzzleId]) {
+                setActivePuzzleState(null);
+                return;
+            }
+            markLootKeyClaimed("solved_" + puzzleId);
+            setActivePuzzleState(null);
+            if (typeof playTriadSfx === "function") playTriadSfx("win");
+
+            if (puzzleId === "puzzle_elemental_obelisks") {
+                const p9Txt = unlockPowerNineCard("mox_pearl");
+                applyRewardsAndMove(character, { exp: 95, gold: 55, treasures: 1, heal: 20 }, character.currentNode, "🔥☀️ ENIGMA ELEMENTALE RISOLTO! I 4 Bracieri della Luce si accendono all'unisono: +95 EXP, +55 🪙, +1 💎 e +20 PV!" + p9Txt);
+            } else if (puzzleId === "puzzle_lore_escape") {
+                const p9Txt = unlockPowerNineCard("ancestral_recall");
+                applyRewardsAndMove(character, { exp: 130, gold: 75, treasures: 2 }, character.currentNode, "🔐📖 ESCAPE ROOM COMPLETATA! Il Caveau della Guerra dei Fratelli si spalanca: +130 EXP, +75 🪙 e +2 💎!" + p9Txt);
+            } else if (puzzleId === "puzzle_multisol_roots") {
+                const p9Txt = unlockPowerNineCard("mox_emerald");
+                applyRewardsAndMove(character, { exp: 120, gold: 65, food: 2, treasures: 1 }, character.currentNode, "🌿✨ SANTUARIO DELLE RADICI APERTO! Avete superato tutti gli ostacoli con ingegno: +120 EXP, +65 🪙, +2 🍖 e +1 💎!" + p9Txt);
+            }
+        };
+
+        const attemptElementalBrazier = (brazierObj, mode) => {
+            if (!activePuzzleState || !character) return;
+            if (activePuzzleState.litKeys.indexOf(brazierObj.key) !== -1) return;
+
+            let updated = Object.assign({}, character);
+            let success = false;
+            let msg = "";
+
+            if (mode === "mana") {
+                const curM = (updated.manaPool && updated.manaPool[brazierObj.manaColor]) ? updated.manaPool[brazierObj.manaColor] : 0;
+                if (curM < 1) return alert("Non hai 1 Mana " + brazierObj.manaColor + " nella riserva di " + updated.name + "!");
+                let nextPool = Object.assign({}, updated.manaPool);
+                nextPool[brazierObj.manaColor] = curM - 1;
+                updated.manaPool = nextPool;
+                saveCharState(updated);
+                success = true;
+                msg = `✨ Hai canalizzato 1 Mana ${brazierObj.manaColor}: il **${brazierObj.name}** divampa!`;
+            } else if (mode === "keyword") {
+                const pKws = getPartyCombinedKeywords();
+                const matched = brazierObj.altKeywords.find(k => pKws.indexOf(k) !== -1);
+                if (!matched) return alert("Nessun eroe vivo possiede: " + brazierObj.altKeywords.join(" / "));
+                success = true;
+                msg = `⚡ Abilità **${matched}** sfruttata con successo: il **${brazierObj.name}** si accende!`;
+            } else if (mode === "treasure") {
+                if ((updated.treasures || 0) < 1) return alert("Non hai Pedine Tesoro (💎)!");
+                updated.treasures = updated.treasures - 1;
+                saveCharState(updated);
+                success = true;
+                msg = `💎 Hai incanalato una Pedina Tesoro: il **${brazierObj.name}** si illumina!`;
+            } else if (mode === "roll") {
+                const d20 = Math.floor(Math.random() * 20) + 1;
+                const magVal = getFinalStats(updated).mag || 10;
+                const tot = d20 + magVal;
+                if (d20 === 20 || tot >= 24) {
+                    success = true;
+                    msg = `🔮 Prova di Magia superata (${d20}+${magVal}=${tot} vs CD 24): il **${brazierObj.name}** si accende!`;
+                } else {
+                    updated.currentHP = Math.max(1, updated.currentHP - 3);
+                    saveCharState(updated);
+                    msg = `❌ Scarica arcana (${d20}+${magVal}=${tot} vs CD 24): ${updated.name} subisce -3 PV! Riprova o usa un altro metodo.`;
+                }
+            }
+
+            if (success) {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_good");
+                const nextLit = activePuzzleState.litKeys.concat([brazierObj.key]);
+                if (nextLit.length >= 4) {
+                    completeInteractivePuzzle(activePuzzleState.id);
+                } else {
+                    setActivePuzzleState(Object.assign({}, activePuzzleState, { litKeys: nextLit, feedback: msg }));
+                }
+            } else {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                setActivePuzzleState(Object.assign({}, activePuzzleState, { feedback: msg }));
+            }
+        };
+
+        const answerEscapeRoomOption = (isCorrect) => {
+            if (!activePuzzleState || !character) return;
+            const pDef = INTERACTIVE_PUZZLES_DB[activePuzzleState.id];
+            if (!pDef || !pDef.stages) return;
+
+            if (isCorrect) {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_good");
+                const nextIdx = activePuzzleState.stageIdx + 1;
+                if (nextIdx >= pDef.stages.length) {
+                    completeInteractivePuzzle(activePuzzleState.id);
+                } else {
+                    setActivePuzzleState(Object.assign({}, activePuzzleState, {
+                        stageIdx: nextIdx,
+                        showHint: false,
+                        feedback: "✅ Sigillo sbloccato! Si rivela il meccanismo della Fase " + (nextIdx + 1) + "!"
+                    }));
+                }
+            } else {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                const hurt = Object.assign({}, character, { currentHP: Math.max(1, character.currentHP - 3) });
+                saveCharState(hurt);
+                setActivePuzzleState(Object.assign({}, activePuzzleState, {
+                    showHint: true,
+                    feedback: "❌ Risposta errata! Una scarica runica infligge -3 PV a " + character.name + ", ma la stele rivela un indizio più chiaro!"
+                }));
+            }
+        };
+
+        const attemptMultiSolutionObstacle = (obsObj, method) => {
+            if (!activePuzzleState || !character) return;
+            if (activePuzzleState.solvedObs.indexOf(obsObj.id) !== -1) return;
+
+            let updated = Object.assign({}, character);
+            let ok = false;
+            let msg = "";
+
+            if (method.type === "keyword") {
+                const pKws = getPartyCombinedKeywords();
+                const hitKw = method.keywords.find(k => pKws.indexOf(k) !== -1);
+                if (!hitKw) return alert("Serve una tra queste abilità nel Party: " + method.keywords.join(" / "));
+                ok = true;
+                msg = `⚡ Superato grazie all'abilità **${hitKw}** della Compagnia!`;
+            } else if (method.type === "mana") {
+                let pool = Object.assign({}, updated.manaPool || {});
+                let colUsed = null;
+                if (method.color === "U_OR_W") {
+                    if ((pool.U || 0) >= 1) colUsed = "U";
+                    else if ((pool.W || 0) >= 1) colUsed = "W";
+                } else if ((pool[method.color] || 0) >= 1) {
+                    colUsed = method.color;
+                }
+                if (!colUsed) return alert("Mana insufficiente nella riserva di " + updated.name + "!");
+                pool[colUsed] = pool[colUsed] - 1;
+                updated.manaPool = pool;
+                saveCharState(updated);
+                ok = true;
+                msg = `✨ Hai speso 1 Mana ${colUsed} superando l'ostacolo all'istante!`;
+            } else if (method.type === "food") {
+                if ((updated.food || 0) < 1) return alert("Non hai Pedine Cibo (🍖) nello zaino!");
+                updated.food = updated.food - 1;
+                saveCharState(updated);
+                ok = true;
+                msg = "🍖 Lo Spirito accetta il tributo di cibo e libera il passaggio!";
+            } else if (method.type === "stat") {
+                const d20 = Math.floor(Math.random() * 20) + 1;
+                const stVal = getFinalStats(updated)[method.stat] || 10;
+                const tot = d20 + stVal;
+                if (d20 === 20 || tot >= method.dc) {
+                    ok = true;
+                    msg = `✅ Prova superata (${d20}+${stVal}=${tot} vs CD ${method.dc})! Ostacolo vinto!`;
+                } else {
+                    updated.currentHP = Math.max(1, updated.currentHP - 3);
+                    saveCharState(updated);
+                    msg = `❌ Prova fallita (${d20}+${stVal}=${tot} vs CD ${method.dc}): -3 PV a ${updated.name}! Riprova o usa un'altra soluzione.`;
+                }
+            }
+
+            if (ok) {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_good");
+                const nextObs = activePuzzleState.solvedObs.concat([obsObj.id]);
+                if (nextObs.length >= 3) {
+                    completeInteractivePuzzle(activePuzzleState.id);
+                } else {
+                    setActivePuzzleState(Object.assign({}, activePuzzleState, { solvedObs: nextObs, feedback: msg }));
+                }
+            } else {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                setActivePuzzleState(Object.assign({}, activePuzzleState, { feedback: msg }));
+            }
+        };
         const [showBestiaryModal, setShowBestiaryModal] = useState(false);
         const [zoomedBestiaryMonster, setZoomedBestiaryMonster] = useState(null);
         const [showAlchemyModal, setShowAlchemyModal] = useState(false);
@@ -13062,6 +13577,12 @@
                 return;
             }
 
+           // 1B. Apertura Enigma Interattivo (Elementale, Escape Room o Multi-Soluzione)
+            if (choice.type === 'interactive_puzzle' && choice.puzzleId) {
+                openInteractivePuzzle(choice.puzzleId);
+                return;
+            }
+          
             // 2. Controllo costo in Monete d'Oro (es. locande / terme)
             if (choice.costGold && choice.costGold > 0) {
                 if ((character.gold || 0) < choice.costGold) {
@@ -14046,8 +14567,280 @@
                         </div>,
                         document.body
                     )}
-                  
-                    {/* TIMER DI INCOSCIENZA (1 GIORNO E 4 ORE = 1 MINUTO E 4 SECONDI = 64s) */}
+
+                  {/* 6. MINIGIOCO DADI DEI PLANESWALKER (STILE ORLOG) */}
+                    {showOrlogModal && orlogState && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setShowOrlogModal(false)}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10019] bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-w-lg max-h-[90dvh] overflow-y-auto bg-gradient-to-b from-[#1f120b] via-gray-950 to-black border-4 border-amber-500 rounded-2xl p-4 shadow-[0_0_50px_rgba(245,158,11,0.5)] space-y-3"
+                            >
+                                <div className="flex justify-between items-center border-b border-amber-800/70 pb-2">
+                                    <h3 className="font-rpg-title text-amber-300 font-black text-sm sm:text-base uppercase">
+                                        🎲 Dadi dei Planeswalker — Round {orlogState.round}
+                                    </h3>
+                                    <button onClick={() => setShowOrlogModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                        Esci ✖
+                                    </button>
+                                </div>
+
+                                {/* BARRA VITA E FAVORE */}
+                                <div className="grid grid-cols-2 gap-2 text-center">
+                                    <div className="bg-blue-950/70 border border-cyan-400 rounded-xl p-2">
+                                        <p className="text-[10px] font-black text-cyan-300 uppercase">Tu ({character.name})</p>
+                                        <p className="text-base font-black text-white">❤️ {orlogState.playerHP}/15 &nbsp; ✨ {orlogState.playerFavor}</p>
+                                    </div>
+                                    <div className="bg-red-950/70 border border-red-400 rounded-xl p-2">
+                                        <p className="text-[10px] font-black text-red-300 uppercase">Krark (Posta {orlogBet}🪙)</p>
+                                        <p className="text-base font-black text-white">❤️ {orlogState.enemyHP}/15 &nbsp; ✨ {orlogState.enemyFavor}</p>
+                                    </div>
+                                </div>
+
+                                {/* DADI DI KRARK */}
+                                <div className="bg-black/60 border border-red-900/70 rounded-xl p-2.5 space-y-1.5">
+                                    <p className="text-[10px] font-black uppercase text-red-300">🟥 Dadi di Krark:</p>
+                                    <div className="grid grid-cols-5 gap-1.5">
+                                        {orlogState.enemyDice.map(d => (
+                                            <div key={d.idx} className={`rounded-lg p-1.5 text-center border ${d.face.gold ? "border-amber-400 bg-red-950/80" : "border-red-800 bg-gray-900"}`}>
+                                                <div className="text-lg leading-none">{d.face.icon}</div>
+                                                <div className="text-[9px] font-bold text-gray-200 mt-0.5 truncate">{d.face.label}</div>
+                                                {d.face.gold && <div className="text-[8px] text-amber-300 font-black">+1✨</div>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* I TUOI 5 DADI (TOCCA PER BLOCCARE / SBLOCCARE) */}
+                                <div className="bg-black/60 border border-cyan-800/70 rounded-xl p-2.5 space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-[10px] font-black uppercase text-cyan-300">🟦 I tuoi Dadi (Tocca per 🔒 Bloccare):</p>
+                                        <span className="text-[10px] font-black text-amber-300">Rilanci: {orlogState.rollsLeft}</span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-1.5">
+                                        {orlogState.playerDice.map(d => (
+                                            <button
+                                                key={d.idx}
+                                                disabled={orlogState.finished}
+                                                onClick={() => toggleOrlogDieLock(d.idx)}
+                                                className={`rounded-lg p-1.5 text-center border-2 transition-all active:scale-95 ${
+                                                    d.locked
+                                                        ? "border-amber-300 bg-blue-900 shadow-[0_0_12px_rgba(251,191,36,0.8)] -translate-y-1"
+                                                        : (d.face.gold ? "border-amber-500/60 bg-gray-900" : "border-cyan-700/60 bg-gray-900")
+                                                }`}
+                                            >
+                                                <div className="text-[9px] font-black text-amber-300">{d.locked ? "🔒" : "🎲"}</div>
+                                                <div className="text-lg leading-none">{d.face.icon}</div>
+                                                <div className="text-[9px] font-bold text-white mt-0.5 truncate">{d.face.label}</div>
+                                                {d.face.gold && <div className="text-[8px] text-amber-300 font-black">+1✨</div>}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* FAVORI DEI PLANESWALKER */}
+                                {!orlogState.finished && (
+                                    <div className="space-y-1.5">
+                                        <p className="text-[10px] font-black uppercase text-amber-300">✨ Favore Planeswalker opzionale (si attiva alla Risoluzione):</p>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {ORLOG_FAVORS.map(f => {
+                                                const isSel = orlogState.selectedFavorId === f.id;
+                                                const canAfford = orlogState.playerFavor >= f.cost;
+                                                return (
+                                                    <button
+                                                        key={f.id}
+                                                        disabled={!canAfford}
+                                                        onClick={() => setOrlogState(Object.assign({}, orlogState, { selectedFavorId: isSel ? null : f.id }))}
+                                                        className={`p-2 rounded-xl border text-left transition-all ${
+                                                            isSel
+                                                                ? "bg-amber-500 text-black border-white font-black"
+                                                                : (canAfford ? "bg-gray-900 hover:bg-gray-800 border-amber-500/60 text-white" : "bg-gray-950 border-gray-800 text-gray-500 opacity-50")
+                                                        }`}
+                                                    >
+                                                        <p className="text-[10px] font-black leading-tight">{f.name} ({f.cost}✨)</p>
+                                                        <p className="text-[9px] opacity-90 mt-0.5 leading-tight">{f.desc}</p>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* COMANDI LANCIO / RISOLVI */}
+                                {!orlogState.finished ? (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            disabled={orlogState.rollsLeft <= 0}
+                                            onClick={rerollOrlogUnlockedDice}
+                                            className="bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-black py-2.5 rounded-xl text-xs uppercase shadow"
+                                        >
+                                            🔄 Rilancia Sbloccati ({orlogState.rollsLeft})
+                                        </button>
+                                        <button
+                                            onClick={resolveOrlogRound}
+                                            className="bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow"
+                                        >
+                                            ⚔️ Risolvi Round!
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div className="bg-emerald-950/90 border-2 border-emerald-400 rounded-xl p-2.5 text-center text-xs font-black text-emerald-200">
+                                            {orlogState.rewardMsg}
+                                        </div>
+                                        <button onClick={() => startOrlogGame(orlogBet)} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow">
+                                            🔄 Gioca un'altra Partita ({orlogBet} 🪙)
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* CRONOLOGIA ROUND */}
+                                <div className="bg-black/70 border border-gray-800 rounded-xl p-2 space-y-1 max-h-28 overflow-y-auto">
+                                    {orlogState.log.map((line, idx) => (
+                                        <p key={idx} className="text-[10px] text-gray-300 leading-snug">{line}</p>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* 7. MODALE ENIGMI INTERATTIVI (ELEMENTALE, ESCAPE ROOM 3 FASI & MULTI-SOLUZIONE) */}
+                    {activePuzzleState && INTERACTIVE_PUZZLES_DB[activePuzzleState.id] && ReactDOM.createPortal(
+                        <div
+                            onClick={() => setActivePuzzleState(null)}
+                            className="fixed inset-0 w-screen h-[100dvh] z-[10019] bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
+                        >
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-full max-w-xl max-h-[90dvh] overflow-y-auto bg-gradient-to-b from-indigo-950 via-gray-950 to-black border-4 border-cyan-400 rounded-2xl p-4 shadow-[0_0_50px_rgba(34,211,238,0.45)] space-y-3"
+                            >
+                                {(() => {
+                                    const pDef = INTERACTIVE_PUZZLES_DB[activePuzzleState.id];
+                                    return (
+                                        <React.Fragment>
+                                            <div className="flex justify-between items-center border-b border-cyan-800/70 pb-2">
+                                                <div>
+                                                    <h3 className="font-rpg-title text-cyan-300 font-black text-sm sm:text-base uppercase">
+                                                        {pDef.title}
+                                                    </h3>
+                                                    <p className="text-[10px] text-amber-300 font-bold">🏆 Premio: {pDef.rewardSummary}</p>
+                                                </div>
+                                                <button onClick={() => setActivePuzzleState(null)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                                    Chiudi ✖
+                                                </button>
+                                            </div>
+
+                                            <div className="bg-black/75 border border-cyan-700/60 rounded-xl p-2.5 text-xs text-cyan-100 font-bold text-center">
+                                                {activePuzzleState.feedback}
+                                            </div>
+
+                                            {/* TIPO 1: ENIGMA ELEMENTALE (4 BRACIERI) */}
+                                            {pDef.type === "elemental" && (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                    {pDef.braziers.map(br => {
+                                                        const isLit = activePuzzleState.litKeys.indexOf(br.key) !== -1;
+                                                        return (
+                                                            <div key={br.key} className={`rounded-xl p-3 border-2 space-y-2 ${isLit ? "bg-emerald-950/70 border-emerald-400" : "bg-gray-900 border-cyan-700/60"}`}>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="font-black text-xs text-white">{br.icon} {br.name}</span>
+                                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isLit ? "bg-emerald-500 text-black" : "bg-gray-800 text-gray-400"}`}>
+                                                                        {isLit ? "✅ ACCESO" : "Spento"}
+                                                                    </span>
+                                                                </div>
+                                                                {!isLit && (
+                                                                    <div className="grid grid-cols-2 gap-1.5">
+                                                                        <button onClick={() => attemptElementalBrazier(br, "mana")} className="bg-indigo-800 hover:bg-indigo-700 text-white text-[10px] font-black py-1.5 px-2 rounded-lg">
+                                                                            1 Mana {br.manaColor}
+                                                                        </button>
+                                                                        <button onClick={() => attemptElementalBrazier(br, "keyword")} className="bg-emerald-800 hover:bg-emerald-700 text-white text-[10px] font-black py-1.5 px-2 rounded-lg">
+                                                                            Abilità ({br.altKeywords[0]})
+                                                                        </button>
+                                                                        <button onClick={() => attemptElementalBrazier(br, "roll")} className="bg-purple-800 hover:bg-purple-700 text-white text-[10px] font-black py-1.5 px-2 rounded-lg">
+                                                                            🔮 MAG CD 24
+                                                                        </button>
+                                                                        <button onClick={() => attemptElementalBrazier(br, "treasure")} className="bg-amber-600 hover:bg-amber-500 text-black text-[10px] font-black py-1.5 px-2 rounded-lg">
+                                                                            💎 1 Tesoro
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+
+                                            {/* TIPO 2: ESCAPE ROOM A 3 FASI SULLA LORE */}
+                                            {pDef.type === "escape_room" && (() => {
+                                                const stg = pDef.stages[activePuzzleState.stageIdx];
+                                                if (!stg) return null;
+                                                return (
+                                                    <div className="bg-gray-900 border-2 border-amber-500/70 rounded-xl p-3.5 space-y-3">
+                                                        <p className="text-xs font-black text-amber-300 uppercase">{stg.stepTitle}</p>
+                                                        <p className="text-sm text-gray-100 italic leading-relaxed">{stg.riddle}</p>
+                                                        {activePuzzleState.showHint && (
+                                                            <p className="text-xs text-emerald-300 bg-emerald-950/70 border border-emerald-500/60 rounded-lg p-2 font-bold">
+                                                                💡 {stg.hint}
+                                                            </p>
+                                                        )}
+                                                        <div className="space-y-2">
+                                                            {stg.options.map((opt, idx) => (
+                                                                <button
+                                                                    key={idx}
+                                                                    onClick={() => answerEscapeRoomOption(opt.correct)}
+                                                                    className="w-full text-left bg-gray-950 hover:bg-indigo-900 border border-cyan-600/70 p-3 rounded-xl text-xs font-black text-white transition-all active:scale-95"
+                                                                >
+                                                                    {opt.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* TIPO 3: ENIGMA AMBIENTALE MULTI-SOLUZIONE */}
+                                            {pDef.type === "multi_solution" && (
+                                                <div className="space-y-2.5">
+                                                    {pDef.obstacles.map(obs => {
+                                                        const done = activePuzzleState.solvedObs.indexOf(obs.id) !== -1;
+                                                        return (
+                                                            <div key={obs.id} className={`rounded-xl p-3 border-2 space-y-2 ${done ? "bg-emerald-950/70 border-emerald-400" : "bg-gray-900 border-cyan-700/60"}`}>
+                                                                <div className="flex justify-between items-center">
+                                                                    <p className="text-xs font-black text-white">{obs.title}</p>
+                                                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${done ? "bg-emerald-500 text-black" : "bg-gray-800 text-gray-400"}`}>
+                                                                        {done ? "✅ SUPERATO" : "Bloccato"}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-[11px] text-gray-300">{obs.desc}</p>
+                                                                {!done && (
+                                                                    <div className="grid grid-cols-1 gap-1.5">
+                                                                        {obs.methods.map((m, mIdx) => (
+                                                                            <button
+                                                                                key={mIdx}
+                                                                                onClick={() => attemptMultiSolutionObstacle(obs, m)}
+                                                                                className="text-left bg-gray-950 hover:bg-cyan-950 border border-cyan-600/60 px-3 py-2 rounded-lg text-[11px] font-black text-cyan-100 active:scale-95"
+                                                                            >
+                                                                                {m.label}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })()}
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+                
+                  {/* TIMER DI INCOSCIENZA (1 GIORNO E 4 ORE = 1 MINUTO E 4 SECONDI = 64s) */}
                     {dormantTimer > 0 && (
                         <div className="bg-indigo-950 border-4 border-cyan-400 rounded-2xl p-5 text-center space-y-3 shadow-2xl animate-fade">
                             <div className="text-4xl animate-pulse">🌙⏳</div>
@@ -14408,7 +15201,7 @@
                             <p className="text-xs text-gray-300">
                                 Grazie al leggendario <b>Pollice di Krark (Krark's Thumb)</b>, quando scommetti lanci <b>due dadi D20 e tieni il migliore</b>! Con 12-18 raddoppi, con 19-20 triplichi + 1 Tesoro 💎!
                             </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 <button onClick={() => playKrarkThumbGamble(20)} className="bg-gray-950 hover:bg-rose-950 border border-rose-500 p-3 rounded-xl text-left">
                                     <p className="text-rose-300 font-black text-xs">🎲 Scommetti 20 🪙</p>
                                     <p className="text-gray-400 text-[10px] mt-1">Lancia 2d20 (tieni il migliore): vinci fino a +40🪙 e +1💎!</p>
@@ -14422,7 +15215,23 @@
                                     <p className="text-gray-200 text-[10px] mt-1">Pesca un equipaggiamento casuale (anche Raro o Leggendario)!</p>
                                 </button>
                             </div>
-                        </div>, () => setShowKrarkModal(false), 
+
+                            <div className="border-t border-rose-800/70 pt-3 space-y-2">
+                                <p className="text-xs font-black text-amber-300 uppercase">
+                                    🎲⚔️ Sfida Tattica: Dadi dei Planeswalker (stile Orlog — 3 Lanci, Blocca Dadi & Poteri!)
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <button onClick={() => startOrlogGame(25)} className="bg-amber-950/80 hover:bg-amber-900 border-2 border-amber-400 p-2.5 rounded-xl text-left">
+                                        <p className="text-amber-300 font-black text-xs">🎲 Tavolo Standard (Posta: 25 🪙)</p>
+                                        <p className="text-gray-300 text-[10px]">Vinci +30 🪙 netti e +1 Pedina Tesoro 💎!</p>
+                                    </button>
+                                    <button onClick={() => startOrlogGame(50)} className="bg-purple-950/80 hover:bg-purple-900 border-2 border-fuchsia-400 p-2.5 rounded-xl text-left">
+                                        <p className="text-fuchsia-300 font-black text-xs">👑 Alta Posta (Posta: 50 🪙)</p>
+                                        <p className="text-gray-300 text-[10px]">Vinci +65 🪙 netti, +1 💎 e 1 Reliquia se resti a 10+ PV!</p>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>, () => setShowKrarkModal(false),
                   true
                 )}
 
