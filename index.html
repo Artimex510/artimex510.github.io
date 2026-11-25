@@ -7200,6 +7200,8 @@
                 setSagasUsedByZone({});
                 localStorage.removeItem('rpg_power9');
                 setUnlockedPower9([]);
+                localStorage.removeItem('rpg_fish_bag');
+                setFishBag([]);
                 localStorage.removeItem('rpg_world_clock');
                 localStorage.removeItem('rpg_pvp_full_party_backup');
                 setParty([]);
@@ -7229,6 +7231,8 @@
                     setSagasUsedByZone({});
                     localStorage.removeItem('rpg_power9');
                     setUnlockedPower9([]);
+                    localStorage.removeItem('rpg_fish_bag');
+                    setFishBag([]);
                     localStorage.removeItem('rpg_world_clock');
                     localStorage.removeItem('rpg_pvp_full_party_backup');
                     setParty([]);
@@ -9357,6 +9361,443 @@
         const [showBlacksmithModal, setShowBlacksmithModal] = useState(false);
         const [showBountyModal, setShowBountyModal] = useState(false);
         const [showCampfireModal, setShowCampfireModal] = useState(false);
+        // ============================================================================
+        // --- PESCA PLANARE (BARRA DI TENSIONE) & GARA DI CUCINA DEL BIVACCO       ---
+        // ============================================================================
+        const [showFishingModal, setShowFishingModal] = useState(false);
+        const [fishingPhase, setFishingPhase] = useState("idle"); // "idle" | "waiting" | "bite" | "reeling" | "result"
+        const [fishingBait, setFishingBait] = useState("worm"); // "worm" | "food" | "mana"
+        const [fishingPos, setFishingPos] = useState(50);
+        const [fishingResult, setFishingResult] = useState(null);
+        const [fishBag, setFishBag] = useState(() => {
+            try { return JSON.parse(localStorage.getItem('rpg_fish_bag') || "[]"); } catch (e) { return []; }
+        });
+
+        const fishingTimeoutRef = useRef(null);
+        const fishingLoopRef = useRef(null);
+        const fishingPosRef = useRef(50);
+        const fishingDirRef = useRef(1);
+
+        const FISHING_CATCHES_DB = [
+            { id: "dandan", name: "Dandân delle Maree", rarity: "Comune", card: "Dandân", goldVal: 18, foodVal: 1, cookBonus: 2, flavor: "U", desc: "Pesce leggendario di Arabian Nights: carne soda e salmastra." },
+            { id: "mystic_remora", name: "Remora Mistica", rarity: "Raro", card: "Mystic Remora", goldVal: 32, foodVal: 2, cookBonus: 3, flavor: "U", desc: "Brilla di mana dell'Era Glaciale: prelibatezza per gli arcimaghi!" },
+            { id: "coiling_oracle", name: "Anguilla dell'Oracolo", rarity: "Comune", card: "Coiling Oracle", goldVal: 22, foodVal: 1, cookBonus: 2, flavor: "G", desc: "Pesce-serpente di Ravnica dal retrogusto erbaceo." },
+            { id: "gilded_goose", name: "Anatra Dorata del Lago", rarity: "Raro", card: "Gilded Goose", goldVal: 40, foodVal: 2, cookBonus: 4, flavor: "W", desc: "Cattura rarissima di Eldraine: fa impazzire i giudici di cucina!" },
+            { id: "shark_typhoon", name: "Pinna di Squalo Tifone", rarity: "Epico", card: "Shark Typhoon", goldVal: 55, foodVal: 2, cookBonus: 5, flavor: "R", desc: "Un taglio pregiatissimo carico di energia tempestosa!" },
+            { id: "gingerbrute_box", name: "Forziere Sommerso di Urza", rarity: "Tesoro", card: "Treasure Chest", goldVal: 45, foodVal: 0, treasureVal: 1, cookBonus: 0, flavor: "W", desc: "Un vecchio scrigno incrostato di alghe pieno di oro e gemme!" }
+        ];
+
+        const saveFishBagState = (nextBag) => {
+            setFishBag(nextBag);
+            try { localStorage.setItem('rpg_fish_bag', JSON.stringify(nextBag)); } catch (e) {}
+        };
+
+        const clearFishingTimers = () => {
+            if (fishingTimeoutRef.current) { clearTimeout(fishingTimeoutRef.current); fishingTimeoutRef.current = null; }
+            if (fishingLoopRef.current) { clearInterval(fishingLoopRef.current); fishingLoopRef.current = null; }
+        };
+
+        const closeFishingModalClean = () => {
+            clearFishingTimers();
+            setShowFishingModal(false);
+            setFishingPhase("idle");
+            setFishingResult(null);
+        };
+
+        const startFishingCast = (baitType) => {
+            if (!character || combatState) return;
+            let updated = Object.assign({}, character);
+
+            if (baitType === "food") {
+                if ((updated.food || 0) < 1) return alert("Non hai Pedine Cibo (🍖) da usare come esca!");
+                updated.food = updated.food - 1;
+                saveCharState(updated);
+            } else if (baitType === "mana") {
+                const curU = (updated.manaPool && updated.manaPool.U) ? updated.manaPool.U : 0;
+                const mainCol = (updated.manaIdentity && updated.manaIdentity[0]) ? updated.manaIdentity[0] : "U";
+                const curMain = (updated.manaPool && updated.manaPool[mainCol]) ? updated.manaPool[mainCol] : 0;
+                if (curU >= 1) {
+                    let p = Object.assign({}, updated.manaPool);
+                    p.U = curU - 1;
+                    updated.manaPool = p;
+                    saveCharState(updated);
+                } else if (curMain >= 1) {
+                    let p = Object.assign({}, updated.manaPool);
+                    p[mainCol] = curMain - 1;
+                    updated.manaPool = p;
+                    saveCharState(updated);
+                } else {
+                    return alert("Ti serve almeno 1 Mana (💧 o del tuo colore principale) per l'Esca Arcana!");
+                }
+            }
+
+            clearFishingTimers();
+            setFishingBait(baitType);
+            setFishingResult(null);
+            setFishingPhase("waiting");
+            if (typeof playTriadSfx === "function") playTriadSfx("place");
+
+            const waitMs = 1700 + Math.floor(Math.random() * 2100);
+            fishingTimeoutRef.current = setTimeout(() => {
+                setFishingPhase("bite");
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_good");
+                // Se non ferra entro 2.4 secondi, il pesce scappa
+                fishingTimeoutRef.current = setTimeout(() => {
+                    setFishingPhase("result");
+                    setFishingResult({ status: "escaped", title: "💨 Troppo tardi!", msg: "La preda ha mangiato l'esca ed è fuggita sott'acqua!" });
+                    if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                }, 2400);
+            }, waitMs);
+        };
+
+        const handleFishingActionButton = () => {
+            if (fishingPhase === "waiting") {
+                clearFishingTimers();
+                setFishingPhase("result");
+                setFishingResult({ status: "early", title: "💦 Hai tirato troppo presto!", msg: "Lo schizzo ha spaventato tutti i pesci. Riprova ad attendere l'abboccata!" });
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                return;
+            }
+
+            if (fishingPhase === "bite") {
+                clearFishingTimers();
+                setFishingPhase("reeling");
+                fishingPosRef.current = 12;
+                fishingDirRef.current = 1;
+                setFishingPos(12);
+                const speed = fishingBait === "mana" ? 4.4 : 3.4;
+
+                fishingLoopRef.current = setInterval(() => {
+                    let next = fishingPosRef.current + (fishingDirRef.current * speed);
+                    if (next >= 96) { next = 96; fishingDirRef.current = -1; }
+                    if (next <= 4) { next = 4; fishingDirRef.current = 1; }
+                    fishingPosRef.current = next;
+                    setFishingPos(next);
+                }, 32);
+                return;
+            }
+
+            if (fishingPhase === "reeling") {
+                clearFishingTimers();
+                const pos = fishingPosRef.current;
+                const isPerfect = pos >= 43 && pos <= 57;
+                const isGood = pos >= 28 && pos <= 72;
+
+                if (!isGood) {
+                    setFishingPhase("result");
+                    setFishingResult({ status: "snap", title: "💥 Lenza Spezzata!", msg: "Hai tirato fuori dalla zona verde (" + Math.round(pos) + "%). La preda si è liberata!" });
+                    if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                    return;
+                }
+
+                // 10% di imprevisto divertente: tiri su un mostro acquatico!
+                if (Math.random() < 0.10) {
+                    const heroLvl = character ? ((character.level || 1) + (character.secondaryLevel || 0)) : 1;
+                    const ambushKey = heroLvl >= 4 ? "krasis_hydroid" : "storm_crow";
+                    const ambushName = MTG_BESTIARY[ambushKey] ? MTG_BESTIARY[ambushKey].name : "Mostro degli Abissi";
+                    setFishingPhase("result");
+                    setFishingResult({
+                        status: "monster",
+                        monsterKey: ambushKey,
+                        title: "🌊👹 IMBOSCATA DAGLI ABISSI!",
+                        msg: "Al posto di un pesce hai agganciato **" + ambushName + "**! Preparati a combattere!"
+                    });
+                    if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                    return;
+                }
+
+                // Selezione preda pesata in base all'esca e alla zona Oro
+                let pool = FISHING_CATCHES_DB;
+                if (isPerfect || fishingBait === "mana") {
+                    pool = FISHING_CATCHES_DB.filter(x => x.rarity !== "Comune");
+                } else if (fishingBait === "worm") {
+                    pool = FISHING_CATCHES_DB.filter(x => x.rarity !== "Epico");
+                }
+                const caught = pool[Math.floor(Math.random() * pool.length)] || FISHING_CATCHES_DB[0];
+                const mult = isPerfect ? 2 : 1;
+
+                if (typeof playTriadSfx === "function") playTriadSfx(isPerfect ? "win" : "flip_good");
+                setFishingPhase("result");
+                setFishingResult({
+                    status: "caught",
+                    isPerfect: isPerfect,
+                    mult: mult,
+                    item: caught,
+                    img: "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(caught.card) + "&format=image&version=art_crop",
+                    title: (isPerfect ? "🌟 PESCA PERFETTA! " : "🎣 CATTURA RIUSCITA! ") + caught.name,
+                    msg: caught.desc
+                });
+            }
+        };
+
+        const claimFishingCatch = (actionMode) => {
+            if (!fishingResult || fishingResult.status !== "caught" || !character) return;
+            const c = fishingResult.item;
+            const mult = fishingResult.mult || 1;
+            let updated = Object.assign({}, character);
+
+            if (c.rarity === "Tesoro") {
+                const gAdd = c.goldVal * mult;
+                const tAdd = (c.treasureVal || 1);
+                updated.gold = (updated.gold || 0) + gAdd;
+                updated.treasures = (updated.treasures || 0) + tAdd;
+                saveCharState(updated);
+                setEventBanner(`🎣💎 TESORO PESCATO! Hai recuperato **+${gAdd} Monete d'Oro 🪙** e **+${tAdd} Pedina Tesoro 💎**!`);
+            } else if (actionMode === "bag") {
+                const entry = {
+                    uid: "fish_" + Date.now(),
+                    id: c.id,
+                    name: c.name,
+                    cookBonus: c.cookBonus + (fishingResult.isPerfect ? 1 : 0),
+                    flavor: c.flavor,
+                    rarity: c.rarity
+                };
+                saveFishBagState(fishBag.concat([entry]).slice(-8));
+                setEventBanner(`🎣🧺 **${c.name}** conservato nella Bisaccia Ingredienti (+${entry.cookBonus} punti bonus alla Gara di Cucina)!`);
+            } else if (actionMode === "food") {
+                const fAdd = Math.max(1, c.foodVal * mult);
+                updated.food = (updated.food || 0) + fAdd;
+                saveCharState(updated);
+                setEventBanner(`🎣🍖 Hai cucinato al volo **${c.name}** ricavando **+${fAdd} Pedine Cibo 🍖**!`);
+            } else if (actionMode === "sell") {
+                const gAdd = c.goldVal * mult;
+                updated.gold = (updated.gold || 0) + gAdd;
+                saveCharState(updated);
+                setEventBanner(`🎣🪙 Hai venduto **${c.name}** al molo per **+${gAdd} Monete d'Oro 🪙**!`);
+            }
+
+            setFishingPhase("idle");
+            setFishingResult(null);
+        };
+
+        // --- GARA DI CUCINA DEL BIVACCO (STILE SUIKODEN II / MASTERCHEF PLANARE) ---
+        const [showCookingModal, setShowCookingModal] = useState(false);
+        const [cookState, setCookState] = useState(null);
+        const [cookPos, setCookPos] = useState(50);
+        const cookLoopRef = useRef(null);
+        const cookPosRef = useRef(50);
+        const cookDirRef = useRef(1);
+
+        const COOK_CHEFS = {
+            gyome: {
+                id: "gyome", name: "Gyome, Mastro Cuoco", diff: "MEDIO", targetMin: 18, targetMax: 21,
+                img: "https://api.scryfall.com/cards/named?exact=Gyome%2C+Master+Chef&format=image&version=art_crop",
+                rewardDesc: "+55 🪙, +2 🍖 Cibi & Buff Banchetto (+6 D20 / +15 PV)",
+                quote: "«Vediamo se sai cucinare meglio di un troll di Strixhaven!»"
+            },
+            asmorano: {
+                id: "asmorano", name: "Asmoranomardicadaistinaculdacar", diff: "DIFFICILE", targetMin: 22, targetMax: 25,
+                img: "https://api.scryfall.com/cards/named?exact=Asmoranomardicadaistinaculdacar&format=image&version=art_crop",
+                rewardDesc: "+110 🪙, +3 🍖, +1 💎 & Titolo A4 «Mastro Chef» (+1 COS perm. con 25+ pt!)",
+                quote: "«Ho cucinato per i demoni degli Inferi: stupiscimi o esci dalla cucina!»"
+            }
+        };
+
+        const COOK_JUDGES_POOL = [
+            { name: "Squee", icon: "👺", prefFlavor: "R", prefMethod: "flame", hint: "«Squee ama il PICCANTE (🔥) cotto a Fiamma Viva!»" },
+            { name: "Jhoira", icon: "🧭", prefFlavor: "U", prefMethod: "raw", hint: "«Preferisco sapori freschi e raffinati (💧), magari Crudo Ghiacciato.»" },
+            { name: "Kamahl", icon: "🪓", prefFlavor: "G", prefMethod: "stew", hint: "«Dammi un piatto sostanzioso della foresta (🌳) a Stufato Lento!»" },
+            { name: "Danitha", icon: "☀️", prefFlavor: "W", prefMethod: "stew", hint: "«Apprezzo la delicatezza del Miele di Serra (☀️) ben bilanciato.»" },
+            { name: "Liliana Vess", icon: "💀", prefFlavor: "B", prefMethod: "flame", hint: "«Cerco note affumicate ed esotiche (💀) dal carattere deciso.»" }
+        ];
+
+        const COOK_BASE_INGREDIENTS = [
+            { uid: "base_boar", name: "🥩 Cinghiale dei Clan Gruul", cookBonus: 1, flavor: "R", isFish: false },
+            { uid: "base_shroom", name: "🍄 Funghi Saporiti Golgari", cookBonus: 1, flavor: "B", isFish: false },
+            { uid: "base_apple", name: "🍎 Mele Speziate di Eldraine", cookBonus: 1, flavor: "W", isFish: false }
+        ];
+
+        const COOK_SPICES = [
+            { id: "NONE", label: "🧂 Sale Comune (Gratis)", flavor: "NONE", costColor: null },
+            { id: "R", label: "🔥 Peperoncino di Shiv (1🔥)", flavor: "R", costColor: "R" },
+            { id: "U", label: "💧 Alghe di Tolaria (1💧)", flavor: "U", costColor: "U" },
+            { id: "G", label: "🌳 Erbe di Yavimaya (1🌳)", flavor: "G", costColor: "G" },
+            { id: "W", label: "☀️ Miele di Serra (1☀️)", flavor: "W", costColor: "W" },
+            { id: "B", label: "💀 Tartufo di Urborg (1💀)", flavor: "B", costColor: "B" }
+        ];
+
+        const COOK_METHODS = [
+            { id: "flame", label: "🔥 Fiamma Viva", desc: "Amato da Squee e Liliana (+2 se Cottura Perfetta)" },
+            { id: "stew", label: "🍲 Stufato Lento", desc: "Sicuro ed equilibrato (+1 fisso ai giudici)" },
+            { id: "raw", label: "❄️ Crudo Ghiacciato", desc: "+2 extra se usi un Pesce pescato da te!" }
+        ];
+
+        const clearCookingTimer = () => {
+            if (cookLoopRef.current) { clearInterval(cookLoopRef.current); cookLoopRef.current = null; }
+        };
+
+        const closeCookingModalClean = () => {
+            clearCookingTimer();
+            setShowCookingModal(false);
+            setCookState(null);
+        };
+
+        const startCookingContest = (chefId) => {
+            clearCookingTimer();
+            const judges = COOK_JUDGES_POOL.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+            setCookState({
+                chefId: chefId,
+                phase: "prep", // "prep" | "fire" | "verdict"
+                judges: judges,
+                selectedBaseUid: fishBag.length > 0 ? fishBag[0].uid : "base_boar",
+                selectedSpiceId: "NONE",
+                selectedMethodId: "stew",
+                fireStep: 1,
+                fireBonus: 0,
+                fireNotes: [],
+                verdict: null
+            });
+        };
+
+        const launchCookingFirePhase = () => {
+            if (!cookState || !character) return;
+            const spice = COOK_SPICES.find(s => s.id === cookState.selectedSpiceId);
+            if (spice && spice.costColor) {
+                const curM = (character.manaPool && character.manaPool[spice.costColor]) ? character.manaPool[spice.costColor] : 0;
+                if (curM < 1) {
+                    return alert("Non hai 1 Mana " + spice.costColor + " per questa Spezia! Scegli un altro colore o Sale Comune.");
+                }
+                let nextPool = Object.assign({}, character.manaPool);
+                nextPool[spice.costColor] = curM - 1;
+                saveCharState(Object.assign({}, character, { manaPool: nextPool }));
+            }
+
+            clearCookingTimer();
+            cookPosRef.current = 10;
+            cookDirRef.current = 1;
+            setCookPos(10);
+            setCookState(Object.assign({}, cookState, { phase: "fire", fireStep: 1, fireBonus: 0, fireNotes: [] }));
+
+            const speed = cookState.chefId === "asmorano" ? 4.8 : 3.6;
+            cookLoopRef.current = setInterval(() => {
+                let next = cookPosRef.current + (cookDirRef.current * speed);
+                if (next >= 96) { next = 96; cookDirRef.current = -1; }
+                if (next <= 4) { next = 4; cookDirRef.current = 1; }
+                cookPosRef.current = next;
+                setCookPos(next);
+            }, 30);
+        };
+
+        const tapCookingFireBar = () => {
+            if (!cookState || cookState.phase !== "fire") return;
+            const pos = cookPosRef.current;
+            let stepPts = -2;
+            let stepLabel = "❌ Bruciato/Crudo (-2 pt)";
+            if (pos >= 43 && pos <= 59) {
+                stepPts = 2;
+                stepLabel = "🌟 Cottura da Maestro (+2 pt)";
+            } else if (pos >= 28 && pos <= 74) {
+                stepPts = 1;
+                stepLabel = "✅ Buona Cottura (+1 pt)";
+            }
+
+            if (typeof playTriadSfx === "function") playTriadSfx(stepPts >= 1 ? "flip_good" : "flip_bad");
+
+            const nextBonus = cookState.fireBonus + stepPts;
+            const nextNotes = cookState.fireNotes.concat([(cookState.fireStep === 1 ? "Sfumatura: " : "Impiattamento: ") + stepLabel]);
+
+            if (cookState.fireStep === 1) {
+                setCookState(Object.assign({}, cookState, { fireStep: 2, fireBonus: nextBonus, fireNotes: nextNotes }));
+                return;
+            }
+
+            // STEP 2 COMPLETATO -> CALCOLO VERDETTO DEI 3 GIUDICI!
+            clearCookingTimer();
+            const chosenFish = fishBag.find(f => f.uid === cookState.selectedBaseUid);
+            const chosenBase = chosenFish || COOK_BASE_INGREDIENTS.find(b => b.uid === cookState.selectedBaseUid) || COOK_BASE_INGREDIENTS[0];
+            const isFishUsed = Boolean(chosenFish);
+
+            // Consuma il pesce dalla bisaccia se è stato usato
+            if (isFishUsed) {
+                saveFishBagState(fishBag.filter(f => f.uid !== chosenFish.uid));
+            }
+
+            const spiceObj = COOK_SPICES.find(s => s.id === cookState.selectedSpiceId) || COOK_SPICES[0];
+            const methodId = cookState.selectedMethodId;
+            const dishFlavors = [chosenBase.flavor];
+            if (spiceObj.flavor !== "NONE") dishFlavors.push(spiceObj.flavor);
+
+            let totalScore = 0;
+            const judgeScores = cookState.judges.map(j => {
+                let sc = 5 + Math.min(2, Math.floor((chosenBase.cookBonus || 1) / 2));
+                if (isFishUsed) sc += 1; // Freschezza del pescato
+                if (dishFlavors.indexOf(j.prefFlavor) !== -1) sc += 2;
+                if (j.prefMethod === methodId) sc += 1;
+                if (methodId === "raw" && isFishUsed) sc += 1;
+                if (methodId === "stew") sc += 1;
+                if (nextBonus >= 3) sc += 1;
+                else if (nextBonus <= -2) sc -= 2;
+                sc = Math.max(1, Math.min(10, sc));
+                totalScore += sc;
+                const comment = sc >= 9 ? "«Sublime! Un capolavoro planare!»" : (sc >= 7 ? "«Ottimo sapore, davvero ben eseguito!»" : (sc >= 5 ? "«Commestibile, ma manca di carattere.»" : "«Ahi... questo piatto è un disastro!»"));
+                return { name: j.name, icon: j.icon, score: sc, comment: comment };
+            });
+
+            // Aggiungi bonus extra dell'ingrediente raro e cottura perfetta sul totale (cap 30)
+            totalScore = Math.max(3, Math.min(30, totalScore + Math.max(0, nextBonus) + (isFishUsed ? 1 : 0)));
+
+            const chef = COOK_CHEFS[cookState.chefId] || COOK_CHEFS.gyome;
+            const chefScore = chef.targetMin + Math.floor(Math.random() * (chef.targetMax - chef.targetMin + 1));
+            const playerWon = totalScore >= chefScore;
+
+            let rewardText = "";
+            if (playerWon && character) {
+                if (typeof playTriadSfx === "function") playTriadSfx("win");
+                const isAsmo = chef.id === "asmorano";
+                const gAdd = isAsmo ? 110 : 55;
+                const fAdd = isAsmo ? 3 : 2;
+                const tAdd = isAsmo ? 1 : 0;
+
+                const currentList = party.length > 0 ? party.slice() : [character];
+                let masterChefBonus = "";
+                const rewardedParty = currentList.map(h => {
+                    if (h.status === "dead") return h;
+                    let nh = Object.assign({}, h);
+                    const max = getFinalStats(nh).maxHP;
+                    nh.currentHP = Math.min(max, nh.currentHP + 15);
+                    if (nh.id === character.id) {
+                        nh.gold = (nh.gold || 0) + gAdd;
+                        nh.food = (nh.food || 0) + fAdd;
+                        nh.treasures = (nh.treasures || 0) + tAdd;
+                        if (isAsmo && totalScore >= 25 && nh.honorTitle !== "Mastro Chef del Multiverso") {
+                            nh.honorTitle = "Mastro Chef del Multiverso";
+                            const curCon = (nh.baseStats && nh.baseStats.con) ? nh.baseStats.con : 18;
+                            nh.baseStats = Object.assign({}, nh.baseStats, { con: curCon + 1 });
+                            masterChefBonus = " 👑 TITOLO A4 SBLOCCATO: «Mastro Chef del Multiverso» (+1 COS permanente)!";
+                        }
+                    }
+                    return nh;
+                });
+                savePartyState(rewardedParty);
+                setGiantGrowthActive(true);
+                rewardText = `🏆 HAI BATTUTO ${chef.name.toUpperCase()}! Ottieni +${gAdd} 🪙, +${fAdd} 🍖${tAdd ? ", +1 💎" : ""}, +15 PV a tutti e Buff Banchetto (+6 D20 / +8 Danni sul prossimo colpo)!${masterChefBonus}`;
+                setEventBanner("👨‍🍳🏆 GARA DI CUCINA VINTA! " + rewardText);
+            } else {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                rewardText = `🍽️ ${chef.name} vince ai punti (${chefScore} a ${totalScore}). Prova a pescare un ingrediente raro e rispetta i gusti dei giudici!`;
+            }
+
+            setCookState(Object.assign({}, cookState, {
+                phase: "verdict",
+                fireBonus: nextBonus,
+                fireNotes: nextNotes,
+                verdict: {
+                    dishName: chosenBase.name + (spiceObj.id !== "NONE" ? " (" + spiceObj.id + ")" : ""),
+                    judgeScores: judgeScores,
+                    totalScore: totalScore,
+                    chefScore: chefScore,
+                    playerWon: playerWon,
+                    rewardText: rewardText
+                }
+            }));
+        };
+
+        useEffect(() => {
+            return () => {
+                clearFishingTimers();
+                clearCookingTimer();
+            };
+        }, []);
         const [tokenArtUrl, setTokenArtUrl] = useState("");
         const [summonedCommanderBannerArt, setSummonedCommanderBannerArt] = useState(null);
 
@@ -13619,6 +14060,8 @@
                     setSagasUsedByZone({});
                     localStorage.removeItem('rpg_power9');
                     setUnlockedPower9([]);
+                    localStorage.removeItem('rpg_fish_bag');
+                    setFishBag([]);
                     setParty([]);
                     setCharacter(null);
                     setCombatState(null);
@@ -13941,6 +14384,8 @@
                             setSagasUsedByZone({});
                             localStorage.removeItem('rpg_power9');
                             setUnlockedPower9([]);
+                            localStorage.removeItem('rpg_fish_bag');
+                            setFishBag([]);
                             localStorage.removeItem('rpg_world_clock');
                             localStorage.removeItem('rpg_pvp_full_party_backup');
                             setParty([]);
@@ -14261,31 +14706,27 @@
                         document.body
                     )}
 
-                    {/* 4. LIBRO DELLE POWER NINE (ALBUM 3x3 A CARTA INTERA SCRYFALL + 3 RETRO RANDOM) */}
+                    {/* 4. LIBRO DELLE POWER NINE — TUTTO SCHERMO CON ZOOM CARTA INTERA */}
                     {showPower9Modal && ReactDOM.createPortal(
-                        <div
-                            onClick={() => { setShowPower9Modal(false); setZoomedPower9Card(null); }}
-                            className="fixed inset-0 w-screen h-[100dvh] z-[10018] bg-black/88 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
-                        >
-                            <div
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-full max-w-xl max-h-[88dvh] overflow-y-auto bg-gradient-to-b from-[#1e120a] via-gray-950 to-[#140b06] border-4 border-amber-500 rounded-2xl p-4 shadow-[0_0_50px_rgba(245,158,11,0.5)] space-y-3"
-                            >
-                                <div className="flex justify-between items-center border-b border-amber-700/60 pb-2">
-                                    <div>
-                                        <h3 className="font-rpg-title text-amber-300 font-black text-base uppercase tracking-wider">
-                                            📖 Libro delle Power Nine ({unlockedPower9.length}/9)
-                                        </h3>
-                                        <p className="text-[11px] text-amber-100/80">
-                                            Bonus Passivo: {unlockedPower9.length >= 9 ? "👑 +4 a tutte le Stat!" : (unlockedPower9.length >= 6 ? "✨ +2 a tutte le Stat!" : (unlockedPower9.length >= 3 ? "🔮 +1 a tutte le Stat!" : "Raccogli 3/6/9 carte per bonus permanenti!"))}
-                                        </p>
-                                    </div>
-                                    <button onClick={() => setShowPower9Modal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">
-                                        Chiudi ✖
-                                    </button>
+                        <div className="fixed inset-0 w-screen h-[100dvh] z-[10018] bg-gradient-to-b from-[#1e120a] via-gray-950 to-black flex flex-col overflow-hidden animate-fade">
+                            {/* BARRA SUPERIORE FISSA */}
+                            <div className="shrink-0 flex justify-between items-center px-3 py-2.5 bg-black/85 border-b border-amber-700/70">
+                                <div className="min-w-0 pr-2">
+                                    <h3 className="font-rpg-title text-amber-300 font-black text-xs sm:text-base uppercase tracking-wider truncate">
+                                        📖 Libro delle Power Nine ({unlockedPower9.length}/9)
+                                    </h3>
+                                    <p className="text-[10px] text-amber-100/85 truncate">
+                                        {unlockedPower9.length >= 9 ? "👑 Bonus Attivo: +4 a tutte le Stat!" : (unlockedPower9.length >= 6 ? "✨ Bonus Attivo: +2 a tutte le Stat!" : (unlockedPower9.length >= 3 ? "🔮 Bonus Attivo: +1 a tutte le Stat!" : "Raccogli 3 / 6 / 9 carte per bonus permanenti!"))}
+                                    </p>
                                 </div>
+                                <button onClick={() => { setShowPower9Modal(false); setZoomedPower9Card(null); }} className="bg-red-900 hover:bg-red-700 text-white text-xs font-black px-3 py-1 rounded-lg border border-red-400/60 shrink-0">
+                                    Esci ✖
+                                </button>
+                            </div>
 
-                                <div className="grid grid-cols-3 gap-2.5">
+                            {/* ALBUM 3x3 A TUTTO SCHERMO */}
+                            <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col justify-center max-w-xl w-full mx-auto">
+                                <div className="grid grid-cols-3 gap-2.5 sm:gap-3 my-auto">
                                     {POWER_9_DB.map(card => {
                                         const owned = unlockedPower9.indexOf(card.id) !== -1;
                                         const backImgSrc = getDeterministicCardBack(card.id);
@@ -14295,8 +14736,8 @@
                                                 onClick={() => setZoomedPower9Card(Object.assign({}, card, { owned: owned }))}
                                                 className={`relative rounded-xl overflow-hidden border-2 cursor-pointer transition-transform active:scale-95 aspect-[63/88] ${
                                                     owned
-                                                        ? "border-amber-300 shadow-[0_0_18px_rgba(251,191,36,0.65)] hover:scale-105"
-                                                        : "border-amber-900/70 bg-black hover:border-amber-500"
+                                                        ? "border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.75)] hover:scale-[1.03]"
+                                                        : "border-amber-900/80 bg-black hover:border-amber-500"
                                                 }`}
                                             >
                                                 {owned ? (
@@ -14307,12 +14748,12 @@
                                                             src={backImgSrc}
                                                             alt="Carta Bloccata"
                                                             onError={(e) => { e.target.style.display = "none"; }}
-                                                            className="w-full h-full object-cover opacity-70"
+                                                            className="w-full h-full object-cover opacity-75"
                                                         />
-                                                        <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center p-2 text-center">
-                                                            <span className="text-xl mb-0.5 drop-shadow">🔒</span>
-                                                            <span className="text-[10px] font-black text-amber-300 leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">{card.name}</span>
-                                                            <span className="text-[8px] text-amber-100/80 mt-0.5">Tocca per indizio</span>
+                                                        <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center p-1.5 text-center">
+                                                            <span className="text-2xl mb-0.5 drop-shadow">🔒</span>
+                                                            <span className="text-[10px] sm:text-xs font-black text-amber-300 leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">{card.name}</span>
+                                                            <span className="text-[8px] text-amber-100/85 mt-1">Tocca per indizio</span>
                                                         </div>
                                                     </div>
                                                 )}
@@ -14320,124 +14761,145 @@
                                         );
                                     })}
                                 </div>
+                            </div>
 
-                                {zoomedPower9Card && (
-                                    <div className="bg-black/85 border-2 border-amber-400 rounded-xl p-3 space-y-2 animate-fade">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="text-amber-300 font-black text-sm">{zoomedPower9Card.name}</h4>
-                                            <button onClick={() => setZoomedPower9Card(null)} className="text-xs text-gray-400">Chiudi</button>
+                            {/* BARRA PROGRESSO IN BASSO */}
+                            <div className="shrink-0 px-3 py-2 bg-black/85 border-t border-amber-800/60 text-center">
+                                <p className="text-[10px] text-amber-200/90 font-bold">
+                                    💡 Tocca qualsiasi slot dell'album per ingrandire la carta intera o leggere l'indizio di caccia!
+                                </p>
+                            </div>
+
+                            {/* OVERLAY ZOOM CARTA INTERA / INDIZIO */}
+                            {zoomedPower9Card && (
+                                <div
+                                    onClick={() => setZoomedPower9Card(null)}
+                                    className="fixed inset-0 z-[10025] bg-black/92 backdrop-blur-sm flex items-center justify-center p-4 animate-fade"
+                                >
+                                    <div
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-full max-w-sm bg-gradient-to-b from-[#23140b] to-black border-2 border-amber-400 rounded-2xl p-4 shadow-[0_0_45px_rgba(251,191,36,0.55)] space-y-3 text-center"
+                                    >
+                                        <div className="flex justify-between items-center border-b border-amber-800/60 pb-2">
+                                            <h4 className="font-rpg-title text-amber-300 font-black text-base">{zoomedPower9Card.name}</h4>
+                                            <button onClick={() => setZoomedPower9Card(null)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                                Chiudi ✖
+                                            </button>
                                         </div>
+
                                         {zoomedPower9Card.owned ? (
-                                            <div className="flex flex-col sm:flex-row items-center gap-3">
-                                                <img src={zoomedPower9Card.img} alt={zoomedPower9Card.name} className="w-40 rounded-lg border border-amber-300 shadow-2xl" />
-                                                <p className="text-xs text-emerald-300 font-bold">✅ SBLOCCATA! {zoomedPower9Card.powerText}</p>
+                                            <div className="space-y-3">
+                                                <img
+                                                    src={zoomedPower9Card.img}
+                                                    alt={zoomedPower9Card.name}
+                                                    className="w-full max-w-[270px] mx-auto rounded-xl border-2 border-amber-300 shadow-[0_0_30px_rgba(251,191,36,0.5)]"
+                                                />
+                                                <p className="text-xs text-emerald-300 font-black">✅ SBLOCCATA! {zoomedPower9Card.powerText}</p>
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-amber-100 italic">
-                                                🕵️ <b>Indizio:</b> «{zoomedPower9Card.clue}»
-                                            </p>
+                                            <div className="space-y-3 py-2">
+                                                <div className="w-36 aspect-[63/88] mx-auto rounded-xl overflow-hidden border-2 border-amber-700/80 shadow-xl relative">
+                                                    <img
+                                                        src={getDeterministicCardBack(zoomedPower9Card.id)}
+                                                        alt="Retro Carta"
+                                                        onError={(e) => { e.target.style.display = "none"; }}
+                                                        className="w-full h-full object-cover opacity-80"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/45 flex items-center justify-center text-4xl">🔒</div>
+                                                </div>
+                                                <p className="text-xs sm:text-sm text-amber-100 italic bg-black/70 border border-amber-700/60 rounded-xl p-3">
+                                                    🕵️ <b>Indizio di Ricerca:</b><br />«{zoomedPower9Card.clue}»
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>,
                         document.body
                     )}
-
-                    {/* 5. MINIGIOCO TRIADE PLANARE (3 AVVERSARI + bg_tavolo.png + 3 RETRO RANDOM + EFFETTI 3D!) */}
+                  
+                    {/* 5. MINIGIOCO TRIADE PLANARE — A TUTTO SCHERMO CON ZOOM 3x3 SU bg_tavolo.png */}
                     {showCardGameModal && ReactDOM.createPortal(
-                        <div
-                            onClick={() => setShowCardGameModal(false)}
-                            className="fixed inset-0 w-screen h-[100dvh] z-[10018] bg-black/90 backdrop-blur-sm flex items-center justify-center p-2.5 animate-fade"
-                        >
-                            <div
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-full max-w-2xl max-h-[92dvh] overflow-y-auto bg-gradient-to-b from-[#1a1009] via-gray-950 to-black border-4 border-amber-600 rounded-2xl p-3.5 shadow-[0_0_55px_rgba(217,119,6,0.5)] space-y-3"
-                            >
-                                <div className="flex justify-between items-center border-b border-amber-800/70 pb-2">
-                                    <h3 className="font-rpg-title text-amber-300 font-black text-sm sm:text-base uppercase tracking-wider">
-                                        🃏 Triade Planare — Taverna di Dominaria
-                                    </h3>
-                                    <div className="flex items-center gap-1.5">
-                                        {triadState && (
-                                            <button onClick={() => { setTriadState(null); setTriadOpponent(null); }} className="bg-amber-700 hover:bg-amber-600 text-white text-[11px] font-black px-2.5 py-1 rounded-lg">
-                                                ⬅ Avversari
-                                            </button>
-                                        )}
-                                        <button onClick={() => setShowCardGameModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
-                                            Chiudi ✖
+                        <div className="fixed inset-0 w-screen h-[100dvh] z-[10018] bg-gradient-to-b from-[#1a1009] via-gray-950 to-black flex flex-col overflow-hidden animate-fade">
+                            {/* BARRA SUPERIORE COMPATTA */}
+                            <div className="shrink-0 flex justify-between items-center px-3 py-2 bg-black/85 border-b border-amber-700/70">
+                                <h3 className="font-rpg-title text-amber-300 font-black text-xs sm:text-base uppercase tracking-wider truncate">
+                                    🃏 Triade Planare
+                                </h3>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    {triadState && (
+                                        <button onClick={() => { setTriadState(null); setTriadOpponent(null); }} className="bg-amber-700 hover:bg-amber-600 text-white text-[11px] font-black px-2.5 py-1 rounded-lg">
+                                            ⬅ Avversari
                                         </button>
+                                    )}
+                                    <button onClick={() => setShowCardGameModal(false)} className="bg-red-900 hover:bg-red-700 text-white text-xs font-black px-2.5 py-1 rounded-lg border border-red-400/60">
+                                        Esci ✖
+                                    </button>
+                                </div>
+                            </div>
+
+                            {!triadState ? (
+                                /* SCHERMATA SCELTA AVVERSARIO A TUTTO SCHERMO */
+                                <div className="flex-1 overflow-y-auto p-3 space-y-3 max-w-2xl w-full mx-auto">
+                                    <p className="text-xs text-amber-100/90 text-center">
+                                        Tocca il ritratto dell'avversario che vuoi sfidare! Il tuo mazzo pesca automaticamente le creature più forti dal tuo <b>Bestiario</b> ({getUnlockedBestiaryKeys().length} sbloccate).
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
+                                        {["oste", "cavaliere", "arcimago"].map(oKey => {
+                                            const opp = TRIAD_OPPONENTS[oKey];
+                                            return (
+                                                <div
+                                                    key={oKey}
+                                                    onClick={() => startTriadMatch(oKey)}
+                                                    className="bg-gray-900 border-2 border-amber-500/70 hover:border-amber-300 rounded-2xl overflow-hidden cursor-pointer shadow-xl transition-transform hover:scale-[1.02] active:scale-95 flex flex-col justify-between"
+                                                >
+                                                    <div className="relative w-full aspect-[3/4] bg-black overflow-hidden">
+                                                        <img
+                                                            src={opp.img}
+                                                            alt={opp.name}
+                                                            onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
+                                                            className="w-full h-full object-cover object-top"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
+                                                        <span className={`absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-full shadow ${opp.diffColor}`}>
+                                                            {opp.diffLabel}
+                                                        </span>
+                                                        <p className="absolute bottom-2 left-2 right-2 text-white font-rpg-title font-black text-sm leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                                                            {opp.name}
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-2.5 space-y-1 text-center">
+                                                        <p className="text-[10px] text-gray-300 italic">{opp.quote}</p>
+                                                        <p className="text-[10px] font-black text-amber-300 pt-1 border-t border-gray-800">
+                                                            🏆 {opp.rewardDesc}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-
-                                {!triadState ? (
-                                    <div className="space-y-3">
-                                        <p className="text-xs text-amber-100/90 text-center">
-                                            Tocca il ritratto dell'avversario che vuoi sfidare! Il tuo mazzo pesca automaticamente le creature più forti dal tuo <b>Bestiario</b> ({getUnlockedBestiaryKeys().length} sbloccate).
-                                        </p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                            {["oste", "cavaliere", "arcimago"].map(oKey => {
-                                                const opp = TRIAD_OPPONENTS[oKey];
-                                                return (
-                                                    <div
-                                                        key={oKey}
-                                                        onClick={() => startTriadMatch(oKey)}
-                                                        className="bg-gray-900 border-2 border-amber-500/70 hover:border-amber-300 rounded-2xl overflow-hidden cursor-pointer shadow-xl transition-transform hover:scale-[1.02] active:scale-95 flex flex-col justify-between"
-                                                    >
-                                                        <div className="relative w-full aspect-[3/4] bg-black overflow-hidden">
-                                                            <img
-                                                                src={opp.img}
-                                                                alt={opp.name}
-                                                                onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
-                                                                className="w-full h-full object-cover object-top"
-                                                            />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
-                                                            <span className={`absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-full shadow ${opp.diffColor}`}>
-                                                                {opp.diffLabel}
-                                                            </span>
-                                                            <p className="absolute bottom-2 left-2 right-2 text-white font-rpg-title font-black text-sm leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
-                                                                {opp.name}
-                                                            </p>
-                                                        </div>
-                                                        <div className="p-2.5 space-y-1 text-center">
-                                                            <p className="text-[10px] text-gray-300 italic">{opp.quote}</p>
-                                                            <p className="text-[10px] font-black text-amber-300 pt-1 border-t border-gray-800">
-                                                                🏆 {opp.rewardDesc}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2.5">
-                                        {/* BARRA PUNTEGGIO & MESSAGGIO */}
-                                        <div className="flex items-center justify-between gap-2 bg-gray-900/90 border border-amber-700/70 rounded-xl px-3 py-2">
-                                            <div className="flex items-center gap-2">
-                                                <span className="bg-blue-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow">
+                            ) : (
+                                /* TAVOLO DI GIOCO A TUTTO SCHERMO CON ZOOM 2x SULLA GRIGLIA 3x3 */
+                                <div className="flex-1 overflow-y-auto px-2 py-1.5 flex flex-col justify-between gap-1.5 max-w-xl w-full mx-auto">
+                                    {/* RIGA PUNTEGGIO + MANO COPERTA AVVERSARIO */}
+                                    <div className="shrink-0 space-y-1">
+                                        <div className="flex items-center justify-between gap-2 bg-gray-900/95 border border-amber-700/70 rounded-xl px-2.5 py-1.5">
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                <span className="bg-blue-600 text-white font-black text-xs px-2 py-0.5 rounded-md shadow">
                                                     TU: {triadState.board.filter(c => c && c.owner === "player").length}
                                                 </span>
-                                                <span className="text-amber-400 font-black text-xs">VS</span>
-                                                <span className="bg-red-700 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow">
+                                                <span className="text-amber-400 font-black text-[10px]">VS</span>
+                                                <span className="bg-red-700 text-white font-black text-xs px-2 py-0.5 rounded-md shadow">
                                                     {TRIAD_OPPONENTS[triadOpponent].name.split(",")[0]}: {triadState.board.filter(c => c && c.owner === "enemy").length}
                                                 </span>
                                             </div>
-                                            <span className="text-[11px] font-bold text-amber-200 text-right leading-tight">
-                                                {triadState.message}
-                                            </span>
-                                        </div>
-
-                                        {/* MANO COPERTA AVVERSARIO (CON I 3 RETRO RANDOM VISSUTI/NUOVI/ANTICHI!) */}
-                                        <div className="flex items-center justify-between bg-black/60 border border-red-900/60 rounded-xl px-2.5 py-1.5">
-                                            <span className="text-[10px] font-black uppercase text-red-300">
-                                                🟥 Mano Avversario:
-                                            </span>
-                                            <div className="flex items-center gap-1.5">
+                                            <div className="flex items-center gap-1">
                                                 {triadState.enemyHand.map(ec => (
                                                     <div
                                                         key={ec.uid}
-                                                        className={`w-8 h-11 rounded overflow-hidden border transition-all ${ec.played ? "opacity-15 grayscale border-gray-700" : "border-red-500/80 shadow-md"}`}
+                                                        className={`w-6 h-8 rounded overflow-hidden border transition-all ${ec.played ? "opacity-15 grayscale border-gray-700" : "border-red-500/80 shadow"}`}
                                                     >
                                                         <img
                                                             src={ec.backImg}
@@ -14449,104 +14911,111 @@
                                                 ))}
                                             </div>
                                         </div>
+                                        <p className="text-[11px] font-bold text-amber-200 text-center leading-tight px-1">
+                                            {triadState.message}
+                                        </p>
+                                    </div>
 
-                                        {/* PLANCIA bg_tavolo.png CON I 9 SLOT CALIBRATI + EFFETTI 3D */}
-                                        <div className={`relative w-full aspect-[1200/896] rounded-xl overflow-hidden border-2 border-amber-600/80 shadow-2xl ${triadFx.shaking ? "triad-shake" : ""}`}>
-                                            <img src="./bg_tavolo.png" alt="Tavolo Triade Planare" className="w-full h-full object-fill select-none" />
+                                    {/* PLANCIA bg_tavolo.png ZOOMATA SULLA GRIGLIA 3x3 (CARTE 2x PIÙ GRANDI!) */}
+                                    <div className="flex-1 flex items-center justify-center min-h-0 w-full">
+                                        <div
+                                            style={{ width: "min(100%, 49dvh)" }}
+                                            className={`relative aspect-[600/690] rounded-xl overflow-hidden border-2 border-amber-500/90 shadow-[0_0_30px_rgba(0,0,0,0.95)] ${triadFx.shaking ? "triad-shake" : ""}`}
+                                        >
+                                            <div style={{ position: "absolute", width: "200%", height: "129.87%", left: "-50%", top: "-14.94%" }}>
+                                                <img src="./bg_tavolo.png" alt="Tavolo Triade Planare" className="w-full h-full object-fill select-none" />
+
+                                                {TAVOLO_SLOTS.map((pos, idx) => {
+                                                    const card = triadState.board[idx];
+                                                    const canPlace = !card && triadState.turn === "player" && triadState.selectedIdx !== null && !triadState.finished;
+                                                    const isSlammed = triadFx.slammedIdx === idx;
+                                                    const isFlipped = card && triadFx.flippedIds.indexOf(card.uid) !== -1;
+
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            onClick={() => handleTriadSlotClick(idx)}
+                                                            style={{ left: pos.left, top: pos.top, width: pos.width, height: pos.height }}
+                                                            className={`absolute rounded-lg transition-all flex items-center justify-center ${
+                                                                canPlace ? "cursor-pointer ring-2 ring-amber-300/90 bg-amber-400/20 animate-pulse hover:bg-amber-400/35" : ""
+                                                            }`}
+                                                        >
+                                                            {isSlammed && (
+                                                                <div className={`absolute inset-0 rounded-lg border-4 pointer-events-none z-20 triad-ring ${card && card.owner === "player" ? "border-cyan-300" : "border-red-400"}`} />
+                                                            )}
+
+                                                            {card && (
+                                                                <div className={`relative w-full h-full rounded-lg overflow-hidden border-2 shadow-lg ${
+                                                                    card.owner === "player"
+                                                                        ? "border-cyan-300 bg-blue-950 shadow-[0_0_14px_rgba(56,189,248,0.9)]"
+                                                                        : "border-red-400 bg-red-950 shadow-[0_0_14px_rgba(248,113,113,0.9)]"
+                                                                } ${isSlammed ? "triad-slam" : ""} ${isFlipped ? "triad-flip" : ""}`}>
+                                                                    <img
+                                                                        src={getTriadCardArt(card.key)}
+                                                                        alt={card.name}
+                                                                        onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                                        className="w-full h-full object-cover object-center opacity-95"
+                                                                    />
+                                                                    <div className={`absolute inset-0 ${card.owner === "player" ? "bg-blue-600/20" : "bg-red-700/25"}`} />
+                                                                    <span className="absolute top-0.5 left-1/2 -translate-x-1/2 bg-black/90 text-amber-200 font-black text-xs sm:text-sm px-1.5 py-0.5 rounded leading-none border border-amber-500/70 shadow">{formatTriadNum(card.values.N)}</span>
+                                                                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 bg-black/90 text-amber-200 font-black text-xs sm:text-sm px-1.5 py-0.5 rounded leading-none border border-amber-500/70 shadow">{formatTriadNum(card.values.S)}</span>
+                                                                    <span className="absolute left-0.5 top-1/2 -translate-y-1/2 bg-black/90 text-amber-200 font-black text-xs sm:text-sm px-1.5 py-0.5 rounded leading-none border border-amber-500/70 shadow">{formatTriadNum(card.values.O)}</span>
+                                                                    <span className="absolute right-0.5 top-1/2 -translate-y-1/2 bg-black/90 text-amber-200 font-black text-xs sm:text-sm px-1.5 py-0.5 rounded leading-none border border-amber-500/70 shadow">{formatTriadNum(card.values.E)}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
 
                                             {triadFx.comboCount >= 2 && (
                                                 <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
-                                                    <span className="bg-gradient-to-r from-red-600 via-amber-400 to-red-600 text-black font-rpg-title font-black text-lg sm:text-2xl px-5 py-1.5 rounded-full border-2 border-white shadow-[0_0_30px_rgba(251,191,36,1)] animate-bounce">
+                                                    <span className="bg-gradient-to-r from-red-600 via-amber-400 to-red-600 text-black font-rpg-title font-black text-xl px-5 py-1.5 rounded-full border-2 border-white shadow-[0_0_30px_rgba(251,191,36,1)] animate-bounce">
                                                         🔥 COMBO ×{triadFx.comboCount}! 🔥
                                                     </span>
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
 
-                                            {TAVOLO_SLOTS.map((pos, idx) => {
-                                                const card = triadState.board[idx];
-                                                const canPlace = !card && triadState.turn === "player" && triadState.selectedIdx !== null && !triadState.finished;
-                                                const isSlammed = triadFx.slammedIdx === idx;
-                                                const isFlipped = card && triadFx.flippedIds.indexOf(card.uid) !== -1;
-
+                                    {/* LA TUA MANO IN BASSO (5 CARTE GRANDI & LEGGIBILI) */}
+                                    <div className="shrink-0 space-y-1.5 pb-1">
+                                        <div className="grid grid-cols-5 gap-1.5">
+                                            {triadState.playerHand.map((c, idx) => {
+                                                const isSel = triadState.selectedIdx === idx && !c.played;
                                                 return (
                                                     <div
-                                                        key={idx}
-                                                        onClick={() => handleTriadSlotClick(idx)}
-                                                        style={{ left: pos.left, top: pos.top, width: pos.width, height: pos.height }}
-                                                        className={`absolute rounded-md transition-all flex items-center justify-center ${
-                                                            canPlace ? "cursor-pointer ring-2 ring-amber-300/80 bg-amber-400/15 animate-pulse hover:bg-amber-400/30" : ""
+                                                        key={c.uid}
+                                                        onClick={() => !c.played && triadState.turn === "player" && setTriadState(Object.assign({}, triadState, { selectedIdx: idx }))}
+                                                        className={`relative rounded-lg overflow-hidden border-2 aspect-[3/4] transition-all ${
+                                                            c.played
+                                                                ? "opacity-25 grayscale border-gray-700 cursor-default"
+                                                                : (isSel
+                                                                    ? "border-amber-300 -translate-y-1.5 shadow-[0_0_16px_rgba(251,191,36,0.95)] cursor-pointer"
+                                                                    : "border-cyan-500/75 hover:border-amber-300 cursor-pointer")
                                                         }`}
                                                     >
-                                                        {isSlammed && (
-                                                            <div className={`absolute inset-0 rounded-md border-4 pointer-events-none z-20 triad-ring ${card && card.owner === "player" ? "border-cyan-300" : "border-red-400"}`} />
-                                                        )}
-
-                                                        {card && (
-                                                            <div className={`relative w-full h-full rounded-md overflow-hidden border-2 shadow-lg ${
-                                                                card.owner === "player"
-                                                                    ? "border-cyan-300 bg-blue-950 shadow-[0_0_12px_rgba(56,189,248,0.85)]"
-                                                                    : "border-red-400 bg-red-950 shadow-[0_0_12px_rgba(248,113,113,0.85)]"
-                                                            } ${isSlammed ? "triad-slam" : ""} ${isFlipped ? "triad-flip" : ""}`}>
-                                                                <img
-                                                                    src={getTriadCardArt(card.key)}
-                                                                    alt={card.name}
-                                                                    onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
-                                                                    className="w-full h-full object-cover object-center opacity-90"
-                                                                />
-                                                                <div className={`absolute inset-0 ${card.owner === "player" ? "bg-blue-600/25" : "bg-red-700/30"}`} />
-                                                                <span className="absolute top-0 left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.N)}</span>
-                                                                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.S)}</span>
-                                                                <span className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.O)}</span>
-                                                                <span className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/85 text-amber-200 font-black text-[10px] sm:text-xs px-1 rounded leading-none border border-amber-500/60">{formatTriadNum(card.values.E)}</span>
-                                                            </div>
-                                                        )}
+                                                        <img
+                                                            src={getTriadCardArt(c.key)}
+                                                            alt={c.name}
+                                                            onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-blue-900/15 to-black/30" />
+                                                        <span className="absolute top-0.5 left-1/2 -translate-x-1/2 bg-black/90 text-white font-black text-[11px] px-1 rounded leading-none">{formatTriadNum(c.values.N)}</span>
+                                                        <span className="absolute left-0.5 top-1/2 -translate-y-1/2 bg-black/90 text-white font-black text-[11px] px-1 rounded leading-none">{formatTriadNum(c.values.O)}</span>
+                                                        <span className="absolute right-0.5 top-1/2 -translate-y-1/2 bg-black/90 text-white font-black text-[11px] px-1 rounded leading-none">{formatTriadNum(c.values.E)}</span>
+                                                        <span className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-black/90 text-white font-black text-[11px] px-1 rounded leading-none">{formatTriadNum(c.values.S)}</span>
+                                                        <p className="absolute bottom-0.5 left-0.5 right-0.5 text-[8px] font-black text-amber-200 truncate text-center">
+                                                            {c.name}
+                                                        </p>
                                                     </div>
                                                 );
                                             })}
                                         </div>
 
-                                        {/* LA TUA MANO (5 CARTE SOTTO IL TAVOLO) */}
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-black uppercase text-cyan-300">
-                                                🟦 La tua Mano (Tocca una carta, poi tocca una casella illuminata sul tavolo):
-                                            </p>
-                                            <div className="grid grid-cols-5 gap-1.5">
-                                                {triadState.playerHand.map((c, idx) => {
-                                                    const isSel = triadState.selectedIdx === idx && !c.played;
-                                                    return (
-                                                        <div
-                                                            key={c.uid}
-                                                            onClick={() => !c.played && triadState.turn === "player" && setTriadState(Object.assign({}, triadState, { selectedIdx: idx }))}
-                                                            className={`relative rounded-lg overflow-hidden border-2 aspect-[3/4] transition-all ${
-                                                                c.played
-                                                                    ? "opacity-25 grayscale border-gray-700 cursor-default"
-                                                                    : (isSel
-                                                                        ? "border-amber-300 -translate-y-1.5 shadow-[0_0_16px_rgba(251,191,36,0.95)] cursor-pointer"
-                                                                        : "border-cyan-500/70 hover:border-amber-300 cursor-pointer")
-                                                            }`}
-                                                        >
-                                                            <img
-                                                                src={getTriadCardArt(c.key)}
-                                                                alt={c.name}
-                                                                onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-blue-900/15 to-black/30" />
-                                                            <span className="absolute top-0.5 left-1/2 -translate-x-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.N)}</span>
-                                                            <span className="absolute left-0.5 top-1/2 -translate-y-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.O)}</span>
-                                                            <span className="absolute right-0.5 top-1/2 -translate-y-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.E)}</span>
-                                                            <span className="absolute bottom-3.5 left-1/2 -translate-x-1/2 bg-black/85 text-white font-black text-[10px] px-1 rounded leading-none">{formatTriadNum(c.values.S)}</span>
-                                                            <p className="absolute bottom-0.5 left-0.5 right-0.5 text-[8px] font-black text-amber-200 truncate text-center">
-                                                                {c.name}
-                                                            </p>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-
                                         {triadState.rewardBanner && (
-                                            <div className="bg-emerald-950/90 border-2 border-emerald-400 rounded-xl p-2.5 text-center text-xs font-black text-emerald-200 animate-fade">
+                                            <div className="bg-emerald-950/95 border-2 border-emerald-400 rounded-xl p-2 text-center text-xs font-black text-emerald-200 animate-fade">
                                                 {triadState.rewardBanner}
                                             </div>
                                         )}
@@ -14562,79 +15031,77 @@
                                             </div>
                                         )}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>,
                         document.body
                     )}
-
-                  {/* 6. MINIGIOCO DADI DEI PLANESWALKER (STILE ORLOG) */}
+                  
+                  {/* 6. MINIGIOCO DADI DEI PLANESWALKER (STILE ORLOG — TUTTO SCHERMO) */}
                     {showOrlogModal && orlogState && ReactDOM.createPortal(
-                        <div
-                            onClick={() => setShowOrlogModal(false)}
-                            className="fixed inset-0 w-screen h-[100dvh] z-[10019] bg-black/90 backdrop-blur-sm flex items-center justify-center p-3 animate-fade"
-                        >
-                            <div
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-full max-w-lg max-h-[90dvh] overflow-y-auto bg-gradient-to-b from-[#1f120b] via-gray-950 to-black border-4 border-amber-500 rounded-2xl p-4 shadow-[0_0_50px_rgba(245,158,11,0.5)] space-y-3"
-                            >
-                                <div className="flex justify-between items-center border-b border-amber-800/70 pb-2">
-                                    <h3 className="font-rpg-title text-amber-300 font-black text-sm sm:text-base uppercase">
-                                        🎲 Dadi dei Planeswalker — Round {orlogState.round}
-                                    </h3>
-                                    <button onClick={() => setShowOrlogModal(false)} className="bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
-                                        Esci ✖
-                                    </button>
-                                </div>
+                        <div className="fixed inset-0 w-screen h-[100dvh] z-[10019] bg-gradient-to-b from-[#1f120b] via-gray-950 to-black flex flex-col overflow-hidden animate-fade">
+                            {/* BARRA SUPERIORE FISSA */}
+                            <div className="shrink-0 flex justify-between items-center px-3 py-2.5 bg-black/85 border-b border-amber-700/70">
+                                <h3 className="font-rpg-title text-amber-300 font-black text-xs sm:text-base uppercase tracking-wider">
+                                    🎲 Dadi dei Planeswalker — Round {orlogState.round}
+                                </h3>
+                                <button onClick={() => setShowOrlogModal(false)} className="bg-red-900 hover:bg-red-700 text-white text-xs font-black px-3 py-1 rounded-lg border border-red-400/60">
+                                    Esci ✖
+                                </button>
+                            </div>
 
+                            {/* CORPO CENTRALE ADATTIVO */}
+                            <div className="flex-1 overflow-y-auto px-3 py-2.5 flex flex-col justify-between gap-2.5 max-w-xl w-full mx-auto">
                                 {/* BARRA VITA E FAVORE */}
-                                <div className="grid grid-cols-2 gap-2 text-center">
-                                    <div className="bg-blue-950/70 border border-cyan-400 rounded-xl p-2">
-                                        <p className="text-[10px] font-black text-cyan-300 uppercase">Tu ({character.name})</p>
-                                        <p className="text-base font-black text-white">❤️ {orlogState.playerHP}/15 &nbsp; ✨ {orlogState.playerFavor}</p>
+                                <div className="grid grid-cols-2 gap-2 text-center shrink-0">
+                                    <div className="bg-blue-950/75 border-2 border-cyan-400 rounded-xl p-2.5 shadow-lg">
+                                        <p className="text-[10px] font-black text-cyan-300 uppercase truncate">Tu ({character.name})</p>
+                                        <p className="text-lg font-black text-white">❤️ {orlogState.playerHP}/15 &nbsp; ✨ {orlogState.playerFavor}</p>
                                     </div>
-                                    <div className="bg-red-950/70 border border-red-400 rounded-xl p-2">
+                                    <div className="bg-red-950/75 border-2 border-red-400 rounded-xl p-2.5 shadow-lg">
                                         <p className="text-[10px] font-black text-red-300 uppercase">Krark (Posta {orlogBet}🪙)</p>
-                                        <p className="text-base font-black text-white">❤️ {orlogState.enemyHP}/15 &nbsp; ✨ {orlogState.enemyFavor}</p>
+                                        <p className="text-lg font-black text-white">❤️ {orlogState.enemyHP}/15 &nbsp; ✨ {orlogState.enemyFavor}</p>
                                     </div>
                                 </div>
 
                                 {/* DADI DI KRARK */}
-                                <div className="bg-black/60 border border-red-900/70 rounded-xl p-2.5 space-y-1.5">
-                                    <p className="text-[10px] font-black uppercase text-red-300">🟥 Dadi di Krark:</p>
-                                    <div className="grid grid-cols-5 gap-1.5">
+                                <div className="bg-black/65 border border-red-900/80 rounded-2xl p-3 space-y-2">
+                                    <p className="text-[11px] font-black uppercase text-red-300">🟥 Dadi di Krark:</p>
+                                    <div className="grid grid-cols-5 gap-2">
                                         {orlogState.enemyDice.map(d => (
-                                            <div key={d.idx} className={`rounded-lg p-1.5 text-center border ${d.face.gold ? "border-amber-400 bg-red-950/80" : "border-red-800 bg-gray-900"}`}>
-                                                <div className="text-lg leading-none">{d.face.icon}</div>
-                                                <div className="text-[9px] font-bold text-gray-200 mt-0.5 truncate">{d.face.label}</div>
-                                                {d.face.gold && <div className="text-[8px] text-amber-300 font-black">+1✨</div>}
+                                            <div key={d.idx} className={`rounded-xl py-2.5 px-1 text-center border-2 ${d.face.gold ? "border-amber-400 bg-red-950/85 shadow-[0_0_10px_rgba(251,191,36,0.35)]" : "border-red-800 bg-gray-900"}`}>
+                                                <div className="text-2xl leading-none">{d.face.icon}</div>
+                                                <div className="text-[10px] font-bold text-gray-100 mt-1 truncate">{d.face.label}</div>
+                                                {d.face.gold && <div className="text-[9px] text-amber-300 font-black mt-0.5">+1✨</div>}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* I TUOI 5 DADI (TOCCA PER BLOCCARE / SBLOCCARE) */}
-                                <div className="bg-black/60 border border-cyan-800/70 rounded-xl p-2.5 space-y-1.5">
+                                {/* I TUOI 5 DADI GRANDI E FACILI DA TOCCARE */}
+                                <div className="bg-black/65 border-2 border-cyan-700/80 rounded-2xl p-3 space-y-2">
                                     <div className="flex justify-between items-center">
-                                        <p className="text-[10px] font-black uppercase text-cyan-300">🟦 I tuoi Dadi (Tocca per 🔒 Bloccare):</p>
-                                        <span className="text-[10px] font-black text-amber-300">Rilanci: {orlogState.rollsLeft}</span>
+                                        <p className="text-[11px] font-black uppercase text-cyan-300">🟦 I tuoi Dadi (Tocca per 🔒):</p>
+                                        <span className="bg-amber-500/20 border border-amber-400/60 text-amber-200 text-[11px] font-black px-2 py-0.5 rounded-full">
+                                            Rilanci: {orlogState.rollsLeft}
+                                        </span>
                                     </div>
-                                    <div className="grid grid-cols-5 gap-1.5">
+                                    <div className="grid grid-cols-5 gap-2">
                                         {orlogState.playerDice.map(d => (
                                             <button
                                                 key={d.idx}
                                                 disabled={orlogState.finished}
                                                 onClick={() => toggleOrlogDieLock(d.idx)}
-                                                className={`rounded-lg p-1.5 text-center border-2 transition-all active:scale-95 ${
+                                                className={`rounded-xl py-2.5 px-1 text-center border-2 transition-all active:scale-95 ${
                                                     d.locked
-                                                        ? "border-amber-300 bg-blue-900 shadow-[0_0_12px_rgba(251,191,36,0.8)] -translate-y-1"
-                                                        : (d.face.gold ? "border-amber-500/60 bg-gray-900" : "border-cyan-700/60 bg-gray-900")
+                                                        ? "border-amber-300 bg-blue-900 shadow-[0_0_15px_rgba(251,191,36,0.85)] -translate-y-1"
+                                                        : (d.face.gold ? "border-amber-500/70 bg-gray-900" : "border-cyan-700/70 bg-gray-900")
                                                 }`}
                                             >
-                                                <div className="text-[9px] font-black text-amber-300">{d.locked ? "🔒" : "🎲"}</div>
-                                                <div className="text-lg leading-none">{d.face.icon}</div>
-                                                <div className="text-[9px] font-bold text-white mt-0.5 truncate">{d.face.label}</div>
-                                                {d.face.gold && <div className="text-[8px] text-amber-300 font-black">+1✨</div>}
+                                                <div className="text-[10px] font-black text-amber-300 mb-0.5">{d.locked ? "🔒" : "🎲"}</div>
+                                                <div className="text-2xl leading-none">{d.face.icon}</div>
+                                                <div className="text-[10px] font-bold text-white mt-1 truncate">{d.face.label}</div>
+                                                {d.face.gold && <div className="text-[9px] text-amber-300 font-black mt-0.5">+1✨</div>}
                                             </button>
                                         ))}
                                     </div>
@@ -14643,8 +15110,8 @@
                                 {/* FAVORI DEI PLANESWALKER */}
                                 {!orlogState.finished && (
                                     <div className="space-y-1.5">
-                                        <p className="text-[10px] font-black uppercase text-amber-300">✨ Favore Planeswalker opzionale (si attiva alla Risoluzione):</p>
-                                        <div className="grid grid-cols-3 gap-1.5">
+                                        <p className="text-[10px] font-black uppercase text-amber-300">✨ Favore Planeswalker opzionale:</p>
+                                        <div className="grid grid-cols-3 gap-2">
                                             {ORLOG_FAVORS.map(f => {
                                                 const isSel = orlogState.selectedFavorId === f.id;
                                                 const canAfford = orlogState.playerFavor >= f.cost;
@@ -14653,14 +15120,14 @@
                                                         key={f.id}
                                                         disabled={!canAfford}
                                                         onClick={() => setOrlogState(Object.assign({}, orlogState, { selectedFavorId: isSel ? null : f.id }))}
-                                                        className={`p-2 rounded-xl border text-left transition-all ${
+                                                        className={`p-2.5 rounded-xl border-2 text-left transition-all active:scale-95 ${
                                                             isSel
-                                                                ? "bg-amber-500 text-black border-white font-black"
-                                                                : (canAfford ? "bg-gray-900 hover:bg-gray-800 border-amber-500/60 text-white" : "bg-gray-950 border-gray-800 text-gray-500 opacity-50")
+                                                                ? "bg-amber-500 text-black border-white font-black shadow-lg"
+                                                                : (canAfford ? "bg-gray-900 hover:bg-gray-800 border-amber-500/70 text-white" : "bg-gray-950 border-gray-800 text-gray-500 opacity-50")
                                                         }`}
                                                     >
                                                         <p className="text-[10px] font-black leading-tight">{f.name} ({f.cost}✨)</p>
-                                                        <p className="text-[9px] opacity-90 mt-0.5 leading-tight">{f.desc}</p>
+                                                        <p className="text-[9px] opacity-90 mt-1 leading-tight">{f.desc}</p>
                                                     </button>
                                                 );
                                             })}
@@ -14668,39 +15135,41 @@
                                     </div>
                                 )}
 
-                                {/* COMANDI LANCIO / RISOLVI */}
-                                {!orlogState.finished ? (
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button
-                                            disabled={orlogState.rollsLeft <= 0}
-                                            onClick={rerollOrlogUnlockedDice}
-                                            className="bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-black py-2.5 rounded-xl text-xs uppercase shadow"
-                                        >
-                                            🔄 Rilancia Sbloccati ({orlogState.rollsLeft})
-                                        </button>
-                                        <button
-                                            onClick={resolveOrlogRound}
-                                            className="bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow"
-                                        >
-                                            ⚔️ Risolvi Round!
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <div className="bg-emerald-950/90 border-2 border-emerald-400 rounded-xl p-2.5 text-center text-xs font-black text-emerald-200">
-                                            {orlogState.rewardMsg}
-                                        </div>
-                                        <button onClick={() => startOrlogGame(orlogBet)} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow">
-                                            🔄 Gioca un'altra Partita ({orlogBet} 🪙)
-                                        </button>
-                                    </div>
-                                )}
-
                                 {/* CRONOLOGIA ROUND */}
-                                <div className="bg-black/70 border border-gray-800 rounded-xl p-2 space-y-1 max-h-28 overflow-y-auto">
+                                <div className="bg-black/75 border border-gray-800 rounded-xl p-2.5 space-y-1 max-h-24 overflow-y-auto">
                                     {orlogState.log.map((line, idx) => (
-                                        <p key={idx} className="text-[10px] text-gray-300 leading-snug">{line}</p>
+                                        <p key={idx} className="text-[11px] text-gray-200 leading-snug">{line}</p>
                                     ))}
+                                </div>
+
+                                {/* COMANDI FISSI IN BASSO */}
+                                <div className="shrink-0 pb-1">
+                                    {!orlogState.finished ? (
+                                        <div className="grid grid-cols-2 gap-2.5">
+                                            <button
+                                                disabled={orlogState.rollsLeft <= 0}
+                                                onClick={rerollOrlogUnlockedDice}
+                                                className="bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-black py-3.5 rounded-xl text-xs sm:text-sm uppercase shadow-lg active:scale-95"
+                                            >
+                                                🔄 Rilancia ({orlogState.rollsLeft})
+                                            </button>
+                                            <button
+                                                onClick={resolveOrlogRound}
+                                                className="bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 rounded-xl text-xs sm:text-sm uppercase shadow-lg border-2 border-amber-200 active:scale-95"
+                                            >
+                                                ⚔️ Risolvi Round!
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <div className="bg-emerald-950/95 border-2 border-emerald-400 rounded-xl p-2.5 text-center text-xs font-black text-emerald-200">
+                                                {orlogState.rewardMsg}
+                                            </div>
+                                            <button onClick={() => startOrlogGame(orlogBet)} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 rounded-xl text-sm uppercase shadow-lg active:scale-95">
+                                                🔄 Gioca un'altra Partita ({orlogBet} 🪙)
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>,
@@ -14839,6 +15308,376 @@
                         </div>,
                         document.body
                     )}
+
+                  {/* 8. MINIGIOCO PESCA PLANARE — TUTTO SCHERMO MOBILE-FRIENDLY */}
+                    {showFishingModal && ReactDOM.createPortal(
+                        <div className="fixed inset-0 w-screen h-[100dvh] z-[10019] bg-gradient-to-b from-cyan-950 via-slate-950 to-black flex flex-col overflow-hidden animate-fade">
+                            {/* BARRA SUPERIORE FISSA */}
+                            <div className="shrink-0 flex justify-between items-center px-3 py-2.5 bg-black/85 border-b border-cyan-700/70">
+                                <div className="min-w-0 pr-2">
+                                    <h3 className="font-rpg-title text-cyan-300 font-black text-xs sm:text-base uppercase truncate">
+                                        🎣 Pesca Planare — {getZoneVisualConfig(character.currentNode).regionName.split("—")[0]}
+                                    </h3>
+                                    <p className="text-[10px] text-cyan-100/80">
+                                        Bisaccia: {fishBag.length}/8 &nbsp;•&nbsp; Cibo: {character.food || 0}🍖 &nbsp;•&nbsp; Oro: {character.gold || 0}🪙
+                                    </p>
+                                </div>
+                                <button onClick={closeFishingModalClean} className="bg-red-900 hover:bg-red-700 text-white text-xs font-black px-3 py-1 rounded-lg border border-red-400/60 shrink-0">
+                                    Esci ✖
+                                </button>
+                            </div>
+
+                            {/* CORPO PRINCIPALE A TUTTO SCHERMO */}
+                            <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col justify-between max-w-xl w-full mx-auto">
+                                {/* FASE 1: SCELTA ESCA */}
+                                {fishingPhase === "idle" && (
+                                    <div className="space-y-3 my-auto">
+                                        <div className="text-center space-y-1">
+                                            <div className="text-5xl">🎣🌊</div>
+                                            <p className="text-xs sm:text-sm text-gray-200">
+                                                Scegli l'esca e lancia la lenza! I pesci rari possono essere conservati per vincere la <b>Gara di Cucina</b>!
+                                            </p>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-2.5">
+                                            <button onClick={() => startFishingCast("worm")} className="bg-gray-900/95 hover:bg-cyan-950 border-2 border-cyan-500/70 p-4 rounded-2xl text-left active:scale-95 shadow-lg">
+                                                <p className="text-cyan-300 font-black text-sm">🪱 Verme Comune (Gratis)</p>
+                                                <p className="text-gray-300 text-xs mt-0.5">Prede comuni e qualche forziere sommerso. Barra rilassata.</p>
+                                            </button>
+                                            <button onClick={() => startFishingCast("food")} className="bg-gray-900/95 hover:bg-emerald-950 border-2 border-emerald-500/70 p-4 rounded-2xl text-left active:scale-95 shadow-lg">
+                                                <p className="text-emerald-300 font-black text-sm">🍖 Briciola di Cibo (-1 🍖)</p>
+                                                <p className="text-gray-300 text-xs mt-0.5">Attira pesci pregiati e forzieri con alta resa in Oro o Cibo.</p>
+                                            </button>
+                                            <button onClick={() => startFishingCast("mana")} className="bg-gray-900/95 hover:bg-indigo-950 border-2 border-blue-400 p-4 rounded-2xl text-left active:scale-95 shadow-lg">
+                                                <p className="text-blue-300 font-black text-sm">💧 Esca di Mana (-1 💧 o Mana Principale)</p>
+                                                <p className="text-gray-300 text-xs mt-0.5">Garantisce solo prede Rare/Epiche o Tesori! Barra più rapida.</p>
+                                            </button>
+                                        </div>
+                                        {fishBag.length > 0 && (
+                                            <div className="bg-black/65 border border-cyan-800 rounded-xl p-2.5 space-y-1.5">
+                                                <p className="text-[10px] font-black text-amber-300 uppercase">🧺 Pesci in Bisaccia pronti per la Cucina:</p>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {fishBag.map(f => (
+                                                        <span key={f.uid} className="text-[11px] bg-cyan-950 text-cyan-200 border border-cyan-600/60 px-2.5 py-0.5 rounded-full font-bold">
+                                                            🐟 {f.name} (+{f.cookBonus})
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* FASE 2 & 3: SPECCHIO D'ACQUA GRANDE + BARRA DI TENSIONE ALTA */}
+                                {(fishingPhase === "waiting" || fishingPhase === "bite" || fishingPhase === "reeling") && (
+                                    <div className="flex-1 flex flex-col justify-between gap-4 py-2 text-center">
+                                        <div className={`flex-1 flex flex-col items-center justify-center rounded-3xl p-6 border-4 transition-all ${
+                                            fishingPhase === "bite"
+                                                ? "bg-amber-950/90 border-amber-300 shadow-[0_0_40px_rgba(251,191,36,0.95)] animate-pulse"
+                                                : "bg-gradient-to-b from-cyan-900/70 via-blue-950/90 to-slate-950 border-cyan-500/70"
+                                        }`}>
+                                            <div className={`text-6xl sm:text-7xl mb-4 ${fishingPhase === "waiting" ? "animate-bounce" : ""}`}>
+                                                {fishingPhase === "waiting" ? "〰️🔴〰️" : (fishingPhase === "bite" ? "💦❗🐟❗💦" : "🎣🌊")}
+                                            </div>
+                                            <p className="text-base sm:text-lg font-black text-white px-2">
+                                                {fishingPhase === "waiting" && "Attendi... osserva il galleggiante sull'acqua..."}
+                                                {fishingPhase === "bite" && "ABBOCCA! TOCCA SUBITO PER FERRARE!"}
+                                                {fishingPhase === "reeling" && "CENTRA LA ZONA VERDE O ORO PER TIRARE SU LA PREDA!"}
+                                            </p>
+                                        </div>
+
+                                        {fishingPhase === "reeling" && (
+                                            <div className="space-y-2 shrink-0">
+                                                <div className="relative w-full h-12 rounded-full bg-red-950 border-2 border-gray-400 overflow-hidden shadow-inner">
+                                                    <div style={{ left: "28%", width: "44%" }} className="absolute top-0 bottom-0 bg-emerald-600/90" />
+                                                    <div style={{ left: "43%", width: "14%" }} className="absolute top-0 bottom-0 bg-amber-400 shadow-[0_0_16px_rgba(251,191,36,1)]" />
+                                                    <div style={{ left: fishingPos + "%" }} className="absolute top-0 bottom-0 w-3 -ml-1.5 bg-white shadow-[0_0_14px_#fff] rounded-full" />
+                                                </div>
+                                                <p className="text-xs text-amber-200 font-bold">🟩 Cattura &nbsp;•&nbsp; 🟨 Pesca Perfetta (×2 Oro/Cibo o +1 Bonus Cucina!)</p>
+                                            </div>
+                                        )}
+
+                                        <button
+                                            onClick={handleFishingActionButton}
+                                            className={`shrink-0 w-full py-5 rounded-2xl font-rpg-title font-black text-lg uppercase shadow-2xl active:scale-95 transition-all ${
+                                                fishingPhase === "bite"
+                                                    ? "bg-amber-400 hover:bg-amber-300 text-black border-2 border-white"
+                                                    : (fishingPhase === "reeling" ? "bg-emerald-500 hover:bg-emerald-400 text-black border-2 border-white" : "bg-cyan-900 text-cyan-200 border-2 border-cyan-500")
+                                            }`}
+                                        >
+                                            {fishingPhase === "waiting" ? "⏳ Aspetta l'abboccata..." : (fishingPhase === "bite" ? "❗ FERRA LA LENZA!" : "🎣 TIRA ADESSO!")}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* FASE 4: RISULTATO CATTURA */}
+                                {fishingPhase === "result" && fishingResult && (
+                                    <div className="flex-1 flex flex-col justify-between gap-3 py-2 text-center animate-fade">
+                                        <div className="space-y-3 my-auto">
+                                            {fishingResult.img && (
+                                                <img
+                                                    src={fishingResult.img}
+                                                    alt={fishingResult.title}
+                                                    onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
+                                                    className="w-full h-56 sm:h-64 object-cover rounded-2xl border-2 border-amber-400 shadow-2xl"
+                                                />
+                                            )}
+                                            <h4 className="text-amber-300 font-rpg-title font-black text-lg">{fishingResult.title}</h4>
+                                            <p className="text-xs sm:text-sm text-gray-200">{fishingResult.msg}</p>
+                                        </div>
+
+                                        <div className="shrink-0 pb-1">
+                                            {fishingResult.status === "caught" ? (
+                                                fishingResult.item.rarity === "Tesoro" ? (
+                                                    <button onClick={() => claimFishingCatch("sell")} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-4 rounded-2xl text-sm uppercase shadow-xl active:scale-95">
+                                                        💎 Apri il Forziere (+{fishingResult.item.goldVal * fishingResult.mult}🪙 e +1💎)
+                                                    </button>
+                                                ) : (
+                                                    <div className="grid grid-cols-1 gap-2">
+                                                        <button onClick={() => claimFishingCatch("bag")} className="bg-cyan-600 hover:bg-cyan-500 text-white font-black py-3.5 rounded-xl text-xs sm:text-sm uppercase shadow-lg active:scale-95">
+                                                            🧺 Metti in Bisaccia per la Cucina (+{fishingResult.item.cookBonus + (fishingResult.isPerfect ? 1 : 0)} pt)
+                                                        </button>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <button onClick={() => claimFishingCatch("food")} className="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl text-xs sm:text-sm active:scale-95">
+                                                                🍖 Cucina (+{Math.max(1, fishingResult.item.foodVal * fishingResult.mult)} 🍖)
+                                                            </button>
+                                                            <button onClick={() => claimFishingCatch("sell")} className="bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 rounded-xl text-xs sm:text-sm active:scale-95">
+                                                                🪙 Vendi (+{fishingResult.item.goldVal * fishingResult.mult} 🪙)
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            ) : fishingResult.status === "monster" ? (
+                                                <button
+                                                    onClick={() => {
+                                                        const mK = fishingResult.monsterKey;
+                                                        closeFishingModalClean();
+                                                        startMonsterEncounter(mK, character.currentNode);
+                                                    }}
+                                                    className="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-2xl text-sm uppercase shadow-xl active:scale-95"
+                                                >
+                                                    ⚔️ Impugna le Armi e Affrontalo nell'Arena!
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => { setFishingPhase("idle"); setFishingResult(null); }} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-black py-4 rounded-2xl text-sm uppercase shadow-xl active:scale-95">
+                                                    🔄 Lancia di Nuovo la Lenza
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* 9. MINIGIOCO GARA DI CUCINA DEL BIVACCO — TUTTO SCHERMO MOBILE-FRIENDLY */}
+                    {showCookingModal && ReactDOM.createPortal(
+                        <div className="fixed inset-0 w-screen h-[100dvh] z-[10019] bg-gradient-to-b from-[#231208] via-gray-950 to-black flex flex-col overflow-hidden animate-fade">
+                            {/* BARRA SUPERIORE FISSA */}
+                            <div className="shrink-0 flex justify-between items-center px-3 py-2.5 bg-black/85 border-b border-amber-700/70">
+                                <h3 className="font-rpg-title text-amber-300 font-black text-xs sm:text-base uppercase truncate pr-2">
+                                    👨‍🍳 Gara di Cucina Planare
+                                </h3>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    {cookState && cookState.phase === "prep" && (
+                                        <button onClick={() => setCookState(null)} className="bg-amber-700 hover:bg-amber-600 text-white text-[11px] font-black px-2.5 py-1 rounded-lg">
+                                            ⬅ Chef
+                                        </button>
+                                    )}
+                                    <button onClick={closeCookingModalClean} className="bg-red-900 hover:bg-red-700 text-white text-xs font-black px-3 py-1 rounded-lg border border-red-400/60">
+                                        Esci ✖
+                                    </button>
+                                </div>
+                            </div>
+
+                            {!cookState ? (
+                                /* SCELTA CHEF AVVERSARIO A TUTTO SCHERMO */
+                                <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col justify-center max-w-xl w-full mx-auto space-y-3">
+                                    <p className="text-xs sm:text-sm text-amber-100/90 text-center">
+                                        Scegli quale leggendario Chef di Magic sfidare ai fornelli! Usa i pesci della tua <b>Bisaccia ({fishBag.length})</b> per stupire i 3 giudici!
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3">
+                                        {["gyome", "asmorano"].map(cKey => {
+                                            const ch = COOK_CHEFS[cKey];
+                                            return (
+                                                <div
+                                                    key={cKey}
+                                                    onClick={() => startCookingContest(cKey)}
+                                                    className="bg-gray-900 border-2 border-amber-500/80 hover:border-amber-300 rounded-2xl overflow-hidden cursor-pointer shadow-xl active:scale-95 transition-transform flex flex-col justify-between"
+                                                >
+                                                    <div className="relative h-48 sm:h-56 bg-black">
+                                                        <img src={ch.img} alt={ch.name} onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }} className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
+                                                        <span className={`absolute top-2 right-2 text-[10px] font-black px-2.5 py-0.5 rounded-full shadow ${cKey === "gyome" ? "bg-amber-500 text-black" : "bg-red-600 text-white"}`}>
+                                                            {ch.diff}
+                                                        </span>
+                                                        <p className="absolute bottom-2 left-2.5 right-2.5 text-white font-rpg-title font-black text-sm leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
+                                                            {ch.name}
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-3 text-center space-y-1.5">
+                                                        <p className="text-[11px] text-gray-300 italic">{ch.quote}</p>
+                                                        <p className="text-[11px] font-black text-amber-300 border-t border-gray-800 pt-1.5">🏆 {ch.rewardDesc}</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : cookState.phase === "prep" ? (
+                                /* FASE 1: PREPARAZIONE PIATTO CON TASTO AVVIO FISSO IN BASSO */
+                                <React.Fragment>
+                                    <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3 max-w-xl w-full mx-auto">
+                                        <div className="bg-black/75 border border-amber-700/80 rounded-xl p-3 space-y-1.5">
+                                            <p className="text-[10px] font-black text-amber-300 uppercase">⚖️ I 3 Giudici della Sfida (Leggi cosa desiderano!):</p>
+                                            {cookState.judges.map((j, idx) => (
+                                                <p key={idx} className="text-xs text-gray-200 leading-snug">
+                                                    <b>{j.icon} {j.name}:</b> <span className="italic text-amber-100">{j.hint}</span>
+                                                </p>
+                                            ))}
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <p className="text-[11px] font-black text-cyan-300 uppercase">1. Ingrediente Base (i Pesci pescati danno bonus extra!):</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {fishBag.concat(COOK_BASE_INGREDIENTS).map(ing => {
+                                                    const sel = cookState.selectedBaseUid === ing.uid;
+                                                    const isF = Boolean(ing.id);
+                                                    return (
+                                                        <button
+                                                            key={ing.uid}
+                                                            onClick={() => setCookState(Object.assign({}, cookState, { selectedBaseUid: ing.uid }))}
+                                                            className={`p-2.5 rounded-xl border-2 text-left text-xs font-black transition-all active:scale-95 ${sel ? "bg-amber-500 text-black border-white shadow-lg" : (isF ? "bg-cyan-950/75 border-cyan-400 text-cyan-200" : "bg-gray-900 border-gray-700 text-gray-200")}`}
+                                                        >
+                                                            {isF ? "🐟 " : ""}{ing.name} <span className="opacity-85 text-[10px]">({ing.flavor} • +{ing.cookBonus} pt)</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <p className="text-[11px] font-black text-amber-300 uppercase">2. Spezia di Mana (infonde il gusto ai giudici):</p>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                {COOK_SPICES.map(sp => {
+                                                    const sel = cookState.selectedSpiceId === sp.id;
+                                                    return (
+                                                        <button
+                                                            key={sp.id}
+                                                            onClick={() => setCookState(Object.assign({}, cookState, { selectedSpiceId: sp.id }))}
+                                                            className={`p-2.5 rounded-xl border-2 text-[11px] font-black active:scale-95 ${sel ? "bg-amber-500 text-black border-white shadow-lg" : "bg-gray-900 border-gray-700 text-gray-200"}`}
+                                                        >
+                                                            {sp.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5 pb-2">
+                                            <p className="text-[11px] font-black text-orange-300 uppercase">3. Tecnica di Cottura:</p>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {COOK_METHODS.map(mt => {
+                                                    const sel = cookState.selectedMethodId === mt.id;
+                                                    return (
+                                                        <button
+                                                            key={mt.id}
+                                                            onClick={() => setCookState(Object.assign({}, cookState, { selectedMethodId: mt.id }))}
+                                                            className={`p-2.5 rounded-xl border-2 text-left active:scale-95 ${sel ? "bg-orange-500 text-black border-white shadow-lg" : "bg-gray-900 border-gray-700 text-gray-200"}`}
+                                                        >
+                                                            <p className="text-xs font-black">{mt.label}</p>
+                                                            <p className="text-[9px] opacity-90 leading-tight mt-0.5">{mt.desc}</p>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="shrink-0 p-3 bg-black/90 border-t border-amber-800/70 max-w-xl w-full mx-auto">
+                                        <button onClick={launchCookingFirePhase} className="w-full bg-gradient-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-black font-rpg-title font-black py-4 rounded-2xl text-sm sm:text-base uppercase shadow-xl border-2 border-amber-200 active:scale-95">
+                                            🔥 Accendi i Fornelli (Fase Cottura!) ➔
+                                        </button>
+                                    </div>
+                                </React.Fragment>
+                            ) : cookState.phase === "fire" ? (
+                                /* FASE 2: TEMPERATURA DEI FORNELLI A TUTTO SCHERMO */
+                                <div className="flex-1 flex flex-col justify-between gap-4 px-4 py-4 max-w-xl w-full mx-auto text-center">
+                                    <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-orange-950/70 via-red-950/60 to-black border-4 border-orange-500/80 rounded-3xl p-6 space-y-3">
+                                        <div className="text-6xl animate-bounce">{cookState.fireStep === 1 ? "🔥🍳" : "🍽️✨"}</div>
+                                        <p className="text-base sm:text-lg font-rpg-title font-black text-amber-300 uppercase">
+                                            {cookState.fireStep === 1 ? "Passo 1/2: Sfumatura Perfetta!" : "Passo 2/2: Impiattamento Finale!"}
+                                        </p>
+                                        <p className="text-xs text-gray-200">
+                                            Ferma l'indicatore nella fascia <b>Oro</b> al centro per il massimo bonus dei giudici!
+                                        </p>
+                                        {cookState.fireNotes.length > 0 && (
+                                            <p className="text-xs font-black text-emerald-300 bg-emerald-950/80 border border-emerald-500/70 px-3 py-1.5 rounded-full">
+                                                {cookState.fireNotes[0]}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2 shrink-0">
+                                        <div className="relative w-full h-12 rounded-full bg-red-950 border-2 border-amber-400 overflow-hidden shadow-inner">
+                                            <div style={{ left: "28%", width: "46%" }} className="absolute top-0 bottom-0 bg-orange-600/85" />
+                                            <div style={{ left: "43%", width: "16%" }} className="absolute top-0 bottom-0 bg-amber-300 shadow-[0_0_18px_rgba(251,191,36,1)]" />
+                                            <div style={{ left: cookPos + "%" }} className="absolute top-0 bottom-0 w-3 -ml-1.5 bg-white shadow-[0_0_14px_#fff] rounded-full" />
+                                        </div>
+                                        <p className="text-xs text-amber-200 font-bold">🟧 Buona Cottura (+1) &nbsp;•&nbsp; 🟨 Cottura da Maestro (+2)</p>
+                                    </div>
+
+                                    <button onClick={tapCookingFireBar} className="shrink-0 w-full bg-amber-400 hover:bg-amber-300 text-black font-rpg-title font-black py-5 rounded-2xl text-lg uppercase border-2 border-white shadow-2xl active:scale-95">
+                                        {cookState.fireStep === 1 ? "🔥 SFUMA ADESSO!" : "🍽️ IMPIATTA ADESSO!"}
+                                    </button>
+                                </div>
+                            ) : cookState.verdict && (
+                                /* FASE 3: VERDETTO DEI 3 GIUDICI A TUTTO SCHERMO */
+                                <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col justify-between gap-3 max-w-xl w-full mx-auto animate-fade">
+                                    <div className="space-y-3 my-auto">
+                                        <div className="grid grid-cols-2 gap-2.5 text-center">
+                                            <div className="bg-blue-950/80 border-2 border-cyan-400 rounded-2xl p-3">
+                                                <p className="text-[10px] font-black text-cyan-300 uppercase">Il Tuo Piatto</p>
+                                                <p className="text-3xl font-black text-white">{cookState.verdict.totalScore} / 30</p>
+                                            </div>
+                                            <div className="bg-red-950/80 border-2 border-red-400 rounded-2xl p-3">
+                                                <p className="text-[10px] font-black text-red-300 uppercase">{COOK_CHEFS[cookState.chefId].name.split(",")[0]}</p>
+                                                <p className="text-3xl font-black text-white">{cookState.verdict.chefScore} / 30</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {cookState.verdict.judgeScores.map((js, idx) => (
+                                                <div key={idx} className="bg-gray-900 border border-amber-700/70 rounded-xl p-3 flex justify-between items-center gap-2">
+                                                    <div>
+                                                        <p className="text-xs sm:text-sm font-black text-amber-200">{js.icon} {js.name}</p>
+                                                        <p className="text-[11px] text-gray-300 italic">{js.comment}</p>
+                                                    </div>
+                                                    <span className="bg-amber-500 text-black font-black text-base px-3 py-1 rounded-xl shrink-0">
+                                                        {js.score}/10
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className={`rounded-2xl p-3.5 text-center text-xs sm:text-sm font-black border-2 ${cookState.verdict.playerWon ? "bg-emerald-950/95 border-emerald-400 text-emerald-200" : "bg-red-950/85 border-red-500 text-red-200"}`}>
+                                            {cookState.verdict.rewardText}
+                                        </div>
+                                    </div>
+
+                                    <div className="shrink-0 flex gap-2 pb-1">
+                                        <button onClick={() => startCookingContest(cookState.chefId)} className="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-black py-3.5 rounded-xl text-xs sm:text-sm uppercase shadow-lg active:scale-95">
+                                            🔄 Rivincita
+                                        </button>
+                                        <button onClick={() => setCookState(null)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-black py-3.5 rounded-xl text-xs sm:text-sm uppercase border border-gray-600 active:scale-95">
+                                            👨‍🍳 Cambia Chef
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>,
+                        document.body
+                    )}
                 
                   {/* TIMER DI INCOSCIENZA (1 GIORNO E 4 ORE = 1 MINUTO E 4 SECONDI = 64s) */}
                     {dormantTimer > 0 && (
@@ -14873,6 +15712,13 @@
                             >
                                 <span>🃏 Sfida al Tavolo: Triade Planare (3 Avversari)</span>
                                 <span className="bg-black/25 px-2 py-0.5 rounded-full text-[10px]">Vinci Oro & Timetwister!</span>
+                            </button>
+                          <button
+                                onClick={() => { setShowMercenaryModal(false); setCookState(null); setShowCookingModal(true); }}
+                                className="w-full bg-gradient-to-r from-orange-700 via-amber-600 to-orange-700 hover:from-orange-600 hover:to-orange-600 text-white font-rpg-title font-black py-2.5 px-4 rounded-xl border border-amber-300 shadow text-xs uppercase tracking-wider flex items-center justify-between active:scale-95"
+                            >
+                                <span>👨‍🍳 Gara di Cucina della Locanda (Gyome & Asmorano)</span>
+                                <span className="bg-black/30 px-2 py-0.5 rounded-full text-[10px]">Pesci in Bisaccia: {fishBag.length}</span>
                             </button>
                             {!pendingMercenaryHero ? (
                                 <div className="space-y-3">
@@ -15166,7 +16012,7 @@
                         <div className="bg-gray-900 border-4 border-emerald-500 rounded-2xl p-4 shadow-2xl animate-fade space-y-3">
                             <div className="flex justify-between items-center border-b border-gray-700 pb-2">
                                 <h3 className="text-emerald-400 font-black text-sm uppercase">
-                                    ⛺ Bivacco della Compagnia — Scegli l'Attività da Campo
+                                   ⛺ Bivacco della Compagnia — Scegli l'Attività da Campo
                                 </h3>
                                 <button onClick={() => setShowCampfireModal(false)} className="text-xs text-gray-300 font-bold">Chiudi ✖</button>
                             </div>
@@ -15183,6 +16029,28 @@
                                     <p className="text-cyan-300 font-black text-xs">🔥 3. Turno di Guardia</p>
                                     <p className="text-gray-300 text-[10px] mt-1">Tutta la Compagnia rigenera +2 Mana per ciascuno dei propri colori!</p>
                                 </button>
+                            </div>
+
+                            <div className="border-t border-emerald-800/70 pt-3 space-y-2">
+                                <p className="text-xs font-black text-amber-300 uppercase">
+                                    🎣👨‍🍳 Attività Rilassanti del Bivacco (Pesca Ingredienti Rari & Sfida gli Chef!)
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => { setShowCampfireModal(false); setFishingPhase("idle"); setFishingResult(null); setShowFishingModal(true); }}
+                                        className="bg-cyan-950/85 hover:bg-cyan-900 border-2 border-cyan-400 p-3 rounded-xl text-left active:scale-95"
+                                    >
+                                        <p className="text-cyan-300 font-black text-xs">🎣 Pesca Planare (Bisaccia: {fishBag.length})</p>
+                                        <p className="text-gray-300 text-[10px] mt-0.5">Pesca creature acquatiche di Magic, Tesori sommersi e ingredienti rari!</p>
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowCampfireModal(false); setCookState(null); setShowCookingModal(true); }}
+                                        className="bg-amber-950/85 hover:bg-amber-900 border-2 border-amber-400 p-3 rounded-xl text-left active:scale-95"
+                                    >
+                                        <p className="text-amber-300 font-black text-xs">👨‍🍳 Gara di Cucina del Bivacco</p>
+                                        <p className="text-gray-300 text-[10px] mt-0.5">Sfida Gyome o Asmorano davanti a 3 giudici per Oro, Cibo e Buff!</p>
+                                    </button>
+                                </div>
                             </div>
                         </div>,
                         () => setShowCampfireModal(false),
