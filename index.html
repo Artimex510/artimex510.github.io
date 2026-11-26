@@ -10293,11 +10293,12 @@
             }
         ];
 
-        const FORTRESS_DEFAULT_BANNERS = [
+       const FORTRESS_DEFAULT_BANNERS = [
             { id: "banner_1", name: "Vessillo di Benalia", icon: "☀️", bg: "from-amber-700 to-yellow-500", img: "./banner_1.png" },
             { id: "banner_2", name: "Sigillo di Tolaria", icon: "💧", bg: "from-blue-900 to-cyan-600", img: "./banner_2.png" },
             { id: "banner_3", name: "Ala di Shiv", icon: "🔥", bg: "from-red-900 to-orange-600", img: "./banner_3.png" },
-            { id: "banner_4", name: "Stemma di Llanowar", icon: "🌳", bg: "from-emerald-900 to-green-600", img: "./banner_4.png" }
+            { id: "banner_4", name: "Stemma di Llanowar", icon: "🌳", bg: "from-emerald-900 to-green-600", img: "./banner_4.png" },
+            { id: "banner_5", name: "Sigillo di Urborg", icon: "💀", bg: "from-gray-900 to-purple-950", img: "./banner_5.png" }
         ];
 
         const [fortressState, setFortressState] = useState(() => {
@@ -17180,13 +17181,14 @@
                                     {/* INTESTAZIONE CON STENDARDO E CHIUSURA */}
                                     <div className="flex items-center justify-between gap-2 border-b border-amber-700/60 pb-2.5">
                                         <div className="flex items-center gap-2.5 min-w-0">
-                                            <div className={`w-11 h-14 rounded-lg border-2 border-amber-300 overflow-hidden bg-gradient-to-b ${activeBanner.bg} flex items-center justify-center shrink-0 shadow-md`}>
-                                                <img
-                                                    src={activeBanner.img}
-                                                    alt={activeBanner.name}
-                                                    onError={(e) => { e.target.style.display = "none"; }}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                            <div className={`w-11 h-14 rounded-lg border-2 border-amber-300 overflow-hidden bg-gradient-to-b ${activeBanner.bg} flex items-center justify-center relative shrink-0 shadow-md`}>
+                                              <img
+                                                key={activeBanner.img}
+                                                src={activeBanner.img}
+                                                alt={activeBanner.name}
+                                                onError={(e) => { e.target.style.display = "none"; }}
+                                                className="w-full h-full object-cover relative z-10"
+                                               />
                                                 <span className="text-xl absolute pointer-events-none drop-shadow">{activeBanner.isCustom ? "" : activeBanner.icon}</span>
                                             </div>
                                             <div className="min-w-0">
@@ -17520,18 +17522,19 @@
 
                                             <div className="flex flex-col sm:flex-row items-center gap-3 bg-black/50 border border-amber-800/70 rounded-xl p-3">
                                                 <div className={`w-24 h-32 rounded-xl border-2 border-amber-300 overflow-hidden bg-gradient-to-b ${activeBanner.bg} flex items-center justify-center relative shrink-0 shadow-lg`}>
-                                                    <img
+                                                     <img
+                                                        key={activeBanner.img}
                                                         src={activeBanner.img}
                                                         alt={activeBanner.name}
                                                         onError={(e) => { e.target.style.display = "none"; }}
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                        className="w-full h-full object-cover relative z-10"
+                                                      />
                                                     <span className="text-4xl absolute pointer-events-none drop-shadow">{activeBanner.isCustom ? "" : activeBanner.icon}</span>
                                                 </div>
                                                 <div className="space-y-2 flex-1 text-center sm:text-left">
                                                     <p className="text-xs font-black text-amber-200">Stendardo Attuale: {activeBanner.name}</p>
                                                     <p className="text-[11px] text-gray-300">
-                                                        Carica uno stemma dalla galleria del tuo cellulare o scegli uno dei 4 vessilli predefiniti. Apparirà anche in cima alla Scheda A4!
+                                                        Carica uno stemma dalla galleria del tuo cellulare o scegli uno dei 5 vessilli predefiniti. Apparirà anche in cima alla Scheda A4!
                                                     </p>
                                                     <label className="inline-block bg-purple-700 hover:bg-purple-600 border border-purple-300 text-white font-black text-xs px-4 py-2 rounded-xl cursor-pointer shadow active:scale-95">
                                                         📱 Carica Stendardo dal Cellulare
@@ -17540,7 +17543,7 @@
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                                                 {FORTRESS_DEFAULT_BANNERS.map(b => (
                                                     <button
                                                         key={b.id}
@@ -17548,7 +17551,7 @@
                                                         className={`p-2 rounded-xl border-2 text-center space-y-1 transition-all ${fortressState.bannerId === b.id ? "border-amber-300 bg-amber-950/70 scale-[1.02]" : "border-gray-700 bg-gray-900/80"}`}
                                                     >
                                                         <div className={`w-full h-16 rounded-lg overflow-hidden bg-gradient-to-b ${b.bg} flex items-center justify-center relative`}>
-                                                            <img src={b.img} alt={b.name} onError={(e) => { e.target.style.display = "none"; }} className="w-full h-full object-cover" />
+                                                            <img src={b.img} alt={b.name} onError={(e) => { e.target.style.display = "none"; }} className="w-full h-full object-cover relative z-10" />
                                                             <span className="text-2xl absolute pointer-events-none">{b.icon}</span>
                                                         </div>
                                                         <p className="text-[10px] font-black text-amber-100 truncate">{b.name}</p>
@@ -20220,7 +20223,7 @@
                                     const bInfo = getActiveFortressBannerInfo();
                                     return (
                                         <div className={`w-7 h-9 rounded border border-gray-900 overflow-hidden bg-gradient-to-b ${bInfo.bg} flex items-center justify-center relative shrink-0 shadow-sm`} title={fortressState.customName || "Stendardo"}>
-                                            <img src={bInfo.img} alt={bInfo.name} onError={(e) => { e.target.style.display = "none"; }} className="w-full h-full object-cover" />
+                                            <img src={bInfo.img} alt={bInfo.name} onError={(e) => { e.target.style.display = "none"; }} className="w-full h-full object-cover relative z-10" />
                                             <span className="text-xs absolute pointer-events-none">{bInfo.isCustom ? "" : bInfo.icon}</span>
                                         </div>
                                     );
