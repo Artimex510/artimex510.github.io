@@ -1937,7 +1937,12 @@
         glimmer_lens: { id: "glimmer_lens", name: "🔦 Lente del Bagliore (Glimmer Lens)", slot: "head", minLvl: 7, str: 2, agi: 3, mag: 4, con: 4, keywords: ["Egida", "Cautela"] },
         dissection_tools: { id: "dissection_tools", name: "🔪 Strumenti da Dissezione", slot: "hands", reqClassGroup: "martial_rogue", minLvl: 9, str: 5, agi: 4, mag: 1, con: 3, keywords: ["Tocco Letale", "Legame Vitale"] },
         ghost_vacuum: { id: "ghost_vacuum", name: "👻 Aspiratore Spettrale (Ghost Vacuum)", slot: "artifact", minLvl: 10, str: 3, agi: 4, mag: 6, con: 5, keywords: ["Egida", "Proliferare"] },
-        marina_grimoire: { id: "marina_grimoire", name: "📖 Grimorio di Marina Vendrell", slot: "artifact", reqClassGroup: "caster", reqLegendary: true, minLvl: 14, str: 2, agi: 4, mag: 11, con: 8, keywords: ["Indomabile", "Egida", "Proliferare"] }
+        marina_grimoire: { id: "marina_grimoire", name: "📖 Grimorio di Marina Vendrell", slot: "artifact", reqClassGroup: "caster", reqLegendary: true, minLvl: 14, str: 2, agi: 4, mag: 11, con: 8, keywords: ["Indomabile", "Egida", "Proliferare"] },
+
+        // --- ARMI BOSS ESCLUSIVE ---
+        trident_thassa_abyss: {id: "trident_thassa_abyss",name: "🔱 Tridente Abissale di Thassa",slot: "weapon",rarity: "Leggendario",dropOnly: true,price: 0,str: 5, mag: 6, agi: 3, con: 0,keywords: ["Imbloccabile", "Attacco Improvviso"],desc: "Arma esclusiva di Arixmethes (non vendibile nei negozi). I colpi fendono l'acqua senza resistenza."},
+        abyssal_tide_blade: {id: "abyssal_tide_blade",name: "🌊 Lama della Marea Tempestosa",slot: "weapon",rarity: "Leggendario", dropOnly: true,price: 0,str: 7, con: 4, mag: 3, agi: 0,keywords: ["Travolgere", "Cautela"],desc: "Forgiata nelle fosse oceaniche dal Leviatano della Marea. Esclusiva da Boss Abissale."},
+        koma_cosmos_aegis: {id: "koma_cosmos_aegis",name: "🐍 Egida delle Spire di Koma",slot: "armor",rarity: "Mitico",dropOnly: true,price: 0,con: 7, mag: 5, str: 3, agi: 0,keywords: ["Egida", "Legame Vitale"],desc: "Armatura mitica ottenibile solo pescando e sconfiggendo Koma, Serpente del Cosmo."}
     };
     // ============================================================================
     // --- MEGA-BESTIARIO DI MAGIC (25 CREATURE ICONICHE, MEME E BOSS)          ---
@@ -2112,7 +2117,17 @@
         overlord_hauntwoods: { name: "👁️ Signore Supremo dei Boschi Infestati", isHumanoid: false, maxHP: 156, initBonus: 7, dc: 33, dmg: 18, blueMana: 0, exp: 370, gold: 180, treasures: 4, loot: "glimmer_lens", isBoss: true, summonerType: "nightmare_horror", desc: "Uno dei cinque Overlord della Casa: intreccia radici d'incubo evocando Orrori Parassiti!" },
         overlord_boilerbilges: { name: "🔥 Signore Supremo delle Caldaie (Overlord)", isHumanoid: false, maxHP: 160, initBonus: 8, dc: 33, dmg: 19, blueMana: 0, exp: 380, gold: 190, treasures: 4, loot: "dissection_tools", isBoss: true, desc: "Un incubo industriale di tubi roventi e fiamme che domina i sotterranei della Casa!" },
         marina_vendrell_shadow: { name: "🕯️ L'Ombra di Marina Vendrell & Le Stanze", isHumanoid: true, maxHP: 152, initBonus: 9, dc: 33, dmg: 17, blueMana: 4, exp: 375, gold: 185, treasures: 4, loot: "marina_grimoire", isBoss: true, summonerType: "nightmare_horror", desc: "La custode delle chiavi della Casa manipolata dalla paura: controlla 4💧 Mana Blu e Incubi!" },
-        valgavoth_terror_eater: { name: "🦋💀 VALGAVOTH, DIVORATORE DI TERRORE (SUPER-BOSS)", isHumanoid: false, maxHP: 185, initBonus: 10, dc: 35, dmg: 20, blueMana: 4, exp: 520, gold: 280, treasures: 6, loot: "ugins_nexus", isBoss: true, summonerType: "nightmare_horror", desc: "Il Demone-Falena primordiale che HA DIVORATO UN INTERO PIANO! Volare, 4💧 Mana Blu e sciami di Incubi!" }
+        valgavoth_terror_eater: { name: "🦋💀 VALGAVOTH, DIVORATORE DI TERRORE (SUPER-BOSS)", isHumanoid: false, maxHP: 185, initBonus: 10, dc: 35, dmg: 20, blueMana: 4, exp: 520, gold: 280, treasures: 6, loot: "ugins_nexus", isBoss: true, summonerType: "nightmare_horror", desc: "Il Demone-Falena primordiale che HA DIVORATO UN INTERO PIANO! Volare, 4💧 Mana Blu e sciami di Incubi!" },
+        // --- BOSS ABISSALI E MOSTRI CAVALCABILI  ---
+        abyss_arixmethes: { name: "Arixmethes, l'Isola Dormiente (Boss Abissale)", maxHP: 220, dmg: 18, dc: 28, initBonus: 6, exp: 320, gold: 180, isBoss: true, flying: false, exclusiveDropId: "trident_thassa_abyss", scryfallCard: "Arixmethes, Slumbering Isle" },
+        abyss_stormtide: { name: "Leviatano della Marea Tempestosa (Boss Abissale)", maxHP: 250, dmg: 20, dc: 29, initBonus: 5, exp: 380, gold: 220, isBoss: true, flying: false, exclusiveDropId: "abyssal_tide_blade", scryfallCard: "Stormtide Leviathan" },
+        abyss_koma: { name: "Koma, Serpente del Cosmo (Boss Abissale Mitico)", maxHP: 310, dmg: 23, dc: 31, initBonus: 8, exp: 520, gold: 320, isBoss: true, flying: false, exclusiveDropId: "koma_cosmos_aegis", scryfallCard: "Koma, Cosmos Serpent" },
+        wild_shivan_dragon: { name: "Drago di Shiv Selvatico (Cavalcabile)", maxHP: 145, dmg: 14, dc: 25, initBonus: 7, exp: 190, gold: 95, flying: true, mountId: "shivan_mount", scryfallCard: "Shivan Dragon" },
+        wild_serra_pegasus: { name: "Pegaso di Serra Selvatico (Cavalcabile)", maxHP: 120, dmg: 11, dc: 24, initBonus: 8, exp: 160, gold: 75, flying: true, mountId: "sunblade_pegasus", scryfallCard: "Stormfront Pegasus" },
+        wild_benalia_griffin: { name: "Grifone dei Cieli Selvatico (Cavalcabile)", maxHP: 130, dmg: 12, dc: 24, initBonus: 8, exp: 170, gold: 80, flying: true, mountId: "skyhunter_griffin", scryfallCard: "Silverbeak Griffin" },
+        wild_ixalan_dino: { name: "Tirannosauro Alfa di Ixalan (Cavalcabile)", maxHP: 165, dmg: 16, dc: 25, initBonus: 6, exp: 210, gold: 105, flying: false, mountId: "ghalta_raptor", scryfallCard: "Regisaur Alpha" },
+        wild_warhorse: { name: "Destriero Corazzato di Benalia (Cavalcabile)", maxHP: 115, dmg: 11, dc: 23, initBonus: 7, exp: 145, gold: 65, flying: false, mountId: "benalish_charger", scryfallCard: "Armored Warhorse" },
+        wild_nightmare: { name: "Incubo Fiammeggiante di Urborg (Cavalcabile)", maxHP: 140, dmg: 14, dc: 25, initBonus: 8, exp: 185, gold: 90, flying: true, mountId: "nightmare_steed", scryfallCard: "Nightmare" }
     };
 
     const RPG_STORY_NODES_PART1 = {
@@ -6909,6 +6924,15 @@
             eqMag += setInfo.mag;
             eqCon += setInfo.con;
 
+            // Bonus passivo della Cavalcatura attiva dell'Eroe
+            if (char && char.mount) {
+                if (char.mount.manaColor === "R") eqStr += 2;
+                else if (char.mount.manaColor === "G") eqStr += 3;
+                else if (char.mount.manaColor === "W") eqCon += 2;
+                else if (char.mount.manaColor === "U") eqAgi += 2;
+                else if (char.mount.manaColor === "B") eqMag += 2;
+            }
+          
             // BONUS DA INCANTA CREATURA (AURA MISTICA ATTIVA SULL'EROE)
             const activeAuraObj = (char.activeAura && RPG_AURAS_DB[char.activeAura.id]) ? RPG_AURAS_DB[char.activeAura.id] : null;
             if (activeAuraObj) {
@@ -9225,6 +9249,15 @@
             overlord_boilerbilges: "Overlord of the Boilerbilges",
             marina_vendrell_shadow: "Marina Vendrell",
             valgavoth_terror_eater: "Valgavoth, Terror Eater",
+            abyss_arixmethes: "Arixmethes, Slumbering Isle",
+            abyss_stormtide: "Stormtide Leviathan",
+            abyss_koma: "Koma, Cosmos Serpent",
+            wild_shivan_dragon: "Shivan Dragon",
+            wild_serra_pegasus: "Stormfront Pegasus",
+            wild_benalia_griffin: "Silverbeak Griffin",
+            wild_ixalan_dino: "Regisaur Alpha",
+            wild_warhorse: "Armored Warhorse",
+            wild_nightmare: "Nightmare",
             // --- 8 NUOVE PEDINE EVOCATE (SCRYFALL ART CROP) ---
             tok_cat_beast: "Rampaging Baloths",
             tok_nyx_soldier: "Phalanx Leader",
@@ -9380,7 +9413,7 @@
 
         const FISHING_CATCHES_DB = [
             { id: "dandan", name: "Dandân delle Maree", rarity: "Comune", card: "Dandân", goldVal: 18, foodVal: 1, cookBonus: 2, flavor: "U", desc: "Pesce leggendario di Arabian Nights: carne soda e salmastra." },
-            { id: "mystic_remora", name: "Remora Mistica", rarity: "Raro", card: "Mystic Remora", goldVal: 32, foodVal: 2, cookBonus: 3, flavor: "U", desc: "Brilla di mana dell'Era Glaciale: prelibatezza per gli arcimaghi!" },
+            { id: "mystic_remora", name: "Remora Mistica", rarity: "Raro", card: "Mystic Remora", set: "ice", collector: "87", goldVal: 32, foodVal: 2, cookBonus: 3, flavor: "U", desc: "Brilla di mana dell'Era Glaciale: prelibatezza per gli arcimaghi!" },
             { id: "coiling_oracle", name: "Anguilla dell'Oracolo", rarity: "Comune", card: "Coiling Oracle", goldVal: 22, foodVal: 1, cookBonus: 2, flavor: "G", desc: "Pesce-serpente di Ravnica dal retrogusto erbaceo." },
             { id: "gilded_goose", name: "Anatra Dorata del Lago", rarity: "Raro", card: "Gilded Goose", goldVal: 40, foodVal: 2, cookBonus: 4, flavor: "W", desc: "Cattura rarissima di Eldraine: fa impazzire i giudici di cucina!" },
             { id: "shark_typhoon", name: "Pinna di Squalo Tifone", rarity: "Epico", card: "Shark Typhoon", goldVal: 55, foodVal: 2, cookBonus: 5, flavor: "R", desc: "Un taglio pregiatissimo carico di energia tempestosa!" },
@@ -9491,8 +9524,30 @@
                 }
 
                 // 10% di imprevisto divertente: tiri su un mostro acquatico!
-                if (Math.random() < 0.10) {
-                    const heroLvl = character ? ((character.level || 1) + (character.secondaryLevel || 0)) : 1;
+                // BOSS ABISSALI RARI (solo nei nodi costieri/marini!) + imprevisto acquatico standard
+                const inAbyssZone = character && isAbyssalFishingZone(character.currentNode);
+                const abyssChance = inAbyssZone ? (fishingBait === "mana" ? 0.25 : 0.12) : 0;
+                const heroLvl = character ? getHeroTotalLevel(character) : 1;
+
+                if (inAbyssZone && Math.random() < abyssChance) {
+                    const abyssPool = heroLvl >= 12
+                        ? ["abyss_arixmethes", "abyss_stormtide", "abyss_koma"]
+                        : ["abyss_arixmethes", "abyss_stormtide"];
+                    const bossKey = abyssPool[Math.floor(Math.random() * abyssPool.length)];
+                    const bossObj = MTG_BESTIARY[bossKey];
+                    setFishingPhase("result");
+                    setFishingResult({
+                        status: "monster",
+                        monsterKey: bossKey,
+                        img: "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(bossObj.scryfallCard) + "&format=image&version=art_crop",
+                        title: "🦑🌊 BOSS ABISSALE AGGANCIATO!",
+                        msg: "Le acque ribollono! Hai risvegliato **" + bossObj.name + "**! Sconfiggilo per ottenere la sua Reliquia Leggendaria Esclusiva (introvabile dal mercante)!"
+                    });
+                    if (typeof playTriadSfx === "function") playTriadSfx("combo");
+                    return;
+                }
+
+                if (Math.random() < 0.08) {
                     const ambushKey = heroLvl >= 4 ? "krasis_hydroid" : "storm_crow";
                     const ambushName = MTG_BESTIARY[ambushKey] ? MTG_BESTIARY[ambushKey].name : "Mostro degli Abissi";
                     setFishingPhase("result");
@@ -9523,7 +9578,9 @@
                     isPerfect: isPerfect,
                     mult: mult,
                     item: caught,
-                    img: "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(caught.card) + "&format=image&version=art_crop",
+                    img: (caught.set && caught.collector)
+                        ? "https://api.scryfall.com/cards/" + encodeURIComponent(caught.set) + "/" + encodeURIComponent(caught.collector) + "?format=image&version=art_crop"
+                        : "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(caught.card) + (caught.set ? "&set=" + encodeURIComponent(caught.set) : "") + "&format=image&version=art_crop",
                     title: (isPerfect ? "🌟 PESCA PERFETTA! " : "🎣 CATTURA RIUSCITA! ") + caught.name,
                     msg: caught.desc
                 });
@@ -9570,6 +9627,334 @@
             setFishingResult(null);
         };
 
+        // ============================================================================
+        // --- SISTEMA CAVALCATURE (LV. 10+) & BOSS ABISSALI NELLA PESCA            ---
+        // ============================================================================
+        const [mountPowerUsed, setMountPowerUsed] = useState(false);
+        const [mountGuardActive, setMountGuardActive] = useState(false);
+        const [mountCombatLog, setMountCombatLog] = useState("");
+
+        const RPG_MOUNTS_DB = {
+            shivan_mount: {
+                id: "shivan_mount",
+                name: "Drago di Shiv",
+                creatureType: "Drago",
+                manaColor: "R",
+                manaIcon: "🔥",
+                flying: true,
+                keywords: ["Volare", "Rapidità"],
+                baseDmg: 15,
+                tameDC: 25,
+                passiveDesc: "+2 FOR • +50% danni in Carica contro nemici VOLANTI",
+                powerName: "🔥 Soffio di Shiv",
+                powerDesc: "Fiammata draconica: infligge danni pesanti da fuoco (+10 extra) ignorando la difesa!",
+                powerType: "burn",
+                img: "https://api.scryfall.com/cards/named?exact=Shivan+Dragon&format=image&version=art_crop"
+            },
+            sunblade_pegasus: {
+                id: "sunblade_pegasus",
+                name: "Pegaso di Serra",
+                creatureType: "Pegaso",
+                manaColor: "W",
+                manaIcon: "☀️",
+                flying: true,
+                keywords: ["Volare", "Legame Vitale"],
+                baseDmg: 12,
+                tameDC: 22,
+                passiveDesc: "+2 COS • +50% danni vs VOLANTI • Cura il 40% dei danni inflitti",
+                powerName: "☀️ Carica dell'Alba",
+                powerDesc: "Discesa radiosa: colpisce il nemico e cura subito +14 PV al tuo Eroe!",
+                powerType: "heal",
+                img: "https://api.scryfall.com/cards/named?exact=Stormfront+Pegasus&format=image&version=art_crop"
+            },
+            skyhunter_griffin: {
+                id: "skyhunter_griffin",
+                name: "Grifone dei Cieli",
+                creatureType: "Grifone",
+                manaColor: "U",
+                manaIcon: "💧",
+                flying: true,
+                keywords: ["Volare", "Attacco Improvviso"],
+                baseDmg: 13,
+                tameDC: 23,
+                passiveDesc: "+2 AGI • +50% danni vs VOLANTI • Attacco fulmineo (+3 al D20)",
+                powerName: "💧 Vortice Aereo",
+                powerDesc: "Raffica tagliente: danneggia il bersaglio e dimezza il prossimo contrattacco nemico!",
+                powerType: "shield",
+                img: "https://api.scryfall.com/cards/named?exact=Silverbeak+Griffin&format=image&version=art_crop"
+            },
+            ghalta_raptor: {
+                id: "ghalta_raptor",
+                name: "Tirannosauro Alfa",
+                creatureType: "Dinosauro",
+                manaColor: "G",
+                manaIcon: "🌳",
+                flying: false,
+                keywords: ["Travolgere", "Rapidità"],
+                baseDmg: 16,
+                tameDC: 25,
+                passiveDesc: "+3 FOR • +50% danni in Carica contro nemici A TERRA",
+                powerName: "🌳 Calpestio Primordiale",
+                powerDesc: "Carica sismica devastante (+12 danni bonus contro nemici a terra)!",
+                powerType: "trample",
+                img: "https://api.scryfall.com/cards/named?exact=Regisaur+Alpha&format=image&version=art_crop"
+            },
+            benalish_charger: {
+                id: "benalish_charger",
+                name: "Destriero di Benalia",
+                creatureType: "Cavallo",
+                manaColor: "W",
+                manaIcon: "☀️",
+                flying: false,
+                keywords: ["Cautela", "Rapidità"],
+                baseDmg: 12,
+                tameDC: 21,
+                passiveDesc: "+2 COS • +50% danni in Carica contro nemici A TERRA",
+                powerName: "🛡️ Carica della Cavalleria",
+                powerDesc: "Sfondamento disciplinato: colpisce e attiva uno scudo che dimezza il prossimo danno subito!",
+                powerType: "shield",
+                img: "https://api.scryfall.com/cards/named?exact=Armored+Warhorse&format=image&version=art_crop"
+            },
+            nightmare_steed: {
+                id: "nightmare_steed",
+                name: "Incubo di Urborg",
+                creatureType: "Incubo",
+                manaColor: "B",
+                manaIcon: "💀",
+                flying: true,
+                keywords: ["Volare", "Tocco Letale"],
+                baseDmg: 14,
+                tameDC: 24,
+                passiveDesc: "+2 MAG • +50% danni vs VOLANTI • Critico letale su 18–20",
+                powerName: "💀 Galoppo delle Ombre",
+                powerDesc: "Assalto spettrale: infligge danni oscuri e drena +10 PV dal nemico!",
+                powerType: "drain",
+                img: "https://api.scryfall.com/cards/named?exact=Nightmare&format=image&version=art_crop"
+            }
+        };
+
+        // Mappa che collega anche mostri già esistenti nel Bestiario alle cavalcature addestrabili
+        const getTameableMountForEnemy = (cs) => {
+            if (!cs) return null;
+            const mon = MTG_BESTIARY[cs.key];
+            if (mon && mon.mountId && RPG_MOUNTS_DB[mon.mountId]) return RPG_MOUNTS_DB[mon.mountId];
+            const k = String(cs.key || "").toLowerCase();
+            if (k.indexOf("shivan_dragon") !== -1 || k.indexOf("dragon") !== -1) return RPG_MOUNTS_DB.shivan_mount;
+            if (k.indexOf("griffin") !== -1) return RPG_MOUNTS_DB.skyhunter_griffin;
+            if (k.indexOf("pegasus") !== -1) return RPG_MOUNTS_DB.sunblade_pegasus;
+            if (k.indexOf("dino") !== -1 || k.indexOf("tyrant") !== -1) return RPG_MOUNTS_DB.ghalta_raptor;
+            if (k.indexOf("nightmare") !== -1) return RPG_MOUNTS_DB.nightmare_steed;
+            return null;
+        };
+
+        const isCombatEnemyFlying = (cs) => {
+            if (!cs) return false;
+            const mon = MTG_BESTIARY[cs.key];
+            if (mon && typeof mon.flying === "boolean") return mon.flying;
+            const txt = (String(cs.key || "") + " " + String(cs.name || "")).toLowerCase();
+            return /dragon|drago|angel|angelo|griffin|grifone|pegas|crow|corvo|bird|uccell|drake|draco|sphinx|sfinge|demon|demone|vampir|nightmare|incubo|emrakul/.test(txt);
+        };
+
+        const getHeroTotalLevel = (h) => {
+            if (!h) return 1;
+            return (h.level || 1) + (h.secondaryLevel || 0);
+        };
+
+        const getCombatHpValue = (cs) => {
+            if (!cs) return 0;
+            if (typeof cs.enemyHP === "number") return cs.enemyHP;
+            if (typeof cs.currentHP === "number") return cs.currentHP;
+            if (typeof cs.hp === "number") return cs.hp;
+            return 0;
+        };
+
+        const setCombatHpValue = (cs, newHp) => {
+            const next = Object.assign({}, cs);
+            if (typeof cs.enemyHP === "number") next.enemyHP = newHp;
+            if (typeof cs.currentHP === "number") next.currentHP = newHp;
+            if (typeof cs.hp === "number") next.hp = newHp;
+            return next;
+        };
+
+        // Reset automatico poteri cavalcatura a inizio nuovo combattimento
+        useEffect(() => {
+            if (combatState) {
+                setMountPowerUsed(false);
+                setMountGuardActive(false);
+                setMountCombatLog("");
+            }
+        }, [combatState ? combatState.key : null]);
+
+        // Controlla se il nodo attuale è una zona marina/costiera per i Boss Abissali nella Pesca
+        const isAbyssalFishingZone = (nodeId) => {
+            const n = String(nodeId || "").toLowerCase();
+            return /tolaria|depths|ixalan|theros|coast|costa|port|porto|sea|mare|ocean|island|isola|bay|baia|river|fiume|kamigawa|nghathrod|ship|nave|water|acqu/.test(n);
+        };
+
+        // Caccia mirata dal Bivacco (sbloccata al Livello 10+) per incontrare una Cavalcatura Selvatica!
+        const huntWildMountEncounter = () => {
+            if (!character || combatState) return;
+            if (getHeroTotalLevel(character) < 10) {
+                return alert("🔒 L'Addestramento Cavalcature si sblocca al Livello 10! (Livello attuale di " + character.name + ": " + getHeroTotalLevel(character) + ")");
+            }
+            const wildKeys = ["wild_shivan_dragon", "wild_serra_pegasus", "wild_benalia_griffin", "wild_ixalan_dino", "wild_warhorse", "wild_nightmare"];
+            const pickedKey = wildKeys[Math.floor(Math.random() * wildKeys.length)];
+            setShowCampfireModal(false);
+            setEventBanner("🐎🦅 Hai seguito le tracce di una creatura selvatica cavalcabile! Indeboliscila sotto il 35% PV e tocca «Addestra!» invece di ucciderla!");
+            startMonsterEncounter(pickedKey, character.currentNode);
+        };
+
+        // Tentativo di Addestramento in Battaglia quando il mostro è quasi sconfitto (<= 35% PV)
+        const attemptTameCombatMount = (spendFoodBonus) => {
+            if (!character || !combatState) return;
+            if (getHeroTotalLevel(character) < 10) {
+                return alert("Serve almeno il Livello 10 per addestrare una cavalcatura!");
+            }
+            const mountObj = getTameableMountForEnemy(combatState);
+            if (!mountObj) return;
+
+            const curEnemyHp = getCombatHpValue(combatState);
+            const maxEnemyHp = combatState.maxHP || (MTG_BESTIARY[combatState.key] ? MTG_BESTIARY[combatState.key].maxHP : 100);
+            if (curEnemyHp > Math.ceil(maxEnemyHp * 0.35)) {
+                return alert("La creatura è ancora troppo forte! Portala sotto il 35% dei PV prima di tentare l'addestramento.");
+            }
+
+            let updatedChar = Object.assign({}, character);
+            let foodBonus = 0;
+            if (spendFoodBonus) {
+                if ((updatedChar.food || 0) < 1) return alert("Non hai Pedine Cibo (🍖) per ammansire la creatura!");
+                updatedChar.food = updatedChar.food - 1;
+                foodBonus = 5;
+            }
+
+            const stats = getFinalStats(updatedChar);
+            const statBonus = Math.max(stats.agi || 10, stats.mag || 10);
+            const d20 = Math.floor(Math.random() * 20) + 1;
+            const total = d20 + Math.floor(statBonus / 2) + foodBonus;
+
+            if (d20 === 20 || total >= mountObj.tameDC) {
+                if (typeof playTriadSfx === "function") playTriadSfx("win");
+                updatedChar.mount = Object.assign({}, mountObj);
+                const expGain = Math.round(((MTG_BESTIARY[combatState.key] && MTG_BESTIARY[combatState.key].exp) || 120) * 0.8);
+                updatedChar.exp = (updatedChar.exp || 0) + expGain;
+                saveCharState(updatedChar);
+                setCombatState(null);
+                setMountCombatLog("");
+                setEventBanner(`🐎👑 ADDESTRAMENTO RIUSCITO (${d20}+${Math.floor(statBonus / 2)}${foodBonus ? "+5🍖" : ""} = ${total} vs CD ${mountObj.tameDC})! **${mountObj.name}** ora è la cavalcatura fedele di ${updatedChar.name}! (+${expGain} EXP)`);
+            } else {
+                if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
+                const counterDmg = Math.max(3, Math.round(((combatState.dmg || 10) * 0.7)));
+                updatedChar.currentHP = Math.max(1, updatedChar.currentHP - counterDmg);
+                const failMsg = `❌ Addestramento fallito (${total} vs CD ${mountObj.tameDC})! La creatura si imbizzarrisce e infligge -${counterDmg} PV a ${updatedChar.name}. Riprova (o usa 1🍖 per +5 al tiro)!`;
+                setMountCombatLog(failMsg);
+                const failP = (party.length > 0 ? party : [updatedChar]).map(p => p.id === updatedChar.id ? updatedChar : p);
+                savePartyState(failP);
+                const nextFailCombat = Object.assign({}, combatState, {
+                    log: [failMsg].concat(combatState.log || []).slice(0, 8)
+                });
+                advanceToNextTurn(nextFailCombat, failP);
+            }
+        };
+
+        // Attacco o Potere Magico della Cavalcatura durante il combattimento
+        const executeMountCombatAction = (useSpecialPower) => {
+            if (!character || !character.mount || !combatState) return;
+            const m = character.mount;
+            const stats = getFinalStats(character);
+            let updatedChar = Object.assign({}, character);
+
+            if (useSpecialPower) {
+                if (mountPowerUsed) return alert("Hai già usato il Potere Speciale della tua cavalcatura in questo scontro!");
+                const curMana = (updatedChar.manaPool && updatedChar.manaPool[m.manaColor]) ? updatedChar.manaPool[m.manaColor] : 0;
+                if (curMana >= 1) {
+                    const nextPool = Object.assign({}, updatedChar.manaPool);
+                    nextPool[m.manaColor] = curMana - 1;
+                    updatedChar.manaPool = nextPool;
+                }
+                setMountPowerUsed(true);
+            }
+
+            const enemyFlying = isCombatEnemyFlying(combatState);
+            const hasAirMatch = m.flying && enemyFlying;
+            const hasGroundMatch = !m.flying && !enemyFlying;
+            const typeAdvantage = hasAirMatch || hasGroundMatch;
+
+            const d20 = Math.floor(Math.random() * 20) + 1;
+            const hasRapid = m.keywords.indexOf("Rapidità") !== -1 || m.keywords.indexOf("Attacco Improvviso") !== -1;
+            const hasDeathtouch = m.keywords.indexOf("Tocco Letale") !== -1;
+            const isCrit = d20 === 20 || (hasDeathtouch && d20 >= 18);
+
+            let dmg = m.baseDmg + Math.floor(((stats.str || 10) + (stats.mag || 10)) / 6);
+            if (typeAdvantage) dmg = Math.round(dmg * 1.5);
+            if (m.keywords.indexOf("Travolgere") !== -1) dmg += 4;
+            if (hasRapid) dmg += 2;
+            if (isCrit) dmg = Math.round(dmg * 1.6);
+
+            let extraText = "";
+            let nextGuard = mountGuardActive;
+
+            if (useSpecialPower) {
+                if (m.powerType === "burn") { dmg += 10; extraText = " 🔥 Fiammata pura (+10 danni)!"; }
+                else if (m.powerType === "trample") { dmg += (hasGroundMatch ? 14 : 8); extraText = " 🌳 Sfondamento sismico!"; }
+                else if (m.powerType === "heal") {
+                    const maxH = stats.maxHP;
+                    updatedChar.currentHP = Math.min(maxH, updatedChar.currentHP + 14);
+                    extraText = " ☀️ Cura +14 PV!";
+                } else if (m.powerType === "drain") {
+                    const maxH = stats.maxHP;
+                    updatedChar.currentHP = Math.min(maxH, updatedChar.currentHP + 10);
+                    extraText = " 💀 Drena +10 PV!";
+                } else if (m.powerType === "shield") {
+                    nextGuard = true;
+                    setMountGuardActive(true);
+                    extraText = " 🛡️ Dimezza il contrattacco nemico!";
+                }
+            }
+
+            // Legame Vitale passivo della cavalcatura
+            if (m.keywords.indexOf("Legame Vitale") !== -1) {
+                const lfHeal = Math.max(3, Math.round(dmg * 0.4));
+                updatedChar.currentHP = Math.min(stats.maxHP, updatedChar.currentHP + lfHeal);
+                extraText += ` (+${lfHeal} PV Legame Vitale)`;
+            }
+
+            const curEnemyHp = typeof combatState.currentHP === "number" ? combatState.currentHP : getCombatHpValue(combatState);
+            const newEnemyHp = Math.max(0, curEnemyHp - dmg);
+            const matchTag = hasAirMatch ? " [✈️ BONUS ARIA ×1.5!]" : (hasGroundMatch ? " [🐎 BONUS CARICA TERRA ×1.5!]" : "");
+            const logLine = `${useSpecialPower ? m.powerName : "🐎 Carica di " + m.name}${isCrit ? " 💥 CRITICO!" : ""}: **${character.name}** infligge **-${dmg} PV**${matchTag}${extraText}`;
+
+            const nextParty = (party.length > 0 ? party : [updatedChar]).map(p => p.id === updatedChar.id ? updatedChar : p);
+            const nextDmgMap = Object.assign({}, combatState.damageDealtByHero || {});
+            nextDmgMap[character.id] = (nextDmgMap[character.id] || 0) + dmg;
+            const nextLog = [logLine].concat(combatState.log || []).slice(0, 8);
+            const nextCombat = Object.assign({}, setCombatHpValue(combatState, newEnemyHp), {
+                currentHP: newEnemyHp,
+                damageDealtByHero: nextDmgMap,
+                log: nextLog
+            });
+
+            if (typeof playTriadSfx === "function") playTriadSfx(isCrit || useSpecialPower ? "combo" : "flip_good");
+            savePartyState(nextParty);
+            setMountCombatLog(logLine);
+
+            if (newEnemyHp <= 0) {
+                finishCombatVictory(updatedChar, nextDmgMap, logLine);
+                return;
+            }
+
+            // Passa correttamente al turno successivo nell'ordine di Iniziativa D&D!
+            advanceToNextTurn(nextCombat, nextParty);
+        };
+
+        const releaseCharacterMount = () => {
+            if (!character || !character.mount) return;
+            if (!window.confirm("Vuoi liberare " + character.mount.name + " nelle terre selvagge? Potrai addestrare una nuova cavalcatura!")) return;
+            const nextChar = Object.assign({}, character);
+            delete nextChar.mount;
+            saveCharState(nextChar);
+            setEventBanner("🍃 Hai liberato la tua cavalcatura. Ora lo slot Cavalcatura di " + character.name + " è libero!");
+        };
+      
         // --- GARA DI CUCINA DEL BIVACCO (STILE SUIKODEN II / MASTERCHEF PLANARE) ---
         const [showCookingModal, setShowCookingModal] = useState(false);
         const [cookState, setCookState] = useState(null);
@@ -13097,21 +13482,36 @@
                 }, 400);
             }
 
-            if (combatState.isCabalPitWave && combatState.isCabalPitWave >= 3) {
+           if (combatState.isCabalPitWave && combatState.isCabalPitWave >= 3) {
                 rogueliteRecoveryBanner += unlockPowerNineCard("mox_ruby");
             }
             if (combatState.key === "bfm_legend" || combatState.key === "emrakul_aeons_torn" || combatState.key === "progenitus_worldsoul") {
                 rogueliteRecoveryBanner += unlockPowerNineCard("mox_jet");
             }
+
+            // Drop esclusivo garantito dai Boss Abissali della Pesca (dropOnly: true)
+            const defeatedMonDef = (typeof RPG_MONSTERS_DB !== "undefined" && RPG_MONSTERS_DB[combatState.key]) || (typeof MTG_BESTIARY !== "undefined" && MTG_BESTIARY[combatState.key]);
+            if (defeatedMonDef && defeatedMonDef.exclusiveDropId && RPG_ITEMS_DB[defeatedMonDef.exclusiveDropId] && character) {
+                const alreadyHas = (character.inventory || []).some(it => it && it.id === defeatedMonDef.exclusiveDropId);
+                if (!alreadyHas) {
+                    const exItem = adaptLootForCharacter(RPG_ITEMS_DB[defeatedMonDef.exclusiveDropId], character);
+                    const updatedWithDrop = Object.assign({}, character, {
+                        inventory: (character.inventory || []).concat([exItem])
+                    });
+                    saveCharState(updatedWithDrop);
+                    rogueliteRecoveryBanner += `\n🦑👑 BOTTINO ESCLUSIVO ABISSALE! Hai ottenuto **${exItem.name}** (introvabile dai mercanti) nello Zaino!`;
+                }
+            }
+
             if (combatState.isBoss) {
                 justBeatBossRef.current = true;
             }
             const shouldOpenCityNow = openCityAfterWinRef.current;
             openCityAfterWinRef.current = false;
             setShowBattleOptionsModal(false);
-          
-            setCombatState(null);
 
+            setCombatState(null);
+          
             const currentUpdatedActive = partyWithMvp.find(h => h.id === lastActiveHero.id) || partyWithMvp[0];
             applyRewardsAndMove(
                 currentUpdatedActive,
@@ -15321,6 +15721,11 @@
                                     <p className="text-[10px] text-cyan-100/80">
                                         Bisaccia: {fishBag.length}/8 &nbsp;•&nbsp; Cibo: {character.food || 0}🍖 &nbsp;•&nbsp; Oro: {character.gold || 0}🪙
                                     </p>
+                                  {isAbyssalFishingZone(character.currentNode) && (
+                                        <p className="text-[10px] text-amber-300 font-black">
+                                            🦑 Acque Abissali: possibile agganciare Kraken/Leviatani con Armi Esclusive!
+                                        </p>
+                                    )}
                                 </div>
                                 <button onClick={closeFishingModalClean} className="bg-red-900 hover:bg-red-700 text-white text-xs font-black px-3 py-1 rounded-lg border border-red-400/60 shrink-0">
                                     Esci ✖
@@ -16051,6 +16456,18 @@
                                         <p className="text-gray-300 text-[10px] mt-0.5">Sfida Gyome o Asmorano davanti a 3 giudici per Oro, Cibo e Buff!</p>
                                     </button>
                                 </div>
+                                <button
+                                    onClick={huntWildMountEncounter}
+                                    className="w-full bg-gradient-to-r from-amber-900 via-yellow-700 to-amber-900 hover:from-amber-800 hover:to-amber-800 border-2 border-amber-300 p-3 rounded-xl text-left flex items-center justify-between active:scale-95 shadow-lg"
+                                >
+                                    <div>
+                                        <p className="text-amber-200 font-black text-xs">🐎🦅 Cerca Cavalcature Selvagge (Lv. 10+)</p>
+                                        <p className="text-amber-100/85 text-[10px]">Incontra Draghi, Pegasi, Grifoni o Dinosauri da indebolire e addestrare!</p>
+                                    </div>
+                                    <span className="bg-black/40 text-amber-200 text-[10px] font-black px-2 py-1 rounded-full shrink-0">
+                                        {getHeroTotalLevel(character) >= 10 ? "ATTIVO" : "LV. 10"}
+                                    </span>
+                                </button>
                             </div>
                         </div>,
                         () => setShowCampfireModal(false),
@@ -17995,7 +18412,7 @@
                                                                     >
                                                                         💥 Esplosione di Frammenti (Distruggi per sempre un tuo Oggetto Equipaggiato ➔ 40 Danni Puri!)
                                                                     </button>
-                                                                  {getAvailableDualTech() && !combatState.dualTechUsedThisBattle && (
+                                                                    {getAvailableDualTech() && !combatState.dualTechUsedThisBattle && (
                                                                         <button
                                                                             onClick={executeDualTechInBattle}
                                                                             className="w-full bg-gradient-to-r from-purple-700 via-indigo-600 to-cyan-600 hover:from-purple-600 hover:to-cyan-500 border-2 border-white text-white font-black py-2.5 px-3 rounded-xl text-xs shadow-lg mt-1 animate-pulse"
@@ -18003,6 +18420,105 @@
                                                                             🤝 {getAvailableDualTech().name} ➔ {getAvailableDualTech().desc}
                                                                         </button>
                                                                     )}
+
+                                                                    {/* PANNELLO CAVALCATURA & ADDESTRAMENTO IN ARENA DI BATTAGLIA */}
+                                                                    {(() => {
+                                                                        const monDb = (typeof RPG_MONSTERS_DB !== "undefined" && RPG_MONSTERS_DB[combatState.key]) || (typeof MTG_BESTIARY !== "undefined" && MTG_BESTIARY[combatState.key]);
+                                                                        const tameMount = getTameableMountForEnemy(combatState);
+                                                                        const curEnemyHp = typeof combatState.currentHP === "number" ? combatState.currentHP : getCombatHpValue(combatState);
+                                                                        const maxEnemyHp = combatState.maxHP || (monDb ? monDb.maxHP : 100);
+                                                                        const hpPct = maxEnemyHp > 0 ? Math.round((curEnemyHp / maxEnemyHp) * 100) : 100;
+                                                                        const canTameNow = tameMount && getHeroTotalLevel(character) >= 10 && hpPct <= 35 && curEnemyHp > 0;
+                                                                        const enemyFlies = isCombatEnemyFlying(combatState);
+                                                                        const myMount = character && character.mount;
+
+                                                                        return (
+                                                                            <div className="space-y-2 mt-2">
+                                                                                {/* AVVISO / PULSANTI ADDESTRAMENTO (LV. 10+) */}
+                                                                                {tameMount && (
+                                                                                    <div className={`rounded-xl p-2.5 border-2 ${canTameNow ? "bg-amber-950/90 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.65)] animate-pulse" : "bg-gray-900/80 border-amber-800/60"}`}>
+                                                                                        {canTameNow ? (
+                                                                                            <div className="space-y-2">
+                                                                                                <p className="text-xs font-black text-amber-200 text-center">
+                                                                                                    🐴 {tameMount.name} è stremato ({hpPct}% PV)! Addestralo prima di ucciderlo (CD {tameMount.tameDC})!
+                                                                                                </p>
+                                                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                                    <button onClick={() => attemptTameCombatMount(false)} className="bg-amber-400 hover:bg-amber-300 text-black font-black py-2 px-2 rounded-lg text-xs uppercase active:scale-95">
+                                                                                                        🎲 Addestra (Gratis)
+                                                                                                    </button>
+                                                                                                    <button onClick={() => attemptTameCombatMount(true)} className="bg-emerald-500 hover:bg-emerald-400 text-black font-black py-2 px-2 rounded-lg text-xs uppercase active:scale-95">
+                                                                                                        🍖 Offri 1 Cibo (+5 D20)
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        ) : (
+                                                                                            <p className="text-[10px] text-amber-200/90 text-center font-bold">
+                                                                                                {getHeroTotalLevel(character) >= 10
+                                                                                                    ? `🐎 Creatura Cavalcabile! Portala sotto il 35% PV (ora ${hpPct}%) per sbloccare l'Addestramento!`
+                                                                                                    : `🔒 Creatura Cavalcabile (si sblocca al Livello 10 — ora sei Lv. ${getHeroTotalLevel(character)})`}
+                                                                                            </p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {/* BOX CAVALCATURA ATTIVA DELL'EROE IN BATTAGLIA */}
+                                                                                {myMount && (
+                                                                                    <div className="bg-gradient-to-r from-indigo-950/90 via-slate-950 to-amber-950/70 border-2 border-amber-400/80 rounded-xl p-2.5 space-y-2 shadow-lg">
+                                                                                        <div className="flex items-center gap-2.5">
+                                                                                            <img
+                                                                                                src={myMount.img}
+                                                                                                alt={myMount.name}
+                                                                                                onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                                                                className="w-16 h-16 rounded-lg object-cover border-2 border-amber-300 shrink-0 shadow"
+                                                                                            />
+                                                                                            <div className="min-w-0 flex-1">
+                                                                                                <div className="flex items-center justify-between gap-1">
+                                                                                                    <p className="text-xs font-black text-amber-300 truncate">
+                                                                                                        {myMount.manaIcon} {myMount.name} ({myMount.creatureType})
+                                                                                                    </p>
+                                                                                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 ${
+                                                                                                        (myMount.flying && enemyFlies) || (!myMount.flying && !enemyFlies)
+                                                                                                            ? "bg-emerald-500 text-black"
+                                                                                                            : "bg-gray-800 text-gray-300"
+                                                                                                    }`}>
+                                                                                                        {myMount.flying && enemyFlies
+                                                                                                            ? "✈️ BONUS ARIA ×1.5"
+                                                                                                            : (!myMount.flying && !enemyFlies ? "🐎 BONUS TERRA ×1.5" : (myMount.flying ? "✈️ Volante" : "🐾 Terrestre"))}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <p className="text-[10px] text-cyan-200 font-bold truncate">
+                                                                                                    Abilità: {myMount.keywords.join(" • ")}
+                                                                                                </p>
+                                                                                                <p className="text-[9px] text-gray-300 truncate">{myMount.powerDesc}</p>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        <div className="grid grid-cols-2 gap-2">
+                                                                                            <button
+                                                                                                onClick={() => executeMountCombatAction(false)}
+                                                                                                className="bg-amber-600 hover:bg-amber-500 text-white font-black py-2 px-2 rounded-lg text-[11px] uppercase shadow active:scale-95"
+                                                                                            >
+                                                                                                {myMount.flying ? "🦅 Carica Aerea" : "🐎 Carica Terrestre"}
+                                                                                            </button>
+                                                                                            <button
+                                                                                                disabled={mountPowerUsed}
+                                                                                                onClick={() => executeMountCombatAction(true)}
+                                                                                                className="bg-purple-700 hover:bg-purple-600 disabled:bg-gray-800 disabled:text-gray-500 text-white font-black py-2 px-2 rounded-lg text-[11px] uppercase shadow active:scale-95"
+                                                                                            >
+                                                                                                {mountPowerUsed ? "✅ Potere Usato" : myMount.powerName}
+                                                                                            </button>
+                                                                                        </div>
+
+                                                                                        {mountCombatLog && (
+                                                                                            <p className="text-[11px] font-bold text-amber-200 bg-black/70 border border-amber-700/60 rounded-lg px-2.5 py-1.5">
+                                                                                                {mountCombatLog}
+                                                                                            </p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })()}
                                                                 </React.Fragment>
                                                             )}
                                                         </div>
@@ -18704,6 +19220,57 @@
                                     );
                                 })}
                             </div>
+                        </div>
+
+                        {/* SCHEDA CAVALCATURA COMPAGNA (LV. 10+ — INTEGRATA ANCHE IN STAMPA A4) */}
+                        <div className={`mt-2 bg-amber-50/90 p-2.5 rounded-xl border-2 border-amber-800 space-y-1.5 ${!character.mount ? "no-print" : ""}`}>
+                            <div className="flex justify-between items-center border-b border-amber-700/50 pb-0.5">
+                                <h3 className="font-black text-amber-950 text-[10px] uppercase">
+                                    🐎 Cavalcatura Compagna (Sblocco Lv. 10+)
+                                </h3>
+                                {character.mount && (
+                                    <button
+                                        onClick={releaseCharacterMount}
+                                        className="no-print bg-red-700 hover:bg-red-600 text-white text-[9px] font-black px-2 py-0.5 rounded"
+                                    >
+                                        Libera
+                                    </button>
+                                )}
+                            </div>
+
+                            {character.mount ? (
+                                <div className="flex items-start gap-2.5">
+                                    <img
+                                        src={character.mount.img}
+                                        alt={character.mount.name}
+                                        onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                        className="w-16 h-16 object-cover rounded-lg border-2 border-gray-900 shadow shrink-0"
+                                    />
+                                    <div className="space-y-0.5 text-[10px] text-gray-900 flex-1 min-w-0 leading-tight">
+                                        <p className="font-black text-xs text-gray-900 truncate">
+                                            {character.mount.manaIcon} {character.mount.name}{" "}
+                                            <span className="font-bold text-[10px] text-amber-900">
+                                                ({character.mount.creatureType} • {character.mount.flying ? "✈️ Volante" : "🐾 Terrestre"})
+                                            </span>
+                                        </p>
+                                        <p className="font-bold text-indigo-950">
+                                            ⚡ Abilità: {character.mount.keywords.join(" • ")}
+                                        </p>
+                                        <p className="font-bold text-emerald-900">
+                                            🛡️ {character.mount.passiveDesc}
+                                        </p>
+                                        <p className="text-[9px] text-purple-950 bg-white/75 border border-purple-300 rounded px-1.5 py-0.5">
+                                            ✨ <b>{character.mount.powerName}:</b> {character.mount.powerDesc}
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-[10px] text-gray-700 italic leading-snug">
+                                    {getHeroTotalLevel(character) >= 10
+                                        ? "Nessuna cavalcatura addestrata. Apri il Bivacco ➔ «Cerca Cavalcature Selvagge» oppure indebolisci un Drago, Grifone, Pegaso o Dinosauro sotto il 35% PV in battaglia!"
+                                        : `Raggiungi il Livello 10 (attuale: Lv. ${getHeroTotalLevel(character)}) per addestrare Draghi, Grifoni, Pegasi, Dinosauri e Destrieri!`}
+                                </p>
+                            )}
                         </div>
                     </div>
 
