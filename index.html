@@ -6944,6 +6944,17 @@
                 else if (char.mount.manaColor === "U") eqAgi += 2;
                 else if (char.mount.manaColor === "B") eqMag += 2;
             }
+
+            // Bonus permanente della Fortezza della Compagnia (Lv. 2 / 3 / 4)
+            if (typeof fortressState !== "undefined" && fortressState && fortressState.level > 0) {
+                const fDef = FORTRESS_LEVELS[fortressState.level];
+                if (fDef) {
+                    eqStr += (fDef.statBonus || 0);
+                    eqAgi += (fDef.statBonus || 0);
+                    eqMag += (fDef.statBonus || 0);
+                    eqCon += (fDef.conBonus || 0);
+                }
+            }
           
             // BONUS DA INCANTA CREATURA (AURA MISTICA ATTIVA SULL'EROE)
             const activeAuraObj = (char.activeAura && RPG_AURAS_DB[char.activeAura.id]) ? RPG_AURAS_DB[char.activeAura.id] : null;
@@ -10059,13 +10070,20 @@
 
             if (d20 === 20 || total >= mountObj.tameDC) {
                 if (typeof playTriadSfx === "function") playTriadSfx("win");
+                let parkedNote = "";
+                if (updatedChar.mount && fortressState && fortressState.level >= 1) {
+                    const prevName = updatedChar.mount.name;
+                    if (addMountToStableDirect(updatedChar.mount)) {
+                        parkedNote = " (La precedente cavalcatura " + prevName + " è stata inviata nella Scuderia!)";
+                    }
+                }
                 updatedChar.mount = Object.assign({}, mountObj);
                 const expGain = Math.round(((MTG_BESTIARY[combatState.key] && MTG_BESTIARY[combatState.key].exp) || 120) * 0.8);
                 updatedChar.exp = (updatedChar.exp || 0) + expGain;
                 saveCharState(updatedChar);
                 setCombatState(null);
                 setMountCombatLog("");
-                setEventBanner(`🐎👑 ADDESTRAMENTO RIUSCITO (${d20}+${Math.floor(statBonus / 2)}${foodBonus ? "+5🍖" : ""} = ${total} vs CD ${mountObj.tameDC})! **${mountObj.name}** ora è la cavalcatura fedele di ${updatedChar.name}! (+${expGain} EXP)`);
+                setEventBanner(`🐎👑 ADDESTRAMENTO RIUSCITO (${d20}+${Math.floor(statBonus / 2)}${foodBonus ? "+5🍖" : ""} = ${total} vs CD ${mountObj.tameDC})! **${mountObj.name}** ora è la cavalcatura fedele di ${updatedChar.name}! (+${expGain} EXP)` + parkedNote);
             } else {
                 if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
                 const counterDmg = Math.max(3, Math.round(((combatState.dmg || 10) * 0.7)));
@@ -10180,6 +10198,432 @@
             setEventBanner("🍃 Hai liberato la tua cavalcatura. Ora lo slot Cavalcatura di " + character.name + " è libero!");
         };
       
+        // ============================================================================
+        // --- MODULO B: FORTEZZA DELLA COMPAGNIA (4 LIVELLI + TIMER + SCUDERIA)   ---
+        // ============================================================================
+        const [showFortressModal, setShowFortressModal] = useState(false);
+        const [fortressTab, setFortressTab] = useState("overview"); // "overview" | "stable" | "banner"
+        const [fortressNow, setFortressNow] = useState(Date.now());
+
+        const FORTRESS_LEVELS = [
+            {
+                level: 0,
+                name: "Terreno Brullo della Compagnia",
+                subtitle: "Nessuna fortezza costruita",
+                img: "./mtg-bg.jpg",
+                goldCost: 0,
+                treasureCost: 0,
+                buildMs: 0,
+                buildLabel: "-",
+                stableCap: 0,
+                incomeGold: 0,
+                incomeFood: 0,
+                incomeTreasures: 0,
+                statBonus: 0,
+                conBonus: 0,
+                perks: ["Posa la prima pietra per fondare la tua base e sbloccare Stendardo e Scuderia!"]
+            },
+            {
+                level: 1,
+                name: "Avamposto di Benalia",
+                subtitle: "Livello 1 — Casa Fortificata",
+                img: "./fortezza_lv1.png",
+                goldCost: 350,
+                treasureCost: 0,
+                buildMs: 15 * 60 * 1000, // 15 minuti
+                buildLabel: "15 minuti",
+                stableCap: 2,
+                incomeGold: 0,
+                incomeFood: 0,
+                incomeTreasures: 0,
+                statBonus: 0,
+                conBonus: 0,
+                perks: ["Riposo Gratuito 100% PV e +2 Mana (ogni 30 min)", "Stendardo della Compagnia (visibile anche su Scheda A4)", "Scuderia Base: fino a 2 cavalcature di riserva"]
+            },
+            {
+                level: 2,
+                name: "Torre di Guardia di Kjeldor",
+                subtitle: "Livello 2 — Bastione con Mura",
+                img: "./fortezza_lv2.png",
+                goldCost: 900,
+                treasureCost: 2,
+                buildMs: 2 * 60 * 60 * 1000, // 2 ore
+                buildLabel: "2 ore",
+                stableCap: 6,
+                incomeGold: 40,
+                incomeFood: 1,
+                incomeTreasures: 0,
+                statBonus: 0,
+                conBonus: 1,
+                perks: ["Scuderia Ampliata: fino a 6 cavalcature scambiabili tra gli eroi", "Tesoreria Passiva: +40 🪙 e +1 🍖 ogni 2 ore", "Bonus Permanente Party: +1 COS a tutti gli eroi"]
+            },
+            {
+                level: 3,
+                name: "Maniero di Eiganjo",
+                subtitle: "Livello 3 — Castello Fortificato",
+                img: "./fortezza_lv3.png",
+                goldCost: 2000,
+                treasureCost: 5,
+                buildMs: 8 * 60 * 60 * 1000, // 8 ore
+                buildLabel: "8 ore",
+                stableCap: 12,
+                incomeGold: 90,
+                incomeFood: 2,
+                incomeTreasures: 0,
+                statBonus: 1,
+                conBonus: 2,
+                perks: ["Scuderia Reale: fino a 12 cavalcature per tutta la Compagnia", "Tesoreria Avanzata: +90 🪙 e +2 🍖 ogni 2 ore", "Bonus Permanente Party: +1 FOR/AGI/MAG e +2 COS"]
+            },
+            {
+                level: 4,
+                name: "Cittadella Planare di Serra",
+                subtitle: "Livello 4 — Fortezza Suprema",
+                img: "./fortezza_lv4.png",
+                goldCost: 4500,
+                treasureCost: 10,
+                buildMs: 24 * 60 * 60 * 1000, // 24 ore (1 giorno intero)
+                buildLabel: "24 ore (1 giorno)",
+                stableCap: 18,
+                incomeGold: 180,
+                incomeFood: 3,
+                incomeTreasures: 1,
+                statBonus: 3,
+                conBonus: 6,
+                perks: ["Scuderia Leggendaria: 18 posti (tutte le specie di Magic!)", "Tesoreria Imperiale: +180 🪙, +3 🍖 e +1 💎 ogni 2 ore", "Bonus Permanente Party: +3 FOR/AGI/MAG e +6 COS + Sala Trofei"]
+            }
+        ];
+
+        const FORTRESS_DEFAULT_BANNERS = [
+            { id: "banner_1", name: "Vessillo di Benalia", icon: "☀️", bg: "from-amber-700 to-yellow-500", img: "./banner_1.png" },
+            { id: "banner_2", name: "Sigillo di Tolaria", icon: "💧", bg: "from-blue-900 to-cyan-600", img: "./banner_2.png" },
+            { id: "banner_3", name: "Ala di Shiv", icon: "🔥", bg: "from-red-900 to-orange-600", img: "./banner_3.png" },
+            { id: "banner_4", name: "Stemma di Llanowar", icon: "🌳", bg: "from-emerald-900 to-green-600", img: "./banner_4.png" }
+        ];
+
+        const [fortressState, setFortressState] = useState(() => {
+            try {
+                const raw = JSON.parse(localStorage.getItem("rpg_fortress_state") || "null");
+                if (raw && typeof raw === "object") {
+                    return Object.assign({
+                        level: 0,
+                        customName: "Fortezza della Compagnia",
+                        buildingTargetLevel: null,
+                        buildStartTime: null,
+                        buildEndTime: null,
+                        bannerId: "banner_1",
+                        customBanner: null,
+                        stableMounts: [],
+                        lastRestTime: 0,
+                        lastIncomeTime: 0
+                    }, raw);
+                }
+            } catch (e) {}
+            return {
+                level: 0,
+                customName: "Fortezza della Compagnia",
+                buildingTargetLevel: null,
+                buildStartTime: null,
+                buildEndTime: null,
+                bannerId: "banner_1",
+                customBanner: null,
+                stableMounts: [],
+                lastRestTime: 0,
+                lastIncomeTime: 0
+            };
+        });
+
+        const saveFortressState = (nextState) => {
+            setFortressState(nextState);
+            try { localStorage.setItem("rpg_fortress_state", JSON.stringify(nextState)); } catch (e) {}
+        };
+
+        const formatFortressCountdown = (msLeft) => {
+            const totalSec = Math.max(0, Math.ceil(msLeft / 1000));
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            const pad = (n) => (n < 10 ? "0" + n : String(n));
+            return pad(h) + ":" + pad(m) + ":" + pad(s);
+        };
+
+        // Timer in tempo reale: controlla e completa automaticamente la costruzione anche dopo aver chiuso il browser
+        useEffect(() => {
+            if (!fortressState.buildingTargetLevel || !fortressState.buildEndTime) return;
+            const checkBuildCompletion = () => {
+                const now = Date.now();
+                setFortressNow(now);
+                if (now >= fortressState.buildEndTime) {
+                    const newLvl = fortressState.buildingTargetLevel;
+                    const lvDef = FORTRESS_LEVELS[newLvl] || FORTRESS_LEVELS[1];
+                    const completed = Object.assign({}, fortressState, {
+                        level: newLvl,
+                        buildingTargetLevel: null,
+                        buildStartTime: null,
+                        buildEndTime: null,
+                        lastIncomeTime: fortressState.lastIncomeTime || now
+                    });
+                    saveFortressState(completed);
+                    if (typeof playTriadSfx === "function") playTriadSfx("win");
+                    setEventBanner(`🏰🎉 COSTRUZIONE COMPLETATA! La vostra base è ora **${lvDef.name} (Livello ${newLvl})**! Nuovi posti Scuderia e bonus attivi per tutta la Compagnia!`);
+                }
+            };
+            checkBuildCompletion();
+            const iv = setInterval(checkBuildCompletion, 1000);
+            return () => clearInterval(iv);
+        }, [fortressState.buildingTargetLevel, fortressState.buildEndTime]);
+
+        const getPartyTotalResources = () => {
+            const list = party.length > 0 ? party : (character ? [character] : []);
+            let g = 0; let t = 0;
+            list.forEach(h => {
+                if (!h) return;
+                g += (h.gold || 0);
+                t += (h.treasures || 0);
+            });
+            return { gold: g, treasures: t };
+        };
+
+        const spendPartyResourcesForFortress = (goldNeed, treasureNeed) => {
+            const list = party.length > 0 ? party.slice() : (character ? [character] : []);
+            const totals = getPartyTotalResources();
+            if (totals.gold < goldNeed || totals.treasures < treasureNeed) return false;
+
+            let remGold = goldNeed;
+            let remTreas = treasureNeed;
+            // Prima scala dall'eroe attivo, poi dagli altri compagni della Compagnia
+            const orderedIds = [character ? character.id : ""].concat(list.map(h => h.id).filter(id => !character || id !== character.id));
+            const mapById = {};
+            list.forEach(h => { mapById[h.id] = Object.assign({}, h); });
+
+            orderedIds.forEach(id => {
+                const h = mapById[id];
+                if (!h) return;
+                if (remGold > 0 && (h.gold || 0) > 0) {
+                    const takeG = Math.min(h.gold || 0, remGold);
+                    h.gold = (h.gold || 0) - takeG;
+                    remGold -= takeG;
+                }
+                if (remTreas > 0 && (h.treasures || 0) > 0) {
+                    const takeT = Math.min(h.treasures || 0, remTreas);
+                    h.treasures = (h.treasures || 0) - takeT;
+                    remTreas -= takeT;
+                }
+            });
+
+            const updatedList = list.map(h => mapById[h.id] || h);
+            savePartyState(updatedList);
+            return true;
+        };
+
+        const startFortressUpgrade = () => {
+            if (!character) return;
+            if (fortressState.buildingTargetLevel) {
+                return alert("I muratori sono già al lavoro su un ampliamento! Attendi il termine del timer.");
+            }
+            const nextLvl = (fortressState.level || 0) + 1;
+            const nextDef = FORTRESS_LEVELS[nextLvl];
+            if (!nextDef) return alert("Hai già raggiunto il Livello Massimo della Cittadella Planare!");
+
+            const totals = getPartyTotalResources();
+            if (totals.gold < nextDef.goldCost || totals.treasures < nextDef.treasureCost) {
+                return alert(
+                    "Risorse della Compagnia insufficienti per costruire " + nextDef.name + "!\n" +
+                    "Serve: " + nextDef.goldCost + " Oro" + (nextDef.treasureCost ? " + " + nextDef.treasureCost + " Tesori" : "") + "\n" +
+                    "Avete in totale: " + totals.gold + " Oro e " + totals.treasures + " Tesori."
+                );
+            }
+
+            if (!window.confirm(
+                "Vuoi avviare la costruzione di «" + nextDef.name + "» (Lv. " + nextLvl + ")?\n" +
+                "Costo Compagnia: " + nextDef.goldCost + " 🪙" + (nextDef.treasureCost ? " + " + nextDef.treasureCost + " 💎" : "") + "\n" +
+                "Tempo di costruzione: " + nextDef.buildLabel
+            )) return;
+
+            if (!spendPartyResourcesForFortress(nextDef.goldCost, nextDef.treasureCost)) return;
+
+            const now = Date.now();
+            const nextFort = Object.assign({}, fortressState, {
+                buildingTargetLevel: nextLvl,
+                buildStartTime: now,
+                buildEndTime: now + nextDef.buildMs
+            });
+            saveFortressState(nextFort);
+            setFortressNow(now);
+            if (typeof playTriadSfx === "function") playTriadSfx("place");
+            setEventBanner(`🏗️ CANTIERE APERTO! La costruzione di **${nextDef.name}** richiederà **${nextDef.buildLabel}**. Il timer scorre anche a schermata chiusa!`);
+        };
+
+        const speedUpFortressBuild = (instantMaster) => {
+            if (!fortressState.buildingTargetLevel || !fortressState.buildEndTime) return;
+            if (instantMaster) {
+                const targetLvl = fortressState.buildingTargetLevel;
+                const lvDef = FORTRESS_LEVELS[targetLvl] || FORTRESS_LEVELS[1];
+                saveFortressState(Object.assign({}, fortressState, {
+                    level: targetLvl,
+                    buildingTargetLevel: null,
+                    buildStartTime: null,
+                    buildEndTime: null,
+                    lastIncomeTime: fortressState.lastIncomeTime || Date.now()
+                }));
+                setEventBanner(`👑 [Master] Costruzione di **${lvDef.name}** completata istantaneamente!`);
+                return;
+            }
+            if (!spendPartyResourcesForFortress(0, 1)) {
+                return alert("Serve almeno 1 Pedina Tesoro (💎) nella Compagnia per accelerare i lavori di 2 ore!");
+            }
+            const reducedEnd = fortressState.buildEndTime - (2 * 60 * 60 * 1000);
+            saveFortressState(Object.assign({}, fortressState, { buildEndTime: reducedEnd }));
+            setFortressNow(Date.now());
+            setEventBanner("⚡💎 Hai speso 1 Tesoro per accelerare i costruttori: **-2 ore** sul timer della Fortezza!");
+        };
+
+        const restAtFortress = () => {
+            if (!character || fortressState.level < 1) return;
+            const cooldownMs = 30 * 60 * 1000;
+            const elapsed = Date.now() - (fortressState.lastRestTime || 0);
+            if (elapsed < cooldownMs) {
+                return alert("Potrai riposare di nuovo gratuitamente alla Fortezza tra " + formatFortressCountdown(cooldownMs - elapsed) + ".");
+            }
+            const list = party.length > 0 ? party.slice() : [character];
+            const healed = list.map(h => {
+                if (h.status === "dead") return h;
+                const maxH = getFinalStats(h).maxHP;
+                const pool = Object.assign({}, h.manaPool || {});
+                (h.manaIdentity || ["W"]).forEach(col => { pool[col] = Math.min(12, (pool[col] || 0) + 2); });
+                return Object.assign({}, h, { currentHP: maxH, status: "alive", deathSuccesses: 0, deathFailures: 0, manaPool: pool });
+            });
+            savePartyState(healed);
+            saveFortressState(Object.assign({}, fortressState, { lastRestTime: Date.now() }));
+            if (typeof playTriadSfx === "function") playTriadSfx("win");
+            setEventBanner("🏰💚 RIPOSO NELLA FORTEZZA! Tutta la Compagnia è tornata al **100% PV** e ha ricaricato **+2 Mana** per colore!");
+        };
+
+        const collectFortressIncome = () => {
+            if (!character || fortressState.level < 2) return;
+            const curDef = FORTRESS_LEVELS[fortressState.level] || FORTRESS_LEVELS[0];
+            const cooldownMs = 2 * 60 * 60 * 1000; // Ogni 2 ore
+            const elapsed = Date.now() - (fortressState.lastIncomeTime || 0);
+            if (elapsed < cooldownMs) {
+                return alert("La prossima rendita della Tesoreria sarà pronta tra " + formatFortressCountdown(cooldownMs - elapsed) + ".");
+            }
+            const updated = Object.assign({}, character, {
+                gold: (character.gold || 0) + curDef.incomeGold,
+                food: (character.food || 0) + curDef.incomeFood,
+                treasures: (character.treasures || 0) + curDef.incomeTreasures
+            });
+            saveCharState(updated);
+            saveFortressState(Object.assign({}, fortressState, { lastIncomeTime: Date.now() }));
+            if (typeof playTriadSfx === "function") playTriadSfx("win");
+            setEventBanner(
+                `🏰🪙 RENDITA RISCOSSA! ${character.name} ritira dalla Tesoreria **+${curDef.incomeGold} 🪙**, **+${curDef.incomeFood} 🍖**` +
+                (curDef.incomeTreasures ? ` e **+${curDef.incomeTreasures} 💎**!` : "!")
+            );
+        };
+
+        // Caricamento Stendardo da Cellulare/PC con ridimensionamento automatico su Canvas (~25KB per non riempire localStorage)
+        const handleFortressBannerUpload = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const imgObj = new Image();
+                imgObj.onload = () => {
+                    try {
+                        const canvas = document.createElement("canvas");
+                        const targetW = 240;
+                        const targetH = 320;
+                        canvas.width = targetW;
+                        canvas.height = targetH;
+                        const ctx = canvas.getContext("2d");
+                        const scale = Math.max(targetW / imgObj.width, targetH / imgObj.height);
+                        const drawW = imgObj.width * scale;
+                        const drawH = imgObj.height * scale;
+                        ctx.drawImage(imgObj, (targetW - drawW) / 2, (targetH - drawH) / 2, drawW, drawH);
+                        const compressed = canvas.toDataURL("image/jpeg", 0.78);
+                        saveFortressState(Object.assign({}, fortressState, {
+                            bannerId: "custom",
+                            customBanner: compressed
+                        }));
+                        setEventBanner("🚩✨ Nuovo Stendardo personalizzato caricato e issato sulla Fortezza e sulla Scheda A4!");
+                    } catch (err) {
+                        alert("Errore nel ridimensionamento dell'immagine. Prova un'altra foto.");
+                    }
+                };
+                imgObj.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        const getActiveFortressBannerInfo = () => {
+            if (fortressState.bannerId === "custom" && fortressState.customBanner) {
+                return { id: "custom", name: "Stendardo Personalizzato", icon: "🚩", bg: "from-amber-800 to-yellow-600", img: fortressState.customBanner, isCustom: true };
+            }
+            const found = FORTRESS_DEFAULT_BANNERS.find(b => b.id === fortressState.bannerId);
+            return found || FORTRESS_DEFAULT_BANNERS[0];
+        };
+
+        // --- GESTIONE SCUDERIA (PARCHEGGIA / ASSEGNA / SCAMBIA CAVALCATURE PER OGNI EROE) ---
+        const addMountToStableDirect = (mountObj) => {
+            if (!mountObj) return false;
+            const curDef = FORTRESS_LEVELS[fortressState.level || 0] || FORTRESS_LEVELS[0];
+            const list = Array.isArray(fortressState.stableMounts) ? fortressState.stableMounts.slice() : [];
+            if (list.length >= curDef.stableCap) return false;
+            const entry = Object.assign({}, mountObj, { uid: "mnt_" + Date.now() + "_" + Math.floor(Math.random() * 9999) });
+            list.push(entry);
+            saveFortressState(Object.assign({}, fortressState, { stableMounts: list }));
+            return true;
+        };
+
+        const parkCurrentMountInStable = () => {
+            if (!character || !character.mount) return;
+            const curDef = FORTRESS_LEVELS[fortressState.level || 0] || FORTRESS_LEVELS[0];
+            const list = Array.isArray(fortressState.stableMounts) ? fortressState.stableMounts.slice() : [];
+            if (curDef.stableCap <= 0) {
+                return alert("Costruisci almeno la Fortezza Lv. 1 per sbloccare la Scuderia!");
+            }
+            if (list.length >= curDef.stableCap) {
+                return alert("La Scuderia è piena (" + list.length + "/" + curDef.stableCap + ")! Amplia la Fortezza o libera una cavalcatura.");
+            }
+            const entry = Object.assign({}, character.mount, { uid: "mnt_" + Date.now() + "_" + Math.floor(Math.random() * 9999) });
+            list.push(entry);
+            saveFortressState(Object.assign({}, fortressState, { stableMounts: list }));
+            const nextChar = Object.assign({}, character);
+            delete nextChar.mount;
+            saveCharState(nextChar);
+            setEventBanner("🐎🏠 **" + entry.name + "** è stata portata al sicuro nella Scuderia della Fortezza!");
+        };
+
+        const equipMountFromStable = (mountUid) => {
+            if (!character) return;
+            if (combatState) return alert("⛔ Non puoi cambiare cavalcatura dalla Scuderia durante il combattimento!");
+            const list = Array.isArray(fortressState.stableMounts) ? fortressState.stableMounts.slice() : [];
+            const idx = list.findIndex(m => m && m.uid === mountUid);
+            if (idx === -1) return;
+            const chosen = list[idx];
+            list.splice(idx, 1);
+
+            // Se l'eroe aveva già una cavalcatura attiva, la parcheggia automaticamente nello spazio appena liberato
+            if (character.mount) {
+                const oldParked = Object.assign({}, character.mount, { uid: "mnt_" + Date.now() + "_" + Math.floor(Math.random() * 9999) });
+                list.push(oldParked);
+            }
+
+            const cleanMount = Object.assign({}, chosen);
+            delete cleanMount.uid;
+            saveFortressState(Object.assign({}, fortressState, { stableMounts: list }));
+            saveCharState(Object.assign({}, character, { mount: cleanMount }));
+            if (typeof playTriadSfx === "function") playTriadSfx("flip_good");
+            setEventBanner("🐎✨ **" + character.name + "** ora cavalca **" + cleanMount.name + "** dalla Scuderia!");
+        };
+
+        const releaseStableMount = (mountUid) => {
+            const list = Array.isArray(fortressState.stableMounts) ? fortressState.stableMounts.slice() : [];
+            const found = list.find(m => m && m.uid === mountUid);
+            if (!found) return;
+            if (!window.confirm("Vuoi liberare " + found.name + " dalla Scuderia nelle terre selvagge?")) return;
+            saveFortressState(Object.assign({}, fortressState, { stableMounts: list.filter(m => m && m.uid !== mountUid) }));
+        };
+
         // --- GARA DI CUCINA DEL BIVACCO (STILE SUIKODEN II / MASTERCHEF PLANARE) ---
         const [showCookingModal, setShowCookingModal] = useState(false);
         const [cookState, setCookState] = useState(null);
@@ -16693,9 +17137,430 @@
                                         {getHeroTotalLevel(character) >= 10 ? "ATTIVO" : "LV. 10"}
                                     </span>
                                 </button>
+                                <button
+                                    onClick={() => { setShowCampfireModal(false); setFortressTab("overview"); setShowFortressModal(true); }}
+                                    className="w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-amber-950 hover:from-slate-800 hover:to-amber-900 border-2 border-amber-400 p-3 rounded-xl text-left flex items-center justify-between active:scale-95 shadow-lg"
+                                >
+                                    <div>
+                                        <p className="text-amber-300 font-black text-xs">
+                                            🏰 {fortressState.level > 0 ? (FORTRESS_LEVELS[fortressState.level].name + " (Lv. " + fortressState.level + "/4)") : "Fortezza della Compagnia (Da Costruire)"}
+                                        </p>
+                                        <p className="text-amber-100/80 text-[10px]">
+                                            {fortressState.buildingTargetLevel
+                                                ? "🏗️ Lavori in corso: " + formatFortressCountdown((fortressState.buildEndTime || 0) - fortressNow)
+                                                : "Costruisci e potenzia la Base, gestisci la Scuderia e issa il tuo Stendardo!"}
+                                        </p>
+                                    </div>
+                                    <span className="bg-amber-400 text-black text-[10px] font-black px-2 py-1 rounded-full shrink-0">
+                                        {fortressState.level > 0 ? ("🐎 " + (fortressState.stableMounts || []).length) : "FONDA"}
+                                    </span>
+                                </button>
                             </div>
                         </div>,
                         () => setShowCampfireModal(false),
+                        false
+                    )}
+
+                    {/* MODALE FORTEZZA DELLA COMPAGNIA, SCUDERIA E STENDARDO */}
+                    {showFortressModal && character && renderDedicatedModal(
+                        (() => {
+                            const curDef = FORTRESS_LEVELS[fortressState.level || 0] || FORTRESS_LEVELS[0];
+                            const nextDef = FORTRESS_LEVELS[(fortressState.level || 0) + 1] || null;
+                            const activeBanner = getActiveFortressBannerInfo();
+                            const partyRes = getPartyTotalResources();
+                            const isBuilding = Boolean(fortressState.buildingTargetLevel && fortressState.buildEndTime);
+                            const msLeft = isBuilding ? Math.max(0, fortressState.buildEndTime - fortressNow) : 0;
+                            const totalBuildMs = isBuilding ? Math.max(1, fortressState.buildEndTime - (fortressState.buildStartTime || fortressNow)) : 1;
+                            const buildPct = isBuilding ? Math.min(100, Math.max(2, Math.round(((totalBuildMs - msLeft) / totalBuildMs) * 100))) : 0;
+                            const buildingDef = isBuilding ? (FORTRESS_LEVELS[fortressState.buildingTargetLevel] || nextDef) : null;
+                            const stableList = Array.isArray(fortressState.stableMounts) ? fortressState.stableMounts : [];
+
+                            return (
+                                <div className="bg-gradient-to-b from-slate-950 via-gray-950 to-amber-950/60 border-4 border-amber-500 rounded-2xl p-3 sm:p-4 text-white space-y-3 shadow-2xl">
+                                    {/* INTESTAZIONE CON STENDARDO E CHIUSURA */}
+                                    <div className="flex items-center justify-between gap-2 border-b border-amber-700/60 pb-2.5">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className={`w-11 h-14 rounded-lg border-2 border-amber-300 overflow-hidden bg-gradient-to-b ${activeBanner.bg} flex items-center justify-center shrink-0 shadow-md`}>
+                                                <img
+                                                    src={activeBanner.img}
+                                                    alt={activeBanner.name}
+                                                    onError={(e) => { e.target.style.display = "none"; }}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <span className="text-xl absolute pointer-events-none drop-shadow">{activeBanner.isCustom ? "" : activeBanner.icon}</span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="text-sm sm:text-base font-rpg-title font-black text-amber-300 truncate">
+                                                    🏰 {fortressState.customName || curDef.name}
+                                                </h3>
+                                                <p className="text-[11px] text-amber-100/85 font-bold truncate">
+                                                    {curDef.name} • {curDef.subtitle}
+                                                </p>
+                                                <p className="text-[10px] text-emerald-300 font-bold">
+                                                    Cassa Compagnia: {partyRes.gold} 🪙 &nbsp;•&nbsp; {partyRes.treasures} 💎
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setShowFortressModal(false)} className="bg-red-900 hover:bg-red-700 text-white font-black text-xs px-3 py-1.5 rounded-lg shrink-0">
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    {/* TAB DI NAVIGAZIONE */}
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        <button
+                                            onClick={() => setFortressTab("overview")}
+                                            className={`py-2 rounded-xl text-xs font-black border transition-all ${fortressTab === "overview" ? "bg-amber-500 text-black border-white shadow" : "bg-gray-900 text-amber-200 border-amber-800/70"}`}
+                                        >
+                                            🏰 Fortezza
+                                        </button>
+                                        <button
+                                            onClick={() => setFortressTab("stable")}
+                                            className={`py-2 rounded-xl text-xs font-black border transition-all ${fortressTab === "stable" ? "bg-amber-500 text-black border-white shadow" : "bg-gray-900 text-amber-200 border-amber-800/70"}`}
+                                        >
+                                            🐎 Scuderia ({stableList.length}/{curDef.stableCap})
+                                        </button>
+                                        <button
+                                            onClick={() => setFortressTab("banner")}
+                                            className={`py-2 rounded-xl text-xs font-black border transition-all ${fortressTab === "banner" ? "bg-amber-500 text-black border-white shadow" : "bg-gray-900 text-amber-200 border-amber-800/70"}`}
+                                        >
+                                            🚩 Stendardo
+                                        </button>
+                                    </div>
+
+                                    {/* ===================================================== */}
+                                    {/* SCHEDA 1: FORTEZZA, TIMER COSTRUZIONE E POTENZIAMENTI */}
+                                    {/* ===================================================== */}
+                                    {fortressTab === "overview" && (
+                                        <div className="space-y-3">
+                                            <div className="relative w-full h-44 sm:h-52 rounded-xl overflow-hidden border-2 border-amber-400/80 bg-black shadow-xl">
+                                                <img
+                                                    src={curDef.img}
+                                                    alt={curDef.name}
+                                                    onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
+                                                    className="w-full h-full object-cover object-center"
+                                                />
+                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-3 flex justify-between items-end">
+                                                    <div>
+                                                        <span className="bg-amber-500 text-black text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                                                            Livello {fortressState.level} / 4
+                                                        </span>
+                                                        <p className="text-sm font-black text-white mt-0.5">{curDef.name}</p>
+                                                    </div>
+                                                    {fortressState.level >= 2 && (
+                                                        <span className="text-[10px] font-black text-emerald-300 bg-black/75 border border-emerald-500/60 px-2 py-1 rounded-lg">
+                                                            +{curDef.statBonus} Stat / +{curDef.conBonus} COS
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* BENEFICI ATTUALI */}
+                                            <div className="bg-black/50 border border-amber-800/70 rounded-xl p-2.5 space-y-1">
+                                                <p className="text-[10px] font-black uppercase text-amber-300">✨ Servizi Attivi della Base:</p>
+                                                {curDef.perks.map((pk, idx) => (
+                                                    <p key={idx} className="text-xs text-gray-200">• {pk}</p>
+                                                ))}
+                                            </div>
+
+                                            {/* AZIONI RAPIDE DELLA FORTEZZA (RIPOSO & TESORERIA) */}
+                                            {fortressState.level >= 1 && (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <button
+                                                        onClick={restAtFortress}
+                                                        className="bg-emerald-800 hover:bg-emerald-700 border border-emerald-400 text-white font-black py-2.5 px-3 rounded-xl text-xs shadow active:scale-95"
+                                                    >
+                                                        💚 Riposa alla Base (100% PV +2 Mana)
+                                                    </button>
+                                                    {fortressState.level >= 2 ? (
+                                                        <button
+                                                            onClick={collectFortressIncome}
+                                                            className="bg-amber-700 hover:bg-amber-600 border border-amber-300 text-white font-black py-2.5 px-3 rounded-xl text-xs shadow active:scale-95"
+                                                        >
+                                                            🪙 Riscuoti Tesoreria (+{curDef.incomeGold}🪙 +{curDef.incomeFood}🍖{curDef.incomeTreasures ? " +" + curDef.incomeTreasures + "💎" : ""})
+                                                        </button>
+                                                    ) : (
+                                                        <div className="bg-gray-900/80 border border-gray-700 rounded-xl p-2 text-[10px] text-gray-400 flex items-center justify-center text-center">
+                                                            🔒 Tesoreria Passiva sbloccata al Livello 2
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* SALA DEI TROFEI (SOLO LIVELLO 4) */}
+                                            {fortressState.level >= 4 && (
+                                                <div className="bg-purple-950/70 border border-purple-400 rounded-xl p-2.5 text-xs flex flex-wrap justify-between items-center gap-2">
+                                                    <span className="font-black text-purple-200">🏆 Sala dei Trofei della Cittadella:</span>
+                                                    <span className="text-amber-300 font-bold">
+                                                        Power Nine: {(unlockedPower9 || []).length}/9 &nbsp;•&nbsp; Bestiario: {getUnlockedBestiaryKeys().length} specie
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* TIMER CANTIERE IN CORSO OPPURE PULSANTE PROSSIMO AMPLIAMENTO */}
+                                            {isBuilding && buildingDef ? (
+                                                <div className="bg-indigo-950/90 border-2 border-cyan-400 rounded-xl p-3 space-y-2 shadow-lg">
+                                                    <div className="flex justify-between items-center gap-2">
+                                                        <p className="text-xs font-black text-cyan-200">
+                                                            🏗️ Costruzione in corso: {buildingDef.name} (Lv. {buildingDef.level})
+                                                        </p>
+                                                        <span className="bg-black text-amber-300 font-mono font-black text-sm px-2.5 py-1 rounded-lg border border-amber-400">
+                                                            ⏳ {formatFortressCountdown(msLeft)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full h-3 bg-gray-900 rounded-full overflow-hidden border border-cyan-500/70">
+                                                        <div className="h-full bg-gradient-to-r from-cyan-500 to-amber-400 transition-all duration-500" style={{ width: buildPct + "%" }} />
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2 justify-between items-center pt-1">
+                                                        <button
+                                                            onClick={() => speedUpFortressBuild(false)}
+                                                            className="bg-amber-500 hover:bg-amber-400 text-black font-black text-[11px] px-3 py-1.5 rounded-lg active:scale-95"
+                                                        >
+                                                            ⚡ Accelera -2 Ore (1 💎)
+                                                        </button>
+                                                        {useMasterConsole && (
+                                                            <button
+                                                                onClick={() => speedUpFortressBuild(true)}
+                                                                className="bg-purple-700 hover:bg-purple-600 text-white font-black text-[11px] px-3 py-1.5 rounded-lg"
+                                                            >
+                                                                👑 Master: Completa Ora
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : nextDef ? (
+                                                <div className="bg-gradient-to-r from-amber-950/90 to-slate-900 border-2 border-amber-400 rounded-xl p-3 space-y-2">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div>
+                                                            <p className="text-xs font-black text-amber-300 uppercase">
+                                                                ⬆️ Prossimo Grado: {nextDef.name} (Lv. {nextDef.level})
+                                                            </p>
+                                                            <p className="text-[11px] text-gray-300 mt-0.5">
+                                                                ⏳ Tempo lavori: <b>{nextDef.buildLabel}</b> &nbsp;•&nbsp; 🐎 Scuderia: <b>{nextDef.stableCap} posti</b>
+                                                            </p>
+                                                        </div>
+                                                        <span className="bg-black/70 border border-amber-500 text-amber-300 text-xs font-black px-2.5 py-1 rounded-lg shrink-0">
+                                                            {nextDef.goldCost} 🪙{nextDef.treasureCost ? (" + " + nextDef.treasureCost + " 💎") : ""}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] text-amber-100/90">
+                                                        Sblocca: {nextDef.perks.join(" • ")}
+                                                    </p>
+                                                    <button
+                                                        onClick={startFortressUpgrade}
+                                                        className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-2.5 rounded-xl text-xs uppercase shadow active:scale-95"
+                                                    >
+                                                        🔨 Avvia Costruzione ({nextDef.goldCost} 🪙{nextDef.treasureCost ? (" + " + nextDef.treasureCost + " 💎") : ""})
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-emerald-950/70 border border-emerald-400 rounded-xl p-2.5 text-center text-xs font-black text-emerald-300">
+                                                    👑 Cittadella Planare al Livello Massimo (4/4)!
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* ===================================================== */}
+                                    {/* SCHEDA 2: LA SCUDERIA DELLE CAVALCATURE (PER EROE)    */}
+                                    {/* ===================================================== */}
+                                    {fortressTab === "stable" && (
+                                        <div className="space-y-3">
+                                            <div className="relative w-full h-36 sm:h-44 rounded-xl overflow-hidden border-2 border-amber-400/80 bg-black shadow-lg">
+                                                <img
+                                                    src="./scuderia_gdr.png"
+                                                    alt="Scuderia della Compagnia"
+                                                    onError={(e) => { if (e.target.getAttribute("src") !== "./mtg-bg.jpg") e.target.src = "./mtg-bg.jpg"; }}
+                                                    className="w-full h-full object-cover object-center"
+                                                />
+                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-2.5 flex justify-between items-end">
+                                                    <p className="text-sm font-black text-amber-300">🐎 Scuderia della Compagnia</p>
+                                                    <span className="bg-black/80 border border-amber-400 text-amber-200 text-[10px] font-black px-2 py-0.5 rounded-full">
+                                                        Stalli: {stableList.length} / {curDef.stableCap}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {fortressState.level < 1 ? (
+                                                <div className="bg-black/60 border border-amber-800 rounded-xl p-4 text-center space-y-2">
+                                                    <p className="text-xs text-amber-200 font-bold">
+                                                        🔒 Costruisci prima l'Avamposto di Benalia (Livello 1) per aprire la Scuderia!
+                                                    </p>
+                                                    <button onClick={() => setFortressTab("overview")} className="bg-amber-500 text-black font-black text-xs px-4 py-2 rounded-lg">
+                                                        Vai alla Costruzione ➔
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {/* SELETTORE PERSONAGGIO PER ASSEGNARE CAVALCATURE A OGNI EROE */}
+                                                    {party.length > 1 && (
+                                                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                                                            <span className="text-[10px] font-black text-amber-300 uppercase shrink-0">Eroe:</span>
+                                                            {party.map(h => (
+                                                                <button
+                                                                    key={h.id}
+                                                                    onClick={() => setCharacter(h)}
+                                                                    className={`px-2.5 py-1 rounded-lg text-xs font-black shrink-0 border ${character.id === h.id ? "bg-amber-500 text-black border-white" : "bg-gray-900 text-gray-300 border-gray-700"}`}
+                                                                >
+                                                                    🛡️ {h.name} {h.mount ? ("(" + h.mount.manaIcon + ")") : ""}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* CAVALCATURA ATTUALMENTE EQUIPAGGIATA DALL'EROE SELEZIONATO */}
+                                                    <div className="bg-indigo-950/75 border-2 border-indigo-400/80 rounded-xl p-2.5 space-y-2">
+                                                        <p className="text-[10px] font-black uppercase text-indigo-200">
+                                                            🛡️ Cavalcatura attiva di {character.name}:
+                                                        </p>
+                                                        {character.mount ? (
+                                                            <div className="flex items-center gap-2.5">
+                                                                <img
+                                                                    src={character.mount.img}
+                                                                    alt={character.mount.name}
+                                                                    onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                                    className="w-16 h-16 rounded-lg object-cover border-2 border-amber-300 shrink-0"
+                                                                />
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="text-xs font-black text-amber-300 truncate">
+                                                                        {character.mount.manaIcon} {character.mount.name} ({character.mount.creatureType})
+                                                                    </p>
+                                                                    <p className="text-[10px] text-cyan-200 font-bold">
+                                                                        {character.mount.flying ? "✈️ Volante" : "🐾 Terrestre"} • {character.mount.keywords.join(" • ")}
+                                                                    </p>
+                                                                    <p className="text-[10px] text-gray-300 truncate">{character.mount.powerName}</p>
+                                                                </div>
+                                                                <button
+                                                                    onClick={parkCurrentMountInStable}
+                                                                    className="bg-amber-600 hover:bg-amber-500 text-white font-black text-[10px] px-2.5 py-2 rounded-lg shrink-0 active:scale-95"
+                                                                >
+                                                                    🏠 Parcheggia
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-[11px] text-gray-300 italic">
+                                                                Nessuna cavalcatura equipaggiata su {character.name}. Scegline una dalla Scuderia qui sotto oppure addestrane una nuova dal Bivacco (Lv. 10+)!
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* ELENCO CAVALCATURE DISPONIBILI IN SCUDERIA (CON ART CROP SCRYFALL) */}
+                                                    <div className="space-y-2">
+                                                        <p className="text-[10px] font-black uppercase text-amber-300">
+                                                            📦 Cavalcature Acquisite in Scuderia ({stableList.length}/{curDef.stableCap}):
+                                                        </p>
+                                                        {stableList.length === 0 ? (
+                                                            <div className="bg-black/45 border border-gray-800 rounded-xl p-3 text-center text-[11px] text-gray-400 italic">
+                                                                La Scuderia è vuota. Quando parcheggi una cavalcatura o ne addestri una nuova avendone già una, comparirà qui pronta da assegnare a qualsiasi eroe!
+                                                            </div>
+                                                        ) : (
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {stableList.map(mnt => (
+                                                                    <div key={mnt.uid} className="bg-gray-900/90 border border-amber-700/80 rounded-xl p-2 space-y-2 shadow">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <img
+                                                                                src={mnt.img}
+                                                                                alt={mnt.name}
+                                                                                onError={(e) => { if (e.target.getAttribute("src") !== "./rpg_monster_default.png") e.target.src = "./rpg_monster_default.png"; }}
+                                                                                className="w-16 h-16 rounded-lg object-cover border border-amber-300 shrink-0"
+                                                                            />
+                                                                            <div className="min-w-0 flex-1">
+                                                                                <p className="text-xs font-black text-amber-200 truncate">
+                                                                                    {mnt.manaIcon} {mnt.name}
+                                                                                </p>
+                                                                                <p className="text-[10px] text-cyan-300 font-bold">
+                                                                                    {mnt.creatureType} • {mnt.flying ? "✈️ Volante" : "🐾 Terrestre"}
+                                                                                </p>
+                                                                                <p className="text-[9px] text-emerald-300 truncate">{mnt.keywords.join(" • ")}</p>
+                                                                                <p className="text-[9px] text-purple-200 truncate">{mnt.powerName}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex gap-1.5">
+                                                                            <button
+                                                                                onClick={() => equipMountFromStable(mnt.uid)}
+                                                                                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] py-1.5 rounded-lg active:scale-95"
+                                                                            >
+                                                                                🐎 Assegna a {character.name}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => releaseStableMount(mnt.uid)}
+                                                                                className="bg-red-950 hover:bg-red-800 text-red-200 border border-red-700 font-black text-[10px] px-2.5 py-1.5 rounded-lg"
+                                                                                title="Libera cavalcatura"
+                                                                            >
+                                                                                🍃
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* ===================================================== */}
+                                    {/* SCHEDA 3: NOME FORTEZZA E STENDARDO PERSONALIZZABILE  */}
+                                    {/* ===================================================== */}
+                                    {fortressTab === "banner" && (
+                                        <div className="space-y-3">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-black uppercase text-amber-300 block">
+                                                    ✏️ Nome della vostra Fortezza:
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={fortressState.customName || ""}
+                                                    onChange={(e) => saveFortressState(Object.assign({}, fortressState, { customName: e.target.value }))}
+                                                    placeholder="Es. Rocca della Compagnia"
+                                                    className="w-full bg-gray-900 border border-amber-600 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none"
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col sm:flex-row items-center gap-3 bg-black/50 border border-amber-800/70 rounded-xl p-3">
+                                                <div className={`w-24 h-32 rounded-xl border-2 border-amber-300 overflow-hidden bg-gradient-to-b ${activeBanner.bg} flex items-center justify-center relative shrink-0 shadow-lg`}>
+                                                    <img
+                                                        src={activeBanner.img}
+                                                        alt={activeBanner.name}
+                                                        onError={(e) => { e.target.style.display = "none"; }}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <span className="text-4xl absolute pointer-events-none drop-shadow">{activeBanner.isCustom ? "" : activeBanner.icon}</span>
+                                                </div>
+                                                <div className="space-y-2 flex-1 text-center sm:text-left">
+                                                    <p className="text-xs font-black text-amber-200">Stendardo Attuale: {activeBanner.name}</p>
+                                                    <p className="text-[11px] text-gray-300">
+                                                        Carica uno stemma dalla galleria del tuo cellulare o scegli uno dei 4 vessilli predefiniti. Apparirà anche in cima alla Scheda A4!
+                                                    </p>
+                                                    <label className="inline-block bg-purple-700 hover:bg-purple-600 border border-purple-300 text-white font-black text-xs px-4 py-2 rounded-xl cursor-pointer shadow active:scale-95">
+                                                        📱 Carica Stendardo dal Cellulare
+                                                        <input type="file" accept="image/*" onChange={handleFortressBannerUpload} className="hidden" />
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                                {FORTRESS_DEFAULT_BANNERS.map(b => (
+                                                    <button
+                                                        key={b.id}
+                                                        onClick={() => saveFortressState(Object.assign({}, fortressState, { bannerId: b.id }))}
+                                                        className={`p-2 rounded-xl border-2 text-center space-y-1 transition-all ${fortressState.bannerId === b.id ? "border-amber-300 bg-amber-950/70 scale-[1.02]" : "border-gray-700 bg-gray-900/80"}`}
+                                                    >
+                                                        <div className={`w-full h-16 rounded-lg overflow-hidden bg-gradient-to-b ${b.bg} flex items-center justify-center relative`}>
+                                                            <img src={b.img} alt={b.name} onError={(e) => { e.target.style.display = "none"; }} className="w-full h-full object-cover" />
+                                                            <span className="text-2xl absolute pointer-events-none">{b.icon}</span>
+                                                        </div>
+                                                        <p className="text-[10px] font-black text-amber-100 truncate">{b.name}</p>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })(),
+                        () => setShowFortressModal(false),
                         false
                     )}
 
@@ -19349,10 +20214,21 @@
 
                     <div id="print-area" className={`${mainMana.bgClass} text-black border-[6px] border-gray-900 rounded-2xl p-4 shadow-2xl relative`} style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/aged-paper.png')" }}>
                         
-                        <div className="bg-white/90 border-2 border-gray-900 rounded-xl px-4 py-1.5 mb-2.5 flex justify-between items-center shadow-sm">
-                           <h1 className="text-2xl font-black tracking-wide text-gray-900 truncate" style={{ fontFamily: "Georgia, serif" }}>
-    {character.name} {character.honorTitle ? "— «" + character.honorTitle + "»" : ""}
-</h1>
+                        <div className="bg-white/90 border-2 border-gray-900 rounded-xl px-3 py-1.5 mb-2.5 flex justify-between items-center gap-2 shadow-sm">
+                            <div className="flex items-center gap-2 min-w-0">
+                                {fortressState && fortressState.level >= 1 && (() => {
+                                    const bInfo = getActiveFortressBannerInfo();
+                                    return (
+                                        <div className={`w-7 h-9 rounded border border-gray-900 overflow-hidden bg-gradient-to-b ${bInfo.bg} flex items-center justify-center relative shrink-0 shadow-sm`} title={fortressState.customName || "Stendardo"}>
+                                            <img src={bInfo.img} alt={bInfo.name} onError={(e) => { e.target.style.display = "none"; }} className="w-full h-full object-cover" />
+                                            <span className="text-xs absolute pointer-events-none">{bInfo.isCustom ? "" : bInfo.icon}</span>
+                                        </div>
+                                    );
+                                })()}
+                                <h1 className="text-xl sm:text-2xl font-black tracking-wide text-gray-900 truncate" style={{ fontFamily: "Georgia, serif" }}>
+                                    {character.name} {character.honorTitle ? "— «" + character.honorTitle + "»" : ""}
+                                </h1>
+                            </div>
                             <div className="flex gap-1 shrink-0">
                                 {character.manaIdentity.map(mId => {
                                     const mObj = MANA_COLORS.find(mc => mc.id === mId);
