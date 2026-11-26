@@ -2127,7 +2127,19 @@
         wild_benalia_griffin: { name: "Grifone dei Cieli Selvatico (Cavalcabile)", maxHP: 130, dmg: 12, dc: 24, initBonus: 8, exp: 170, gold: 80, flying: true, mountId: "skyhunter_griffin", scryfallCard: "Silverbeak Griffin" },
         wild_ixalan_dino: { name: "Tirannosauro Alfa di Ixalan (Cavalcabile)", maxHP: 165, dmg: 16, dc: 25, initBonus: 6, exp: 210, gold: 105, flying: false, mountId: "ghalta_raptor", scryfallCard: "Regisaur Alpha" },
         wild_warhorse: { name: "Destriero Corazzato di Benalia (Cavalcabile)", maxHP: 115, dmg: 11, dc: 23, initBonus: 7, exp: 145, gold: 65, flying: false, mountId: "benalish_charger", scryfallCard: "Armored Warhorse" },
-        wild_nightmare: { name: "Incubo Fiammeggiante di Urborg (Cavalcabile)", maxHP: 140, dmg: 14, dc: 25, initBonus: 8, exp: 185, gold: 90, flying: true, mountId: "nightmare_steed", scryfallCard: "Nightmare" }
+        wild_nightmare: { name: "Incubo Fiammeggiante di Urborg (Cavalcabile)", maxHP: 140, dmg: 14, dc: 25, initBonus: 8, exp: 185, gold: 90, flying: true, mountId: "nightmare_steed", scryfallCard: "Nightmare" },
+        wild_gold_dragon: { name: "Drago d'Oro Antico Selvatico (Cavalcabile)", maxHP: 165, dmg: 15, dc: 26, initBonus: 8, exp: 220, gold: 110, flying: true, mountId: "ancient_gold_dragon", scryfallCard: "Ancient Gold Dragon" },
+        wild_silver_dragon: { name: "Drago d'Argento Antico Selvatico (Cavalcabile)", maxHP: 160, dmg: 15, dc: 26, initBonus: 9, exp: 220, gold: 110, flying: true, mountId: "ancient_silver_dragon", scryfallCard: "Ancient Silver Dragon" },
+        wild_ebondeath_dragon: { name: "Dracolich d'Ebano Selvatico (Cavalcabile)", maxHP: 155, dmg: 16, dc: 26, initBonus: 8, exp: 215, gold: 105, flying: true, mountId: "ebondeath_dragon", scryfallCard: "Ebondeath, Dracolich" },
+        wild_bronze_dragon: { name: "Drago di Bronzo Antico Selvatico (Cavalcabile)", maxHP: 170, dmg: 16, dc: 26, initBonus: 7, exp: 225, gold: 115, flying: true, mountId: "ancient_bronze_dragon", scryfallCard: "Ancient Bronze Dragon" },
+        wild_sunmare: { name: "Destriero Solare Crestato Selvatico (Cavalcabile)", maxHP: 135, dmg: 12, dc: 24, initBonus: 8, exp: 170, gold: 80, flying: false, mountId: "crested_sunmare", scryfallCard: "Crested Sunmare" },
+        wild_hippocamp: { name: "Ippocampo delle Maree Selvatico (Cavalcabile)", maxHP: 125, dmg: 12, dc: 24, initBonus: 8, exp: 165, gold: 75, flying: false, mountId: "wavebreak_hippocamp", scryfallCard: "Wavebreak Hippocamp" },
+        wild_lightning_mare: { name: "Destriero dei Fulmini Selvatico (Cavalcabile)", maxHP: 125, dmg: 13, dc: 24, initBonus: 9, exp: 165, gold: 75, flying: false, mountId: "lightning_mare", scryfallCard: "Lightning Mare" },
+        wild_timbermare: { name: "Destriero Silvano Selvatico (Cavalcabile)", maxHP: 135, dmg: 14, dc: 24, initBonus: 8, exp: 170, gold: 80, flying: false, mountId: "timbermare", scryfallCard: "Timbermare" },
+        wild_hushwing_gryff: { name: "Grifone Silente di Innistrad (Cavalcabile)", maxHP: 130, dmg: 12, dc: 24, initBonus: 9, exp: 170, gold: 80, flying: true, mountId: "hushwing_gryff", scryfallCard: "Hushwing Gryff" },
+        wild_rekindling_phoenix: { name: "Fenice Riarsa Selvatica (Cavalcabile)", maxHP: 140, dmg: 14, dc: 25, initBonus: 9, exp: 190, gold: 95, flying: true, mountId: "rekindling_phoenix", scryfallCard: "Rekindling Phoenix" },
+        wild_monstrosaur: { name: "Monstrosauro in Carica Selvatico (Cavalcabile)", maxHP: 155, dmg: 15, dc: 25, initBonus: 7, exp: 195, gold: 95, flying: false, mountId: "charging_monstrosaur", scryfallCard: "Charging Monstrosaur" },
+        wild_nightpack_wolf: { name: "Lupo Alfa di Kessig Selvatico (Cavalcabile)", maxHP: 140, dmg: 14, dc: 24, initBonus: 8, exp: 180, gold: 85, flying: false, mountId: "nightpack_wolf", scryfallCard: "Nightpack Ambusher" }
     };
 
     const RPG_STORY_NODES_PART1 = {
@@ -9258,6 +9270,18 @@
             wild_ixalan_dino: "Regisaur Alpha",
             wild_warhorse: "Armored Warhorse",
             wild_nightmare: "Nightmare",
+            wild_gold_dragon: "Ancient Gold Dragon",
+            wild_silver_dragon: "Ancient Silver Dragon",
+            wild_ebondeath_dragon: "Ebondeath, Dracolich",
+            wild_bronze_dragon: "Ancient Bronze Dragon",
+            wild_sunmare: "Crested Sunmare",
+            wild_hippocamp: "Wavebreak Hippocamp",
+            wild_lightning_mare: "Lightning Mare",
+            wild_timbermare: "Timbermare",
+            wild_hushwing_gryff: "Hushwing Gryff",
+            wild_rekindling_phoenix: "Rekindling Phoenix",
+            wild_monstrosaur: "Charging Monstrosaur",
+            wild_nightpack_wolf: "Nightpack Ambusher",
             // --- 8 NUOVE PEDINE EVOCATE (SCRYFALL ART CROP) ---
             tok_cat_beast: "Rampaging Baloths",
             tok_nyx_soldier: "Phalanx Leader",
@@ -9730,6 +9754,198 @@
                 powerDesc: "Assalto spettrale: infligge danni oscuri e drena +10 PV dal nemico!",
                 powerType: "drain",
                 img: "https://api.scryfall.com/cards/named?exact=Nightmare&format=image&version=art_crop"
+            },
+            ancient_gold_dragon: {
+                id: "ancient_gold_dragon",
+                name: "Drago d'Oro Antico",
+                creatureType: "Drago",
+                manaColor: "W",
+                manaIcon: "☀️",
+                flying: true,
+                keywords: ["Volare", "Cautela"],
+                baseDmg: 16,
+                tameDC: 26,
+                passiveDesc: "+2 COS • +50% danni in Carica contro nemici VOLANTI",
+                powerName: "☀️ Soffio Dorato",
+                powerDesc: "Fiammata sacra che colpisce il bersaglio e cura subito +14 PV al tuo Eroe!",
+                powerType: "heal",
+                img: "https://api.scryfall.com/cards/named?exact=Ancient+Gold+Dragon&format=image&version=art_crop"
+            },
+            ancient_silver_dragon: {
+                id: "ancient_silver_dragon",
+                name: "Drago d'Argento Antico",
+                creatureType: "Drago",
+                manaColor: "U",
+                manaIcon: "💧",
+                flying: true,
+                keywords: ["Volare", "Attacco Improvviso"],
+                baseDmg: 15,
+                tameDC: 26,
+                passiveDesc: "+2 AGI • +50% danni vs VOLANTI • Riflessi fulminei",
+                powerName: "💧 Barriera Psichica",
+                powerDesc: "Soffio congelante arcano che danneggia il nemico e attiva uno scudo difensivo!",
+                powerType: "shield",
+                img: "https://api.scryfall.com/cards/named?exact=Ancient+Silver+Dragon&format=image&version=art_crop"
+            },
+            ebondeath_dragon: {
+                id: "ebondeath_dragon",
+                name: "Dracolich d'Ebano",
+                creatureType: "Drago Non-Morto",
+                manaColor: "B",
+                manaIcon: "💀",
+                flying: true,
+                keywords: ["Volare", "Tocco Letale"],
+                baseDmg: 16,
+                tameDC: 26,
+                passiveDesc: "+2 MAG • +50% danni vs VOLANTI • Critico letale su 18–20",
+                powerName: "💀 Respiro Necrotico",
+                powerDesc: "Ondata d'ombra draconica che infligge danni pesanti e drena +10 PV!",
+                powerType: "drain",
+                img: "https://api.scryfall.com/cards/named?exact=Ebondeath%2C+Dracolich&format=image&version=art_crop"
+            },
+            ancient_bronze_dragon: {
+                id: "ancient_bronze_dragon",
+                name: "Drago di Bronzo Antico",
+                creatureType: "Drago",
+                manaColor: "G",
+                manaIcon: "🌳",
+                flying: true,
+                keywords: ["Volare", "Travolgere"],
+                baseDmg: 17,
+                tameDC: 26,
+                passiveDesc: "+3 FOR • +50% danni vs VOLANTI • Sfondamento brutale",
+                powerName: "🌳 Furia Draconica",
+                powerDesc: "Picchiata titanica con Travolgere che infligge ingenti danni extra!",
+                powerType: "trample",
+                img: "https://api.scryfall.com/cards/named?exact=Ancient+Bronze+Dragon&format=image&version=art_crop"
+            },
+            crested_sunmare: {
+                id: "crested_sunmare",
+                name: "Destriero Solare Crestato",
+                creatureType: "Cavallo",
+                manaColor: "W",
+                manaIcon: "☀️",
+                flying: false,
+                keywords: ["Legame Vitale", "Cautela"],
+                baseDmg: 13,
+                tameDC: 23,
+                passiveDesc: "+2 COS • +50% danni vs TERRA • Cura il 40% dei danni inflitti",
+                powerName: "☀️ Galoppo dell'Alba",
+                powerDesc: "Carica radiosa sul campo di battaglia che cura +14 PV al tuo Eroe!",
+                powerType: "heal",
+                img: "https://api.scryfall.com/cards/named?exact=Crested+Sunmare&format=image&version=art_crop"
+            },
+            wavebreak_hippocamp: {
+                id: "wavebreak_hippocamp",
+                name: "Ippocampo delle Maree",
+                creatureType: "Cavallo Marino",
+                manaColor: "U",
+                manaIcon: "💧",
+                flying: false,
+                keywords: ["Rapidità", "Attacco Improvviso"],
+                baseDmg: 13,
+                tameDC: 23,
+                passiveDesc: "+2 AGI • +50% danni in Carica contro nemici A TERRA",
+                powerName: "💧 Onda Frangiflutti",
+                powerDesc: "Travolge il nemico con un muro d'acqua attivando una barriera difensiva!",
+                powerType: "shield",
+                img: "https://api.scryfall.com/cards/named?exact=Wavebreak+Hippocamp&format=image&version=art_crop"
+            },
+            lightning_mare: {
+                id: "lightning_mare",
+                name: "Destriero dei Fulmini",
+                creatureType: "Cavallo Elementale",
+                manaColor: "R",
+                manaIcon: "🔥",
+                flying: false,
+                keywords: ["Rapidità", "Attacco Improvviso"],
+                baseDmg: 14,
+                tameDC: 23,
+                passiveDesc: "+2 FOR • +50% danni in Carica contro nemici A TERRA",
+                powerName: "🔥 Carica Voltaica",
+                powerDesc: "Scatto alla velocità del lampo che infligge +10 danni elettrici puri!",
+                powerType: "burn",
+                img: "https://api.scryfall.com/cards/named?exact=Lightning+Mare&format=image&version=art_crop"
+            },
+            timbermare: {
+                id: "timbermare",
+                name: "Destriero Silvano",
+                creatureType: "Cavallo Elementale",
+                manaColor: "G",
+                manaIcon: "🌳",
+                flying: false,
+                keywords: ["Travolgere", "Rapidità"],
+                baseDmg: 14,
+                tameDC: 23,
+                passiveDesc: "+3 FOR • +50% danni in Carica contro nemici A TERRA",
+                powerName: "🌳 Corsa della Foresta",
+                powerDesc: "Sfondamento travolgente (+14 danni extra contro nemici a terra)!",
+                powerType: "trample",
+                img: "https://api.scryfall.com/cards/named?exact=Timbermare&format=image&version=art_crop"
+            },
+            hushwing_gryff: {
+                id: "hushwing_gryff",
+                name: "Grifone Silente di Innistrad",
+                creatureType: "Grifone",
+                manaColor: "W",
+                manaIcon: "☀️",
+                flying: true,
+                keywords: ["Volare", "Attacco Improvviso"],
+                baseDmg: 13,
+                tameDC: 23,
+                passiveDesc: "+2 COS • +50% danni vs VOLANTI • Colpo silenzioso",
+                powerName: "☀️ Picchiata di Thraben",
+                powerDesc: "Artigliata celeste che colpisce il bersaglio e cura +14 PV!",
+                powerType: "heal",
+                img: "https://api.scryfall.com/cards/named?exact=Hushwing+Gryff&format=image&version=art_crop"
+            },
+            rekindling_phoenix: {
+                id: "rekindling_phoenix",
+                name: "Fenice Riarsa",
+                creatureType: "Fenice",
+                manaColor: "R",
+                manaIcon: "🔥",
+                flying: true,
+                keywords: ["Volare", "Rapidità"],
+                baseDmg: 15,
+                tameDC: 25,
+                passiveDesc: "+2 FOR • +50% danni in Carica contro nemici VOLANTI",
+                powerName: "🔥 Esplosione di Cenere",
+                powerDesc: "Vortice di piume incandescenti che infligge +10 danni da fuoco extra!",
+                powerType: "burn",
+                img: "https://api.scryfall.com/cards/named?exact=Rekindling+Phoenix&format=image&version=art_crop"
+            },
+            charging_monstrosaur: {
+                id: "charging_monstrosaur",
+                name: "Monstrosauro in Carica",
+                creatureType: "Dinosauro",
+                manaColor: "R",
+                manaIcon: "🔥",
+                flying: false,
+                keywords: ["Travolgere", "Rapidità"],
+                baseDmg: 16,
+                tameDC: 25,
+                passiveDesc: "+2 FOR • +50% danni in Carica contro nemici A TERRA",
+                powerName: "🔥 Furia Preistorica",
+                powerDesc: "Carica implacabile che spezza le difese nemiche con +10 danni extra!",
+                powerType: "burn",
+                img: "https://api.scryfall.com/cards/named?exact=Charging+Monstrosaur&format=image&version=art_crop"
+            },
+            nightpack_wolf: {
+                id: "nightpack_wolf",
+                name: "Lupo Alfa di Kessig",
+                creatureType: "Lupo",
+                manaColor: "G",
+                manaIcon: "🌳",
+                flying: false,
+                keywords: ["Travolgere", "Tocco Letale"],
+                baseDmg: 15,
+                tameDC: 24,
+                passiveDesc: "+3 FOR • +50% danni vs TERRA • Critico letale su 18–20",
+                powerName: "🌳 Morso del Branco",
+                powerDesc: "Assalto feroce alla gola con +14 danni bonus contro nemici a terra!",
+                powerType: "trample",
+                img: "https://api.scryfall.com/cards/named?exact=Nightpack+Ambusher&format=image&version=art_crop"
             }
         };
 
@@ -9739,10 +9955,14 @@
             const mon = MTG_BESTIARY[cs.key];
             if (mon && mon.mountId && RPG_MOUNTS_DB[mon.mountId]) return RPG_MOUNTS_DB[mon.mountId];
             const k = String(cs.key || "").toLowerCase();
+            if (k.indexOf("ojutai") !== -1) return RPG_MOUNTS_DB.ancient_silver_dragon;
+            if (k.indexOf("dromoka") !== -1) return RPG_MOUNTS_DB.ancient_gold_dragon;
+            if (k.indexOf("kokusho") !== -1 || k.indexOf("silumgar") !== -1) return RPG_MOUNTS_DB.ebondeath_dragon;
+            if (k.indexOf("atarka") !== -1) return RPG_MOUNTS_DB.ancient_bronze_dragon;
             if (k.indexOf("shivan_dragon") !== -1 || k.indexOf("dragon") !== -1) return RPG_MOUNTS_DB.shivan_mount;
-            if (k.indexOf("griffin") !== -1) return RPG_MOUNTS_DB.skyhunter_griffin;
+            if (k.indexOf("griffin") !== -1 || k.indexOf("gryff") !== -1) return RPG_MOUNTS_DB.skyhunter_griffin;
             if (k.indexOf("pegasus") !== -1) return RPG_MOUNTS_DB.sunblade_pegasus;
-            if (k.indexOf("dino") !== -1 || k.indexOf("tyrant") !== -1) return RPG_MOUNTS_DB.ghalta_raptor;
+            if (k.indexOf("dino") !== -1 || k.indexOf("tyrant") !== -1 || k.indexOf("gishath") !== -1 || k.indexOf("etali") !== -1 || k.indexOf("dreadmaw") !== -1) return RPG_MOUNTS_DB.ghalta_raptor;
             if (k.indexOf("nightmare") !== -1) return RPG_MOUNTS_DB.nightmare_steed;
             return null;
         };
@@ -9797,7 +10017,12 @@
             if (getHeroTotalLevel(character) < 10) {
                 return alert("🔒 L'Addestramento Cavalcature si sblocca al Livello 10! (Livello attuale di " + character.name + ": " + getHeroTotalLevel(character) + ")");
             }
-            const wildKeys = ["wild_shivan_dragon", "wild_serra_pegasus", "wild_benalia_griffin", "wild_ixalan_dino", "wild_warhorse", "wild_nightmare"];
+            const wildKeys = [
+                "wild_shivan_dragon", "wild_gold_dragon", "wild_silver_dragon", "wild_ebondeath_dragon", "wild_bronze_dragon",
+                "wild_serra_pegasus", "wild_benalia_griffin", "wild_hushwing_gryff", "wild_rekindling_phoenix",
+                "wild_ixalan_dino", "wild_monstrosaur", "wild_nightpack_wolf",
+                "wild_warhorse", "wild_sunmare", "wild_hippocamp", "wild_lightning_mare", "wild_timbermare", "wild_nightmare"
+            ];
             const pickedKey = wildKeys[Math.floor(Math.random() * wildKeys.length)];
             setShowCampfireModal(false);
             setEventBanner("🐎🦅 Hai seguito le tracce di una creatura selvatica cavalcabile! Indeboliscila sotto il 35% PV e tocca «Addestra!» invece di ucciderla!");
