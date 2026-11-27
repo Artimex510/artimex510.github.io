@@ -8019,33 +8019,6 @@
             setEventBanner(`⚔️📜 BOSS DELLA CRONACA! Affronta **${rawBoss.name}** per conquistare la sua Reliquia Esclusiva!` + keldMsg);
         };
 
-            setShowChroniclesModal(false);
-            setShowCampfireModal(false);
-
-            // Avvia l'arena contro il Boss della Cronaca
-            if (typeof startCombat === "function") {
-                startCombat(bossKey);
-            } else {
-                setCombatState({
-                    monsterKey: bossKey,
-                    monsterName: rawBoss.name,
-                    maxHP: finalMaxHP,
-                    currentHP: finalMaxHP,
-                    dmg: rawBoss.dmg,
-                    dc: rawBoss.dc,
-                    initBonus: rawBoss.initBonus || 8,
-                    exp: rawBoss.exp || 300,
-                    gold: rawBoss.gold || 150,
-                    treasures: rawBoss.treasures || 2,
-                    loot: rawBoss.loot || null,
-                    flying: Boolean(rawBoss.flying),
-                    isChronicleBoss: true,
-                    turn: 1,
-                    log: ["⚔️ " + rawBoss.name + " entra nell'Arena!" + hpReductionNote]
-                });
-            }
-            setEventBanner(`⚔️📜 BOSS DELLA CRONACA! Affronta **${rawBoss.name}** per conquistare la sua Reliquia Esclusiva!` + hpReductionNote);
-        };
 
         // ============================================================================
         // --- MODULO C: MERCANTE DINAMICO PER ATTO/ZONA & FORGIA AVANZATA          ---
