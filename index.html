@@ -1942,7 +1942,13 @@
         // --- ARMI BOSS ESCLUSIVE ---
         trident_thassa_abyss: {id: "trident_thassa_abyss",name: "🔱 Tridente Abissale di Thassa",slot: "weapon",rarity: "Leggendario",dropOnly: true,price: 0,str: 5, mag: 6, agi: 3, con: 0,keywords: ["Imbloccabile", "Attacco Improvviso"],desc: "Arma esclusiva di Arixmethes (non vendibile nei negozi). I colpi fendono l'acqua senza resistenza."},
         abyssal_tide_blade: {id: "abyssal_tide_blade",name: "🌊 Lama della Marea Tempestosa",slot: "weapon",rarity: "Leggendario", dropOnly: true,price: 0,str: 7, con: 4, mag: 3, agi: 0,keywords: ["Travolgere", "Cautela"],desc: "Forgiata nelle fosse oceaniche dal Leviatano della Marea. Esclusiva da Boss Abissale."},
-        koma_cosmos_aegis: {id: "koma_cosmos_aegis",name: "🐍 Egida delle Spire di Koma",slot: "armor",rarity: "Mitico",dropOnly: true,price: 0,con: 7, mag: 5, str: 3, agi: 0,keywords: ["Egida", "Legame Vitale"],desc: "Armatura mitica ottenibile solo pescando e sconfiggendo Koma, Serpente del Cosmo."}
+        koma_cosmos_aegis: {id: "koma_cosmos_aegis",name: "🐍 Egida delle Spire di Koma",slot: "body",rarity: "Mitico",dropOnly: true,price: 0,con: 7, mag: 5, str: 3, agi: 0,keywords: ["Egida", "Legame Vitale"],desc: "Armatura mitica ottenibile solo pescando e sconfiggendo Koma, Serpente del Cosmo."},
+        // --- reliquie esclusive ---
+        planar_bridge_blade: {id: "planar_bridge_blade", name: "🌀 Lama del Ponte Planare", slot: "weapon", rarity: "Leggendario", dropOnly: true, price: 0, minLvl: 6, str: 5, agi: 4, mag: 8, con: 5, keywords: ["Attacco Improvviso", "Indistruttibile"], scryfallCard: "Planar Bridge", desc: "Reliquia esclusiva di Tezzeret: fende lo spazio tra i Piani incanalando mana puro."},
+        elbrus_binding_blade: {id: "elbrus_binding_blade", name: "🩸 Elbrus, la Lama Vincolante", slot: "weapon", rarity: "Leggendario", dropOnly: true, price: 0, minLvl: 10, str: 9, agi: 6, mag: 6, con: 6, keywords: ["Legame Vitale", "Tocco Letale"], scryfallCard: "Elbrus, the Binding Blade", desc: "Reliquia esclusiva di Sengir: pugnale demoniaco di Innistrad che divora l'essenza vitale."},
+        akroma_memorial_armor: {id: "akroma_memorial_armor", name: "🪽 Armatura del Memoriale di Akroma", slot: "body", rarity: "Leggendario", dropOnly: true, price: 0, minLvl: 10, str: 6, agi: 6, mag: 5, con: 9, keywords: ["Volare", "Cautela", "Rapidità"], scryfallCard: "Akroma's Memorial", desc: "Reliquia esclusiva di Bruna: corazza angelica forgiata con l'aura di un'antica eroina."},
+        westvale_profane_mantle: {id: "westvale_profane_mantle", name: "😈 Manto Profano di Westvale", slot: "body", rarity: "Mitico", dropOnly: true, price: 0, minLvl: 11, str: 8, agi: 5, mag: 8, con: 8, keywords: ["Legame Vitale", "Indistruttibile", "Fendente"], scryfallCard: "Westvale Abbey", desc: "Reliquia segreta di Ormendahl: protegge chi osa spezzare i sigilli dell'Abbazia."},
+        staff_of_compleation_relic: {id: "staff_of_compleation_relic", name: "👑 Scettro della Compleazione Suprema", slot: "weapon", rarity: "Mitico", dropOnly: true, price: 0, minLvl: 13, reqLegendary: true, str: 10, agi: 10, mag: 10, con: 10, keywords: ["Volare", "Cautela", "Tocco Letale", "Legame Vitale"], scryfallCard: "Staff of Compleation", desc: "Reliquia Mitica esclusiva di Atraxa: concentra la potenza unificata dei Quattro Pretori."}
     };
     // ============================================================================
     // --- MEGA-BESTIARIO DI MAGIC (25 CREATURE ICONICHE, MEME E BOSS)          ---
@@ -2141,7 +2147,12 @@
         wild_hushwing_gryff: { name: "Grifone Silente di Innistrad (Cavalcabile)", maxHP: 130, dmg: 12, dc: 24, initBonus: 9, exp: 170, gold: 80, flying: true, mountId: "hushwing_gryff", scryfallCard: "Hushwing Gryff" },
         wild_rekindling_phoenix: { name: "Fenice Riarsa Selvatica (Cavalcabile)", maxHP: 140, dmg: 14, dc: 25, initBonus: 9, exp: 190, gold: 95, flying: true, mountId: "rekindling_phoenix", scryfallCard: "Rekindling Phoenix" },
         wild_monstrosaur: { name: "Monstrosauro in Carica Selvatico (Cavalcabile)", maxHP: 155, dmg: 15, dc: 25, initBonus: 7, exp: 195, gold: 95, flying: false, mountId: "charging_monstrosaur", scryfallCard: "Charging Monstrosaur" },
-        wild_nightpack_wolf: { name: "Lupo Alfa di Kessig Selvatico (Cavalcabile)", maxHP: 140, dmg: 14, dc: 24, initBonus: 8, exp: 180, gold: 85, flying: false, mountId: "nightpack_wolf", scryfallCard: "Nightpack Ambusher" }
+        wild_nightpack_wolf: { name: "Lupo Alfa di Kessig Selvatico (Cavalcabile)", maxHP: 140, dmg: 14, dc: 24, initBonus: 8, exp: 180, gold: 85, flying: false, mountId: "nightpack_wolf", scryfallCard: "Nightpack Ambusher" },
+        boss_tezzeret_bridge: { name: "Tezzeret, Maestro del Ponte (Boss Cronaca I)", isBoss: true, isHumanoid: true, maxHP: 135, initBonus: 8, dc: 25, dmg: 14, exp: 260, gold: 140, treasures: 2, loot: "planar_bridge_blade", flying: false, desc: "L'artefice di Esper apre varchi metallici attraverso la Cieca Eternità per impossessarsi del Frammento del Tempo!" },
+        boss_baron_sengir: { name: "Sengir, il Barone Oscuro (Boss Cronaca II — Luce)", isBoss: true, isHumanoid: true, maxHP: 185, initBonus: 9, dc: 27, dmg: 17, exp: 380, gold: 210, treasures: 2, loot: "elbrus_binding_blade", flying: true, desc: "Il patriarca vampiro più antico del Multiverso cala sulle catacombe di Innistrad avvolto da una tempesta cremisi!" },
+        boss_bruna_inquisitor: { name: "Bruna, la Luce Morente (Boss Cronaca II — Ombra)", isBoss: true, isHumanoid: true, maxHP: 190, initBonus: 9, dc: 27, dmg: 17, exp: 380, gold: 210, treasures: 2, loot: "akroma_memorial_armor", flying: true, desc: "L'arcangelo giudica il tuo Patto di Sangue e discende con lancia celeste per epurare l'eresia!" },
+        boss_ormendahl_profane: { name: "Ormendahl, Principe Profano (Boss Segreto Cronaca II)", isBoss: true, isHumanoid: false, maxHP: 230, initBonus: 10, dc: 28, dmg: 20, exp: 480, gold: 280, treasures: 3, loot: "westvale_profane_mantle", flying: true, desc: "Il demone sigillato sotto l'Abbazia di Westvale si risveglia spezzando le catene del culto!" },
+        boss_atraxa_unifier: { name: "Atraxa, Grande Unificatrice (Boss Supremo Cronaca III)", isBoss: true, isHumanoid: false, maxHP: 310, initBonus: 11, dc: 30, dmg: 24, exp: 750, gold: 450, treasures: 5, loot: "staff_of_compleation_relic", flying: true, desc: "La voce dei Quattro Pretori di Nuova Phyrexia discende sulla Cieca Eternità per completare l'intera Compagnia!" }
     };
 
     const RPG_STORY_NODES_PART1 = {
@@ -6957,6 +6968,19 @@
                     eqCon += (fDef.conBonus || 0);
                 }
             }
+
+            // Bonus permanenti degli Story Flags (Cronache dell'Intreccio - Modulo D)
+            if (typeof storyFlags !== "undefined" && storyFlags) {
+                if (storyFlags.tolaria_ally) eqMag += 2;
+                if (storyFlags.keld_forge_pact) eqStr += 2;
+                if (storyFlags.secret_chronomancer) eqAgi += 2;
+                if (storyFlags.avacyn_crusade) eqCon += 2;
+                if (storyFlags.markov_blood_oath) { eqStr += 2; eqMag += 2; eqCon -= 1; }
+                if (storyFlags.westvale_breaker) { eqStr += 2; eqAgi += 2; eqMag += 2; eqCon += 2; }
+                if (storyFlags.phyrexia_judgment_done && isChronicleBossDefeated("boss_atraxa_unifier")) {
+                    eqStr += 3; eqAgi += 3; eqMag += 3; eqCon += 3;
+                }
+            }
           
             // BONUS DA INCANTA CREATURA (AURA MISTICA ATTIVA SULL'EROE)
             const activeAuraObj = (char.activeAura && RPG_AURAS_DB[char.activeAura.id]) ? RPG_AURAS_DB[char.activeAura.id] : null;
@@ -7800,6 +7824,227 @@
                     });
                 }
             }
+        };
+
+        // ============================================================================
+        // --- MODULO D: STORY FLAGS, CRONACHE RAMIFICATE & BOSS CON RELIQUIE       ---
+        // ============================================================================
+        const [showChroniclesModal, setShowChroniclesModal] = useState(false);
+
+        const [storyFlags, setStoryFlags] = useState(() => {
+            try {
+                const raw = JSON.parse(localStorage.getItem("rpg_story_flags") || "{}");
+                return (raw && typeof raw === "object") ? raw : {};
+            } catch (e) {
+                return {};
+            }
+        });
+
+        const saveStoryFlags = (nextFlags) => {
+            setStoryFlags(nextFlags);
+            try { localStorage.setItem("rpg_story_flags", JSON.stringify(nextFlags)); } catch (e) {}
+        };
+
+        const hasStoryFlag = (flagKey) => {
+            return Boolean(storyFlags && storyFlags[flagKey]);
+        };
+
+        const setStoryFlagValue = (flagKey, val) => {
+            const next = Object.assign({}, storyFlags);
+            next[flagKey] = (typeof val === "undefined") ? true : val;
+            saveStoryFlags(next);
+            return next;
+        };
+
+        const STORY_FLAG_LABELS = {
+            tolaria_ally: { icon: "💧", title: "Alleanza di Tolaria", effect: "+2 MAG permanente • Sblocca Rito Segreto di Westvale (Arco II)" },
+            keld_forge_pact: { icon: "🔥", title: "Patto della Forgia di Keld", effect: "+2 FOR permanente • Artiglieria Keldon pronta contro Atraxa (-20% PV boss)" },
+            secret_chronomancer: { icon: "⏳", title: "Custode del Frammento", effect: "+2 AGI permanente • Sblocca Rito Segreto di Westvale (Arco II)" },
+            avacyn_crusade: { icon: "☀️", title: "Crociato di Avacyn", effect: "+2 COS permanente • Benedizione difensiva nell'Arco III" },
+            markov_blood_oath: { icon: "🩸", title: "Giuramento Markov", effect: "+2 FOR & +2 MAG, -1 COS • Sete di sangue contro i Pretori" },
+            westvale_breaker: { icon: "😈", title: "Spezzasigilli di Westvale", effect: "+2 a FOR/AGI/MAG/COS • Accesso al Manto Profano di Ormendahl" },
+            phyrexia_judgment_done: { icon: "👑", title: "Flagello di Nuova Phyrexia", effect: "+3 a tutte le Statistiche • Titolo Leggendario della Compagnia" }
+        };
+
+        const CHRONICLE_ARCS = [
+            {
+                id: "arc1_chronoshard",
+                badge: "CRONACA I • LV. 5+",
+                minLvl: 5,
+                title: "Il Frammento del Tempo di Tolaria",
+                lore: "Tra le rovine sommerse dell'Accademia di Tolaria emerge una scheggia di mana temporale contesa da Tezzeret. La decisione su a chi affidarla cambierà gli equilibri degli Atti successivi.",
+                choiceGroupFlags: ["tolaria_ally", "keld_forge_pact", "secret_chronomancer"],
+                choices: [
+                    {
+                        flag: "tolaria_ally",
+                        label: "💧 Consegna il Frammento ai Maghi di Tolaria",
+                        consequence: "+2 MAG a tutto il Party • Sblocca il sentiero segreto dell'Abbazia di Westvale nella Cronaca II.",
+                        bonusGold: 60,
+                        bonusShards: 1,
+                        bossKey: "boss_tezzeret_bridge"
+                    },
+                    {
+                        flag: "keld_forge_pact",
+                        label: "🔥 Fondi il Frammento nelle Fornaci di Keld",
+                        consequence: "+2 FOR a tutto il Party • +2 Scaglie Arcane • I Signori della Guerra di Keld bombarderanno il Boss Finale (-20% PV)!",
+                        bonusGold: 40,
+                        bonusShards: 2,
+                        bossKey: "boss_tezzeret_bridge"
+                    },
+                    {
+                        flag: "secret_chronomancer",
+                        label: "⏳ Sigilla il Frammento nel tuo Grimorio",
+                        consequence: "+2 AGI a tutto il Party • Sblocca la via proibita di Westvale nella Cronaca II.",
+                        bonusGold: 50,
+                        bonusShards: 1,
+                        bossKey: "boss_tezzeret_bridge"
+                    }
+                ]
+            },
+            {
+                id: "arc2_bloodmoon",
+                badge: "CRONACA II • LV. 9+",
+                minLvl: 9,
+                title: "La Caccia alla Luna di Sangue (Innistrad)",
+                lore: "Su Innistrad la Chiesa di Avacyn e le casate vampiriche sono sull'orlo della guerra totale. Da che parte ti schieri deciderà quale Boss affronterai e quale Reliquia Esclusiva potrai conquistare.",
+                requiresAnyFlag: ["tolaria_ally", "keld_forge_pact", "secret_chronomancer"],
+                choiceGroupFlags: ["avacyn_crusade", "markov_blood_oath", "westvale_breaker"],
+                choices: [
+                    {
+                        flag: "avacyn_crusade",
+                        label: "☀️ Giura fedeltà alla Crociata di Avacyn",
+                        consequence: "+2 COS permanente • Affronti Sengir, il Barone Oscuro per la Reliquia «Elbrus, la Lama Vincolante».",
+                        bonusGold: 90,
+                        bonusShards: 2,
+                        bossKey: "boss_baron_sengir"
+                    },
+                    {
+                        flag: "markov_blood_oath",
+                        label: "🩸 Stringi il Patto di Sangue con Casa Markov",
+                        consequence: "+2 FOR, +2 MAG, -1 COS • Affronti Bruna, la Luce Morente per l'«Armatura del Memoriale di Akroma».",
+                        bonusGold: 90,
+                        bonusShards: 2,
+                        bossKey: "boss_bruna_inquisitor"
+                    },
+                    {
+                        flag: "westvale_breaker",
+                        label: "😈 [SEGRETO] Spezza il Sigillo dell'Abbazia di Westvale",
+                        requiresAnyFlag: ["tolaria_ally", "secret_chronomancer"],
+                        lockHint: "Richiede «Alleanza di Tolaria» o «Custode del Frammento» dalla Cronaca I",
+                        consequence: "+2 a TUTTE le Statistiche • Risvegli il Boss Segreto Ormendahl per il «Manto Profano di Westvale»!",
+                        bonusGold: 120,
+                        bonusShards: 3,
+                        bossKey: "boss_ormendahl_profane"
+                    }
+                ]
+            },
+            {
+                id: "arc3_phyrexia",
+                badge: "CRONACA III • LV. 13+",
+                minLvl: 13,
+                title: "Il Giudizio della Cieca Eternità (Phyrexia)",
+                lore: "Atraxa, Grande Unificatrice, guida l'invasione finale verso la tua Fortezza. Tutte le alleanze strette nelle Cronache precedenti convergono in questa battaglia decisiva.",
+                requiresAnyFlag: ["avacyn_crusade", "markov_blood_oath", "westvale_breaker"],
+                choiceGroupFlags: ["phyrexia_judgment_done"],
+                choices: [
+                    {
+                        flag: "phyrexia_judgment_done",
+                        label: "👑 Guida la Coalizione delle Alleanze contro Atraxa",
+                        consequence: "Conquista lo «Scettro della Compleazione Suprema» e sblocca il bonus supremo +3 a tutte le Statistiche!",
+                        bonusGold: 200,
+                        bonusShards: 4,
+                        bossKey: "boss_atraxa_unifier"
+                    }
+                ]
+            }
+        ];
+
+        const getChronicleChosenOption = (arc) => {
+            if (!arc || !arc.choices) return null;
+            for (let i = 0; i < arc.choices.length; i++) {
+                if (hasStoryFlag(arc.choices[i].flag)) return arc.choices[i];
+            }
+            return null;
+        };
+
+        const isChronicleBossDefeated = (bossKey) => {
+            if (hasStoryFlag("defeated_" + bossKey)) return true;
+            if (typeof getUnlockedBestiaryKeys === "function") {
+                const keys = getUnlockedBestiaryKeys();
+                if (keys && keys.indexOf(bossKey) !== -1) return true;
+            }
+            return false;
+        };
+
+        const selectChronicleChoice = (arc, choiceObj) => {
+            if (!character) return;
+            const totalLvl = getHeroTotalLevel(character);
+            if (totalLvl < arc.minLvl) {
+                return alert("Serve almeno il Livello " + arc.minLvl + " (attuale: Lv. " + totalLvl + ") per affrontare questa Cronaca!");
+            }
+            if (getChronicleChosenOption(arc)) {
+                return alert("Hai già compiuto la tua scelta irreversibile in questa Cronaca!");
+            }
+            if (!window.confirm(
+                "Confermi questa scelta per «" + arc.title + "»?\n\n" +
+                choiceObj.label + "\n" +
+                choiceObj.consequence + "\n\n" +
+                "⚠️ Le scelte delle Cronache sono permanenti e plasmano il destino della Compagnia!"
+            )) return;
+
+            setStoryFlagValue(choiceObj.flag, true);
+            const updated = Object.assign({}, character, {
+                gold: (character.gold || 0) + (choiceObj.bonusGold || 0),
+                arcaneShards: (character.arcaneShards || 0) + (choiceObj.bonusShards || 0)
+            });
+            saveCharState(updated);
+            if (typeof playTriadSfx === "function") playTriadSfx("win");
+            setEventBanner(
+                `📜✨ DESTINO INCISO! Hai scelto **${choiceObj.label}** (+${choiceObj.bonusGold} 🪙, +${choiceObj.bonusShards} ✨)! Ora puoi sfidare il Boss della Cronaca per la sua Reliquia Esclusiva!`
+            );
+        };
+
+        const launchChronicleBossBattle = (bossKey) => {
+            if (!character) return;
+            if (combatState) return alert("⛔ Sei già impegnato in un combattimento!");
+            const rawBoss = (typeof MTG_BESTIARY !== "undefined" && MTG_BESTIARY[bossKey]) ? MTG_BESTIARY[bossKey] : RPG_MONSTERS_DB[bossKey];
+            if (!rawBoss) return alert("Boss non trovato nel database: " + bossKey);
+
+            setShowChroniclesModal(false);
+            setShowCampfireModal(false);
+            startMonsterEncounter(bossKey, character.currentNode);
+            const keldMsg = (bossKey === "boss_atraxa_unifier" && hasStoryFlag("keld_forge_pact"))
+                ? " 🔥 [Artiglieria di Keld attiva: -20% PV!]"
+                : "";
+            setEventBanner(`⚔️📜 BOSS DELLA CRONACA! Affronta **${rawBoss.name}** per conquistare la sua Reliquia Esclusiva!` + keldMsg);
+        };
+
+            setShowChroniclesModal(false);
+            setShowCampfireModal(false);
+
+            // Avvia l'arena contro il Boss della Cronaca
+            if (typeof startCombat === "function") {
+                startCombat(bossKey);
+            } else {
+                setCombatState({
+                    monsterKey: bossKey,
+                    monsterName: rawBoss.name,
+                    maxHP: finalMaxHP,
+                    currentHP: finalMaxHP,
+                    dmg: rawBoss.dmg,
+                    dc: rawBoss.dc,
+                    initBonus: rawBoss.initBonus || 8,
+                    exp: rawBoss.exp || 300,
+                    gold: rawBoss.gold || 150,
+                    treasures: rawBoss.treasures || 2,
+                    loot: rawBoss.loot || null,
+                    flying: Boolean(rawBoss.flying),
+                    isChronicleBoss: true,
+                    turn: 1,
+                    log: ["⚔️ " + rawBoss.name + " entra nell'Arena!" + hpReductionNote]
+                });
+            }
+            setEventBanner(`⚔️📜 BOSS DELLA CRONACA! Affronta **${rawBoss.name}** per conquistare la sua Reliquia Esclusiva!` + hpReductionNote);
         };
 
         // ============================================================================
@@ -9627,6 +9872,11 @@
             wild_rekindling_phoenix: "Rekindling Phoenix",
             wild_monstrosaur: "Charging Monstrosaur",
             wild_nightpack_wolf: "Nightpack Ambusher",
+            boss_tezzeret_bridge: "Tezzeret, Master of the Bridge",
+            boss_baron_sengir: "Sengir, the Dark Baron",
+            boss_bruna_inquisitor: "Bruna, the Fading Light",
+            boss_ormendahl_profane: "Ormendahl, Profane Prince",
+            boss_atraxa_unifier: "Atraxa, Grand Unifier",
             // --- 8 NUOVE PEDINE EVOCATE (SCRYFALL ART CROP) ---
             tok_cat_beast: "Rampaging Baloths",
             tok_nyx_soldier: "Phalanx Leader",
@@ -13603,6 +13853,12 @@
                 }
             } catch (e) {}
 
+            // EFFETTO STORY FLAG (MODULO D): Artiglieria di Keld contro Atraxa (-20% PV)
+            if (typeof storyFlags !== "undefined" && storyFlags && storyFlags.keld_forge_pact && monsterKey === "boss_atraxa_unifier") {
+                scaledHP = Math.max(40, Math.round(scaledHP * 0.8));
+                rogueliteScarNote += " 🔥 [ARTIGLIERIA DI KELD: Atraxa inizia indebolita dal bombardamento (-20% PV)!]";
+            }
+
             const mD20 = Math.floor(Math.random() * 20) + 1;
             const mInitBonus = (mTemplate.initBonus || 4) + (isBossMob ? Math.floor(avgPartyLvl * 1.5) : 0);
             const mInitTotal = mD20 + mInitBonus;
@@ -13728,6 +13984,8 @@
             setShowRunesModal(false);
             setShowBountyModal(false);
             setShowCampfireModal(false);
+            if (typeof setShowFortressModal === "function") setShowFortressModal(false);
+            if (typeof setShowChroniclesModal === "function") setShowChroniclesModal(false);
             setShowCabalPitModal(false);
             setShowBestiaryModal(false);
             setShowSaveModal(false);
@@ -17458,11 +17716,11 @@
                                     <p className="text-[10px] font-black uppercase text-amber-300">
                                         ⚡ 3. Infondi una Keyword di Magic (su Arma o Corpo, max 2 per oggetto):
                                     </p>
-                                    {(!character.equipped || (!character.equipped.weapon && !character.equipped.body)) ? (
+                                    {(!character.equipped || (!character.equipped.weapon && !character.equipped.armor)) ? (
                                         <p className="text-[10px] text-gray-400 italic">Equipaggia prima un'Arma o un'Armatura per infonderla.</p>
                                     ) : (
                                         <div className="space-y-2">
-                                            {["weapon", "body"].map(slotK => {
+                                            {["weapon", "armor"].map(slotK => {
                                                 const eqIt = character.equipped ? character.equipped[slotK] : null;
                                                 if (!eqIt) return null;
                                                 return (
@@ -17614,6 +17872,22 @@
                                     </div>
                                     <span className="bg-amber-400 text-black text-[10px] font-black px-2 py-1 rounded-full shrink-0">
                                         {fortressState.level > 0 ? ("🐎 " + (fortressState.stableMounts || []).length) : "FONDA"}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => { setShowCampfireModal(false); setShowChroniclesModal(true); }}
+                                    className="w-full bg-gradient-to-r from-purple-950 via-indigo-950 to-fuchsia-950 hover:from-purple-900 hover:to-fuchsia-900 border-2 border-fuchsia-400 p-3 rounded-xl text-left flex items-center justify-between active:scale-95 shadow-lg"
+                                >
+                                    <div>
+                                        <p className="text-fuchsia-300 font-black text-xs">
+                                            📜 Cronache & Intrecci del Destino (3 Archi Ramificati)
+                                        </p>
+                                        <p className="text-fuchsia-100/80 text-[10px]">
+                                            Scelte permanenti tra gli Atti, sentieri segreti, 5 Boss e Reliquie Esclusive!
+                                        </p>
+                                    </div>
+                                    <span className="bg-fuchsia-400 text-black text-[10px] font-black px-2 py-1 rounded-full shrink-0">
+                                        {Object.keys(STORY_FLAG_LABELS).filter(fk => storyFlags && storyFlags[fk]).length} FLAG
                                     </span>
                                 </button>
                             </div>
@@ -18024,6 +18298,151 @@
                             );
                         })(),
                         () => setShowFortressModal(false),
+                        false
+                    )}
+
+                    {/* MODALE CRONACHE & INTRECCI DEL DESTINO (MODULO D) */}
+                    {showChroniclesModal && character && renderDedicatedModal(
+                        (() => {
+                            const totalLvl = getHeroTotalLevel(character);
+                            const activeFlagKeys = Object.keys(STORY_FLAG_LABELS).filter(fk => hasStoryFlag(fk));
+
+                            return (
+                                <div className="bg-gradient-to-b from-slate-950 via-indigo-950/90 to-purple-950/80 border-4 border-fuchsia-400 rounded-2xl p-3 sm:p-4 text-white space-y-3 shadow-2xl">
+                                    <div className="flex items-center justify-between gap-2 border-b border-fuchsia-700/60 pb-2.5">
+                                        <div>
+                                            <h3 className="text-sm sm:text-base font-rpg-title font-black text-fuchsia-300">
+                                                📜 Cronache & Intrecci del Destino
+                                            </h3>
+                                            <p className="text-[11px] text-fuchsia-100/80">
+                                                Ogni decisione incide uno Story Flag permanente che modifica Boss, sentieri e Reliquie!
+                                            </p>
+                                        </div>
+                                        <button onClick={() => setShowChroniclesModal(false)} className="bg-red-900 hover:bg-red-700 text-white font-black text-xs px-3 py-1.5 rounded-lg shrink-0">
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    {/* RIEPILOGO STORY FLAGS ATTIVI */}
+                                    <div className="bg-black/50 border border-fuchsia-800/70 rounded-xl p-2.5 space-y-1.5">
+                                        <p className="text-[10px] font-black uppercase text-amber-300">
+                                            🔖 Alleanze & Scelte Incise della Compagnia ({activeFlagKeys.length}):
+                                        </p>
+                                        {activeFlagKeys.length === 0 ? (
+                                            <p className="text-[11px] text-gray-400 italic">
+                                                Nessuna scelta ancora registrata. Completa la Cronaca I (Lv. 5+) per plasmare la storia!
+                                            </p>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                {activeFlagKeys.map(fk => (
+                                                    <div key={fk} className="bg-indigo-950/80 border border-indigo-600/60 rounded-lg px-2.5 py-1.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                                                        <span className="text-xs font-black text-amber-200">
+                                                            {STORY_FLAG_LABELS[fk].icon} {STORY_FLAG_LABELS[fk].title}
+                                                        </span>
+                                                        <span className="text-[10px] text-emerald-300 font-bold">
+                                                            {STORY_FLAG_LABELS[fk].effect}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* ELENCO DEI 3 ARCHI RAMIFICATI */}
+                                    <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                                        {CHRONICLE_ARCS.map(arc => {
+                                            const chosen = getChronicleChosenOption(arc);
+                                            const prereqMet = !arc.requiresAnyFlag || arc.requiresAnyFlag.some(rf => hasStoryFlag(rf));
+                                            const lvlMet = totalLvl >= arc.minLvl;
+                                            const bossObj = chosen ? RPG_MONSTERS_DB[chosen.bossKey] : null;
+                                            const bossDefeated = chosen ? isChronicleBossDefeated(chosen.bossKey) : false;
+                                            const relicObj = (bossObj && bossObj.loot) ? RPG_ITEMS_DB[bossObj.loot] : null;
+
+                                            return (
+                                                <div key={arc.id} className={`rounded-xl border-2 p-3 space-y-2.5 ${chosen ? "bg-indigo-950/60 border-emerald-500/80" : (prereqMet && lvlMet ? "bg-gray-900/90 border-fuchsia-500/80" : "bg-gray-950/80 border-gray-700 opacity-75")}`}>
+                                                    <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                                        <span className="bg-fuchsia-900/90 border border-fuchsia-400 text-fuchsia-200 text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                                                            {arc.badge}
+                                                        </span>
+                                                        {chosen ? (
+                                                            <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                                                {bossDefeated ? "🏆 COMPLETATA" : "⚔️ BOSS SBLOCCATO"}
+                                                            </span>
+                                                        ) : (!prereqMet ? (
+                                                            <span className="text-[10px] font-black text-amber-400">🔒 Completa la Cronaca precedente</span>
+                                                        ) : (!lvlMet ? (
+                                                            <span className="text-[10px] font-black text-red-400">🔒 Richiede Lv. {arc.minLvl}</span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-black text-cyan-300">✨ SCELTA DISPONIBILE</span>
+                                                        )))}
+                                                    </div>
+
+                                                    <div>
+                                                        <h4 className="text-sm font-black text-amber-300">{arc.title}</h4>
+                                                        <p className="text-[11px] text-gray-300 mt-0.5 leading-snug">{arc.lore}</p>
+                                                    </div>
+
+                                                    {/* SE NON HAI ANCORA SCELTO: MOSTRA LE OPZIONI RAMIFICATE */}
+                                                    {!chosen ? (
+                                                        <div className="space-y-1.5">
+                                                            {arc.choices.map(ch => {
+                                                                const secretOk = !ch.requiresAnyFlag || ch.requiresAnyFlag.some(rf => hasStoryFlag(rf));
+                                                                const canPick = prereqMet && lvlMet && secretOk;
+                                                                return (
+                                                                    <button
+                                                                        key={ch.flag}
+                                                                        disabled={!canPick}
+                                                                        onClick={() => selectChronicleChoice(arc, ch)}
+                                                                        className={`w-full text-left p-2.5 rounded-xl border transition-all ${
+                                                                            canPick
+                                                                                ? "bg-slate-900 hover:bg-indigo-900 border-amber-400/80 active:scale-[0.99]"
+                                                                                : "bg-black/50 border-gray-800 opacity-55 cursor-not-allowed"
+                                                                        }`}
+                                                                    >
+                                                                        <p className="text-xs font-black text-amber-200">{ch.label}</p>
+                                                                        <p className="text-[10px] text-gray-300 mt-0.5">
+                                                                            {secretOk ? ch.consequence : ("🔒 " + (ch.lockHint || "Sentiero segreto bloccato"))}
+                                                                        </p>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        /* SE HAI GIÀ SCELTO: MOSTRA CONSEGUENZA E ACCESSO AL BOSS + RELIQUIA */
+                                                        <div className="bg-black/55 border border-amber-500/70 rounded-xl p-2.5 space-y-2">
+                                                            <p className="text-xs font-black text-emerald-300">
+                                                                ✓ Scelta Compiuta: {chosen.label}
+                                                            </p>
+                                                            {bossObj && (
+                                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-gray-800">
+                                                                    <div className="space-y-0.5">
+                                                                        <p className="text-xs font-black text-red-300">
+                                                                            👹 Boss: {bossObj.name}
+                                                                        </p>
+                                                                        {relicObj && (
+                                                                            <p className="text-[10px] text-amber-200 font-bold">
+                                                                                🏆 Drop Esclusivo: {relicObj.name} ({relicObj.keywords.join(", ")})
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => launchChronicleBossBattle(chosen.bossKey)}
+                                                                        className="bg-red-700 hover:bg-red-600 border border-red-300 text-white font-black text-xs px-3.5 py-2 rounded-xl shrink-0 active:scale-95 shadow"
+                                                                    >
+                                                                        {bossDefeated ? "⚔️ Risfida Boss" : "⚔️ Affronta Boss!"}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })(),
+                        () => setShowChroniclesModal(false),
                         false
                     )}
 
@@ -20799,6 +21218,11 @@
                             {cabalPitRecord > 0 && (
                                 <p className="font-black text-purple-900 text-[10px] border-t border-gray-300 pt-0.5">
                                     🗼 Record Fossa della Cabala: Ondata {cabalPitRecord}
+                                </p>
+                            )}
+                            {storyFlags && Object.keys(STORY_FLAG_LABELS).some(fk => storyFlags[fk]) && (
+                                <p className="font-black text-amber-900 text-[10px] border-t border-gray-300 pt-0.5">
+                                    📜 Destino: {Object.keys(STORY_FLAG_LABELS).filter(fk => storyFlags[fk]).map(fk => STORY_FLAG_LABELS[fk].icon + " " + STORY_FLAG_LABELS[fk].title).join(" • ")}
                                 </p>
                             )}
                         </div>
