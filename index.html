@@ -2119,6 +2119,8 @@
         marina_vendrell_shadow: { name: "🕯️ L'Ombra di Marina Vendrell & Le Stanze", isHumanoid: true, maxHP: 152, initBonus: 9, dc: 33, dmg: 17, blueMana: 4, exp: 375, gold: 185, treasures: 4, loot: "marina_grimoire", isBoss: true, summonerType: "nightmare_horror", desc: "La custode delle chiavi della Casa manipolata dalla paura: controlla 4💧 Mana Blu e Incubi!" },
         valgavoth_terror_eater: { name: "🦋💀 VALGAVOTH, DIVORATORE DI TERRORE (SUPER-BOSS)", isHumanoid: false, maxHP: 185, initBonus: 10, dc: 35, dmg: 20, blueMana: 4, exp: 520, gold: 280, treasures: 6, loot: "ugins_nexus", isBoss: true, summonerType: "nightmare_horror", desc: "Il Demone-Falena primordiale che HA DIVORATO UN INTERO PIANO! Volare, 4💧 Mana Blu e sciami di Incubi!" },
         // --- BOSS ABISSALI E MOSTRI CAVALCABILI  ---
+        giant_octopus: { name: "Piovra Gigante degli Abissi (3/3)", isHumanoid: false, maxHP: 34, initBonus: 5, dc: 22, dmg: 6, blueMana: 2, exp: 55, gold: 22, treasures: 1, loot: "arcane_signet", flying: false, desc: "Un cefalopode colossale emerso dalle acque profonde attirato dalla tua esca!" },
+        sea_serpent_young: { name: "Serpente Marino delle Maree (5/5)", isHumanoid: false, maxHP: 58, initBonus: 6, dc: 25, dmg: 9, blueMana: 2, exp: 95, gold: 38, treasures: 1, loot: "winged_boots", flying: false, desc: "Un antico serpente d'acqua salata che affiora spezzando le onde!" },
         abyss_arixmethes: { name: "Arixmethes, l'Isola Dormiente (Boss Abissale)", maxHP: 220, dmg: 18, dc: 28, initBonus: 6, exp: 320, gold: 180, isBoss: true, flying: false, exclusiveDropId: "trident_thassa_abyss", scryfallCard: "Arixmethes, Slumbering Isle" },
         abyss_stormtide: { name: "Leviatano della Marea Tempestosa (Boss Abissale)", maxHP: 250, dmg: 20, dc: 29, initBonus: 5, exp: 380, gold: 220, isBoss: true, flying: false, exclusiveDropId: "abyssal_tide_blade", scryfallCard: "Stormtide Leviathan" },
         abyss_koma: { name: "Koma, Serpente del Cosmo (Boss Abissale Mitico)", maxHP: 310, dmg: 23, dc: 31, initBonus: 8, exp: 520, gold: 320, isBoss: true, flying: false, exclusiveDropId: "koma_cosmos_aegis", scryfallCard: "Koma, Cosmos Serpent" },
@@ -7800,31 +7802,361 @@
             }
         };
 
+        // ============================================================================
+        // --- MODULO C: MERCANTE DINAMICO PER ATTO/ZONA & FORGIA AVANZATA          ---
+        // ============================================================================
+        const MERCHANT_ZONE_PROFILES = {
+            act1_benalia: {
+                title: "Bazar di Nuova Benalia & Keld (Atto I)",
+                subtitle: "Rifornimenti iniziali per avventurieri di Dominaria",
+                badge: "☀️ Atto I",
+                maxLvlCap: 3,
+                featuredIds: [
+                    "bonesplitter", "champion_helm", "vulshok_morningstar", "horned_helm",
+                    "brawler_plate", "whispersilk_dagger", "hood_assassin", "venom_bracers",
+                    "Swiftfoot_boots", "arcane_signet", "lavaspur_boots", "ward_helm_serra", "o_naginata", "berserker_greaves"
+                ]
+            },
+            act2_dominaria: {
+                title: "Emporio dei Continenti (Llanowar • Tolaria • Urborg)",
+                subtitle: "Armi veterane e reliquie dei grandi continenti di Dominaria",
+                badge: "🌍 Atto II",
+                maxLvlCap: 7,
+                featuredIds: [
+                    "isochron_scepter", "loxodon_warhammer", "shadowspear", "assault_suit",
+                    "gauntlets_power", "quietus_spike", "grafted_wargear", "lightning_greaves",
+                    "mask_of_avacyn", "nettlecyst", "pariah_shield", "scythe_of_the_wretched",
+                    "sublime_exalted_blade", "undying_phylactery", "sword_light_shadow", "sword_body_mind"
+                ]
+            },
+            jamuraa_iceage: {
+                title: "Carovana di Suq'Ata & Kjeldor (Jamuraa / Era Glaciale)",
+                subtitle: "Manufatti rari di Mirage e cimeli dell'Era Glaciale",
+                badge: "🏜️❄️ Regionale",
+                maxLvlCap: 8,
+                featuredIds: [
+                    "jester_cap", "icy_manipulator", "kaervek_torch_staff", "teferi_puzzle_box",
+                    "cloak_of_the_bat", "gauntlets_of_light", "helm_of_obedience", "plate_armor_paladin",
+                    "diamond_pickaxe", "undying_phylactery", "ward_helm_serra", "sword_war_peace"
+                ]
+            },
+            mirrodin_koilos_shiv: {
+                title: "Fonderia del Synod & Mana Rig (Mirrodin • Koilos • Shiv)",
+                subtitle: "Metalli indistruttibili, Spade di Mirrodin e artefatti Thran",
+                badge: "⚙️🔥 Atto III–IV",
+                maxLvlCap: 12,
+                featuredIds: [
+                    "darksteel_plate", "sunforger", "panharmonicon", "grafted_exoskeleton",
+                    "ichormoon_gauntlet", "staff_domination", "hammer_nazahn", "sword_fire_ice",
+                    "sword_feast_famine", "sword_sinew_steel", "sword_forge_frontier",
+                    "sword_truth_justice", "argentum_armor", "colossus_hammer"
+                ]
+            },
+            plane_innistrad: {
+                title: "Mercato Notturno di Thraben (Innistrad)",
+                subtitle: "Argento benedetto, maschere gotiche e cimeli dei Catari",
+                badge: "🦇 Innistrad",
+                maxLvlCap: 10,
+                featuredIds: [
+                    "mask_of_avacyn", "mask_of_griselbrand", "cloak_of_the_bat", "scythe_of_the_wretched",
+                    "undying_phylactery", "shadowspear", "sword_light_shadow", "sword_once_future", "godsend"
+                ]
+            },
+            plane_ravnica: {
+                title: "Bazar Transgilda del Decimo Distretto (Ravnica)",
+                subtitle: "Ingegneria Izzet, corazze Boros e artefatti delle Dieci Gilde",
+                badge: "🏛️ Ravnica",
+                maxLvlCap: 10,
+                featuredIds: [
+                    "arcane_signet", "aetherflux_reservoir", "lightning_greaves", "commanders_plate",
+                    "loxodon_warhammer", "sunforger", "sword_wealth_power", "sword_truth_justice", "bolas_citadel_relic"
+                ]
+            },
+            plane_kamigawa: {
+                title: "Mercato al Neon di Towashi (Kamigawa)",
+                subtitle: "Lame forgiate dai Kami e vesti mistiche di Otawara",
+                badge: "⛩️ Kamigawa",
+                maxLvlCap: 10,
+                featuredIds: [
+                    "o_naginata", "umezawa_jitte", "mithril_coat", "robe_of_stars",
+                    "winged_boots", "quietus_spike", "sword_hearth_home", "sword_once_future"
+                ]
+            },
+            plane_zendikar: {
+                title: "Casa delle Spedizioni di Porta del Mare (Zendikar)",
+                subtitle: "Equipaggiamenti da scalata degli Skyclave e reliquie antiche",
+                badge: "💎 Zendikar",
+                maxLvlCap: 12,
+                featuredIds: [
+                    "maul_skyclaves", "winged_boots", "hammer_nazahn", "sword_fire_ice",
+                    "sword_feast_famine", "sword_forge_frontier", "colossus_hammer", "excalibur_sword"
+                ]
+            },
+            nexus_finale: {
+                title: "Emporio della Cieca Eternità (Nexus & Assedio Finale)",
+                subtitle: "Le reliquie più potenti del Multiverso per i Planeswalker",
+                badge: "🌌 Endgame",
+                maxLvlCap: 14,
+                featuredIds: [
+                    "staff_domination", "darksteel_plate", "commanders_plate", "bolas_citadel_relic",
+                    "sword_fire_ice", "sword_feast_famine", "sword_sinew_steel", "sword_wealth_power",
+                    "godsend", "excalibur_sword", "the_one_ring", "argentum_armor", "colossus_hammer"
+                ]
+            },
+            plane_theros: {
+                title: "Agorà degli Oracoli di Meletis (Theros)",
+                subtitle: "Manufatti stellari di Nyx (le 5 Armi degli Dei restano esclusive dei Boss!)",
+                badge: "🏛️ Theros",
+                maxLvlCap: 12,
+                featuredIds: [
+                    "ward_helm_serra", "sublime_exalted_blade", "chariot_of_victory",
+                    "helm_of_the_gods", "mantle_of_the_ancients", "nyx_lotus", "godsend"
+                ]
+            },
+            plane_ixalan: {
+                title: "Mercato dei Corsari di Alta e Asciutta (Ixalan)",
+                subtitle: "Sciabole pirata, bussole taumaturgiche e tesori di Orazca",
+                badge: "🦖 Ixalan",
+                maxLvlCap: 14,
+                featuredIds: [
+                    "pirate_cutlass", "diamond_pickaxe", "thaumatic_compass", "conqueror_flail",
+                    "tarrian_soulcleaver", "reaver_cleaver", "immortal_sun"
+                ]
+            },
+            plane_eldraine: {
+                title: "Fiera Fatata di Ardenvale (Eldraine)",
+                subtitle: "Reliquie incantate del Regno e delle Terre Selvagge",
+                badge: "🧚 Eldraine",
+                maxLvlCap: 14,
+                featuredIds: [
+                    "crystal_slipper", "mithril_coat", "robe_of_stars", "circle_of_loyalty",
+                    "cauldron_of_eternity", "the_great_henge", "excalibur_sword"
+                ]
+            },
+            plane_tarkir: {
+                title: "Armeria dei Cinque Clan (Tarkir)",
+                subtitle: "Lame di Fuocospettrale e scaglie dei Signori dei Draghi",
+                badge: "🐉 Tarkir",
+                maxLvlCap: 14,
+                featuredIds: [
+                    "ghostfire_blade", "zephyr_boots", "dragon_throne_tarkir",
+                    "ugins_nexus", "sword_forge_frontier", "reaver_cleaver"
+                ]
+            },
+            plane_duskmourn: {
+                title: "Rifugio dei Sopravvissuti (Duskmourn)",
+                subtitle: "Attrezzatura d'emergenza e reliquie della Casa degli Incubi",
+                badge: "🦋 Duskmourn",
+                maxLvlCap: 15,
+                featuredIds: [
+                    "chainsaw_dsk", "glimmer_lens", "dissection_tools",
+                    "ghost_vacuum", "marina_grimoire", "the_one_ring"
+                ]
+            }
+        };
+
+        const getMerchantZoneInfo = (nodeId) => {
+            const n = String(nodeId || "start").toLowerCase();
+            if (n.indexOf("duskmourn") === 0) return MERCHANT_ZONE_PROFILES.plane_duskmourn;
+            if (n.indexOf("tarkir") === 0) return MERCHANT_ZONE_PROFILES.plane_tarkir;
+            if (n.indexOf("eldraine") === 0) return MERCHANT_ZONE_PROFILES.plane_eldraine;
+            if (n.indexOf("ixalan") === 0) return MERCHANT_ZONE_PROFILES.plane_ixalan;
+            if (n.indexOf("theros") === 0) return MERCHANT_ZONE_PROFILES.plane_theros;
+            if (n.indexOf("omenpath") === 0) return MERCHANT_ZONE_PROFILES.nexus_finale;
+            if (n.indexOf("innistrad") === 0) return MERCHANT_ZONE_PROFILES.plane_innistrad;
+            if (n.indexOf("ravnica") === 0) return MERCHANT_ZONE_PROFILES.plane_ravnica;
+            if (n.indexOf("kamigawa") === 0) return MERCHANT_ZONE_PROFILES.plane_kamigawa;
+            if (n.indexOf("zendikar") === 0) return MERCHANT_ZONE_PROFILES.plane_zendikar;
+            if (n.indexOf("finale") === 0 || n.indexOf("planeswalker") === 0 || n.indexOf("nghathrod") === 0) return MERCHANT_ZONE_PROFILES.nexus_finale;
+            if (n.indexOf("jamuraa") === 0 || n.indexOf("iceage") === 0 || n.indexOf("dark_depths") === 0) return MERCHANT_ZONE_PROFILES.jamuraa_iceage;
+            if (n.indexOf("mirrodin") === 0 || n.indexOf("koilos") === 0 || n.indexOf("shiv") === 0 || n.indexOf("obelisk") === 0 || n.indexOf("karn") === 0 || n.indexOf("phyrexian") === 0) return MERCHANT_ZONE_PROFILES.mirrodin_koilos_shiv;
+            if (n === "start" || n.indexOf("benalia") === 0 || n.indexOf("thran") === 0 || n.indexOf("teferi") === 0 || n.indexOf("keld") === 0 || n.indexOf("jaya") === 0 || n.indexOf("squee") === 0) return MERCHANT_ZONE_PROFILES.act1_benalia;
+            return MERCHANT_ZONE_PROFILES.act2_dominaria;
+        };
+
+        const hasFortressMerchantDiscount = () => {
+            return typeof fortressState !== "undefined" && fortressState && fortressState.level >= 3;
+        };
+
+        const getEffectiveShopPrice = (baseCost) => {
+            const raw = Number(baseCost) || 0;
+            if (hasFortressMerchantDiscount()) {
+                return Math.max(5, Math.round(raw * 0.85));
+            }
+            return raw;
+        };
+
+        const getDynamicMerchantCatalog = () => {
+            const nodeId = character ? character.currentNode : "start";
+            const zone = getMerchantZoneInfo(nodeId);
+            const featuredSet = zone.featuredIds || [];
+
+            return MERCHANT_SHOP.filter(entry => {
+                if (entry.type === "token" || entry.type === "spell") return true;
+                const dbItem = RPG_ITEMS_DB[entry.id];
+                if (!dbItem || dbItem.dropOnly) return false;
+                if (featuredSet.indexOf(entry.id) !== -1) return true;
+                // Mantiene sempre disponibili anche 3-4 oggetti generici base coerenti con la fascia dell'Atto
+                const isBaseGeneric = ["bonesplitter", "champion_helm", "arcane_signet", "Swiftfoot_boots"].indexOf(entry.id) !== -1;
+                if (isBaseGeneric && (entry.minLvl || 1) <= zone.maxLvlCap) return true;
+                return false;
+            }).map(entry => {
+                const isRegional = entry.type === "item" && featuredSet.indexOf(entry.id) !== -1;
+                return Object.assign({}, entry, {
+                    isRegionalSpecial: isRegional,
+                    finalCost: getEffectiveShopPrice(entry.cost)
+                });
+            });
+        };
+
+        // --- FORGIA AVANZATA: SCAGLIE ARCANE, SMONTAGGIO, INFUSIONE KEYWORD & +4/+5 ---
+        const FORGE_INFUSION_KEYWORDS = [
+            { kw: "Legame Vitale", shards: 3, gold: 60, desc: "I colpi critici e speciali rigenerano PV" },
+            { kw: "Tocco Letale", shards: 3, gold: 60, desc: "Critico letale facilitato e danni extra" },
+            { kw: "Travolgere", shards: 3, gold: 60, desc: "Sfonda la difesa nemica con danni extra" },
+            { kw: "Rapidità", shards: 3, gold: 60, desc: "Puoi anticipare il turno d'attacco in Arena" },
+            { kw: "Fendente", shards: 3, gold: 70, desc: "50% danni AoE su tutte le Pedine nemiche" },
+            { kw: "Egida", shards: 3, gold: 70, desc: "Riduce di -3 ogni danno subito" },
+            { kw: "Indistruttibile", shards: 5, gold: 120, desc: "Protegge l'oggetto da Frantumare dei Boss" }
+        ];
+
+        const getDisassembleShardYield = (itemObj) => {
+            if (!itemObj) return 1;
+            const lvl = itemObj.minLvl || 1;
+            if (itemObj.reqLegendary || lvl >= 10) return 4;
+            if (lvl >= 7) return 3;
+            if (lvl >= 4) return 2;
+            return 1;
+        };
+
+        const disassembleInventoryItem = (invIdx) => {
+            if (!character || !character.inventory || !character.inventory[invIdx]) return;
+            if (combatState) return alert("⛔ Non puoi smontare oggetti durante il combattimento!");
+            const target = character.inventory[invIdx];
+            if (target.isTrauma || target.isDemonicPact) {
+                return alert("Non puoi smontare Ferite o Patti Demoniaci alla Forgia!");
+            }
+            const yieldShards = getDisassembleShardYield(target);
+            if (!window.confirm("Vuoi smontare «" + target.name + "» nella Forgia per ricavare +" + yieldShards + " Scaglie Arcane (✨)? L'oggetto verrà distrutto.")) {
+                return;
+            }
+            const nextInv = character.inventory.slice();
+            nextInv.splice(invIdx, 1);
+            const updated = Object.assign({}, character, {
+                inventory: nextInv,
+                arcaneShards: (character.arcaneShards || 0) + yieldShards
+            });
+            saveCharState(updated);
+            if (typeof playTriadSfx === "function") playTriadSfx("place");
+            setEventBanner(`⚒️✨ SMONTAGGIO COMPLETATO! Hai fuso **${target.name}** ricavando **+${yieldShards} Scaglie Arcane ✨** (Totale: ${updated.arcaneShards})!`);
+        };
+
+        const infuseKeywordAtForge = (slotKey, kwEntry) => {
+            if (!character || !character.equipped || !character.equipped[slotKey]) return;
+            if (combatState) return alert("⛔ Non puoi infondere oggetti durante il combattimento!");
+            const item = Object.assign({}, character.equipped[slotKey]);
+            const curKws = Array.isArray(item.keywords) ? item.keywords.slice() : [];
+            if (curKws.indexOf(kwEntry.kw) !== -1) {
+                return alert("Questo oggetto possiede già l'abilità «" + kwEntry.kw + "»!");
+            }
+            const infusedCount = item.infusedCount || 0;
+            if (infusedCount >= 2) {
+                return alert("Questo oggetto ha già ricevuto il massimo di 2 Infusioni Arcane!");
+            }
+            if ((character.arcaneShards || 0) < kwEntry.shards || (character.gold || 0) < kwEntry.gold) {
+                return alert("Risorse insufficienti! Servono " + kwEntry.shards + " Scaglie Arcane (✨) e " + kwEntry.gold + " Oro (🪙).");
+            }
+
+            curKws.push(kwEntry.kw);
+            item.keywords = curKws;
+            item.infusedCount = infusedCount + 1;
+
+            const nextEq = Object.assign({}, character.equipped);
+            nextEq[slotKey] = item;
+            const updated = Object.assign({}, character, {
+                equipped: nextEq,
+                arcaneShards: (character.arcaneShards || 0) - kwEntry.shards,
+                gold: (character.gold || 0) - kwEntry.gold
+            });
+            saveCharState(updated);
+            if (typeof playTriadSfx === "function") playTriadSfx("win");
+            setEventBanner(`✨⚒️ INFUSIONE ARCANA RIUSCITA! **${item.name}** ha acquisito permanentemente **${kwEntry.kw}**!`);
+        };
+
+        const mythicOverchargeAtForge = (slotKey) => {
+            if (!character || !character.equipped || !character.equipped[slotKey]) return;
+            if (combatState) return alert("⛔ Non puoi forgiare durante il combattimento!");
+            const item = Object.assign({}, character.equipped[slotKey]);
+            const curPlus = item.upgradeLevel || 0;
+            if (curPlus < 3) return alert("Porta prima questo oggetto a +3 con la Forgia standard!");
+            if (curPlus >= 5) return alert("👑 Questo equipaggiamento ha già raggiunto il grado massimo +5 MITICO!");
+
+            const nextPlus = curPlus + 1;
+            const shardCost = nextPlus === 4 ? 4 : 6;
+            const goldCost = nextPlus === 4 ? 150 : 250;
+            const treasCost = nextPlus === 4 ? 1 : 2;
+
+            if ((character.arcaneShards || 0) < shardCost || (character.gold || 0) < goldCost || (character.treasures || 0) < treasCost) {
+                return alert("Per il Sovraccarico +" + nextPlus + " servono: " + shardCost + " Scaglie Arcane (✨), " + goldCost + " 🪙 e " + treasCost + " 💎!");
+            }
+
+            const baseCleanName = item.name.replace(/\s*\+\d+(\s*MITICO)?$/, "");
+            item.upgradeLevel = nextPlus;
+            item.name = baseCleanName + " +" + nextPlus + (nextPlus === 5 ? " MITICO" : "");
+
+            if ((item.mag || 0) > (item.str || 0) && (item.mag || 0) > (item.agi || 0)) {
+                item.mag = (item.mag || 0) + 3;
+            } else if ((item.agi || 0) > (item.str || 0)) {
+                item.agi = (item.agi || 0) + 3;
+            } else {
+                item.str = (item.str || 0) + 3;
+            }
+            item.con = (item.con || 0) + 3;
+
+            const nextEq = Object.assign({}, character.equipped);
+            nextEq[slotKey] = item;
+            const updated = Object.assign({}, character, {
+                equipped: nextEq,
+                arcaneShards: (character.arcaneShards || 0) - shardCost,
+                gold: (character.gold || 0) - goldCost,
+                treasures: (character.treasures || 0) - treasCost,
+                currentHP: character.currentHP + 3
+            });
+            saveCharState(updated);
+            if (typeof playTriadSfx === "function") playTriadSfx("win");
+            setEventBanner(`🔥👑 SOVRACCARICO MITICO COMPLETATO! **${item.name}** ottiene +3 Statistica Principale e +3 COS!`);
+        };
+
         const buyFromMerchant = (shopEntry) => {
             const currentGold = character.gold || 0;
-            if ((character.level || 1) < (shopEntry.minLvl || 1)) {
+            const totalHeroLvl = (character.level || 1) + (character.secondaryLevel || 0);
+            if (shopEntry.type === "item" && RPG_ITEMS_DB[shopEntry.id] && RPG_ITEMS_DB[shopEntry.id].dropOnly) {
+                return alert("⛔ Questa reliquia è esclusiva dei Boss e non può essere acquistata!");
+            }
+            if (totalHeroLvl < (shopEntry.minLvl || 1)) {
                 return alert(`Devi essere almeno di LIVELLO ${shopEntry.minLvl} per acquistare questo oggetto!`);
             }
-            if (currentGold < shopEntry.cost) {
-                return alert(`Oro insufficiente! Ti servono ${shopEntry.cost} Monete d'Oro (ne hai ${currentGold}).`);
+            const realPrice = getEffectiveShopPrice(shopEntry.cost);
+            if (currentGold < realPrice) {
+                return alert(`Oro insufficiente! Ti servono ${realPrice} Monete d'Oro (ne hai ${currentGold}).`);
             }
-            let updated = { ...character, gold: currentGold - shopEntry.cost };
+            let updated = { ...character, gold: currentGold - realPrice };
             if (shopEntry.type === "token") {
                 if (shopEntry.id === "buy_food") {
                     updated.food = (updated.food || 0) + 1;
-                    setEventBanner(`⚖️ Acquistata 1 Pedina Cibo (🍖) per ${shopEntry.cost} Monete d'Oro!`);
+                    setEventBanner(`⚖️ Acquistata 1 Pedina Cibo (🍖) per ${realPrice} Monete d'Oro!`);
                 } else {
                     updated.treasures = (updated.treasures || 0) + 1;
-                    setEventBanner(`⚖️ Acquistata 1 Pedina Tesoro (💎) per ${shopEntry.cost} Monete d'Oro!`);
+                    setEventBanner(`⚖️ Acquistata 1 Pedina Tesoro (💎) per ${realPrice} Monete d'Oro!`);
                 }
             } else if (shopEntry.type === "spell") {
                 updated = learnSpell(updated, shopEntry.id);
-                setEventBanner(`📜 Hai acquistato e imparato "${MTG_SPELLS_DB[shopEntry.id].name}"!`);
+                setEventBanner(`📜 Hai acquistato e imparato "${MTG_SPELLS_DB[shopEntry.id].name}" per ${realPrice} Monete d'Oro!`);
             } else if (RPG_ITEMS_DB[shopEntry.id]) {
                 const rawItem = RPG_ITEMS_DB[shopEntry.id];
                 const adapted = adaptLootForCharacter(rawItem, updated);
                 updated.inventory = [...updated.inventory, adapted];
-                setEventBanner(`⚖️ Hai acquistato "${adapted.name}" per ${shopEntry.cost} Monete d'Oro!`);
+                setEventBanner(`⚖️ Hai acquistato "${adapted.name}" per ${realPrice} Monete d'Oro!`);
             }
             saveCharState(updated);
         };
@@ -9272,6 +9604,8 @@
             overlord_boilerbilges: "Overlord of the Boilerbilges",
             marina_vendrell_shadow: "Marina Vendrell",
             valgavoth_terror_eater: "Valgavoth, Terror Eater",
+            giant_octopus: "Giant Octopus",
+            sea_serpent_young: "Sea Serpent",
             abyss_arixmethes: "Arixmethes, Slumbering Isle",
             abyss_stormtide: "Stormtide Leviathan",
             abyss_koma: "Koma, Cosmos Serpent",
@@ -9576,21 +9910,24 @@
                         monsterKey: bossKey,
                         img: "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(bossObj.scryfallCard) + "&format=image&version=art_crop",
                         title: "🦑🌊 BOSS ABISSALE AGGANCIATO!",
-                        msg: "Le acque ribollono! Hai risvegliato **" + bossObj.name + "**! Sconfiggilo per ottenere la sua Reliquia Leggendaria Esclusiva (introvabile dal mercante)!"
+                        msg: "Le acque ribollono! Hai risvegliato" + bossObj.name + "! Sconfiggilo per ottenere la sua Reliquia Leggendaria Esclusiva (introvabile dal mercante)!"
                     });
                     if (typeof playTriadSfx === "function") playTriadSfx("combo");
                     return;
                 }
 
-                if (Math.random() < 0.08) {
-                    const ambushKey = heroLvl >= 4 ? "krasis_hydroid" : "storm_crow";
-                    const ambushName = MTG_BESTIARY[ambushKey] ? MTG_BESTIARY[ambushKey].name : "Mostro degli Abissi";
+                 if (Math.random() < 0.08) {
+                    const ambushKey = heroLvl >= 7 ? "krasis_hydroid" : (heroLvl >= 4 ? "sea_serpent_young" : "giant_octopus");
+                    const ambushObj = MTG_BESTIARY[ambushKey];
+                    const ambushName = ambushObj ? ambushObj.name : "Mostro degli Abissi";
+                    const ambushCard = MONSTER_SCRYFALL_MAP[ambushKey] || "Giant Octopus";
                     setFishingPhase("result");
                     setFishingResult({
                         status: "monster",
                         monsterKey: ambushKey,
+                        img: "https://api.scryfall.com/cards/named?exact=" + encodeURIComponent(ambushCard) + "&format=image&version=art_crop",
                         title: "🌊👹 IMBOSCATA DAGLI ABISSI!",
-                        msg: "Al posto di un pesce hai agganciato **" + ambushName + "**! Preparati a combattere!"
+                        msg: "Al posto di un pesce hai agganciato " + ambushName + "! Preparati a combattere!"
                     });
                     if (typeof playTriadSfx === "function") playTriadSfx("flip_bad");
                     return;
@@ -10210,7 +10547,7 @@
                 level: 0,
                 name: "Terreno Brullo della Compagnia",
                 subtitle: "Nessuna fortezza costruita",
-                img: "./mtg-bg.jpg",
+                img: "./fortezza_lv0.png",
                 goldCost: 0,
                 treasureCost: 0,
                 buildMs: 0,
@@ -17034,14 +17371,137 @@
                                                 onClick={() => upgradeEquippedItemAtSmith(sl.key)}
                                                 className="bg-orange-500 hover:bg-orange-400 disabled:bg-gray-800 text-black disabled:text-gray-500 font-black text-[10px] px-2.5 py-1.5 rounded-lg shrink-0 shadow"
                                             >
-                                                {curP >= 3 ? "MAX (+3)" : `⚒️ Forgia +${curP + 1} (${nextCost}🪙 + 1💎)`}
+                                               {curP >= 5 ? "👑 MAX (+5 MITICO)" : (curP >= 3 ? "⬇️ Sovraccarico sotto" : `⚒️ Forgia +${curP + 1} (${nextCost}🪙 + 1💎)`)}
                                             </button>
                                         </div>
                                     );
                                 })}
                             </div>
-                        </div>, () => setShowBlacksmithModal(false), 
-                  true
+
+                            {/* FORGIA AVANZATA: SCAGLIE ARCANE, SMONTAGGIO, INFUSIONE & +4/+5 MITICO */}
+                            <div className="border-t-2 border-amber-600/70 pt-3 mt-3 space-y-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2 bg-indigo-950/80 border border-indigo-400/70 rounded-xl p-2.5">
+                                    <div>
+                                        <h4 className="text-xs font-black text-cyan-300 uppercase">
+                                            ✨ Forgia Arcana Avanzata (Smontaggio, Infusione & +5 Mitico)
+                                        </h4>
+                                        <p className="text-[10px] text-gray-300">
+                                            Smonta oggetti inutili dallo zaino per ricavare Scaglie Arcane, poi infondi Keyword o supera il limite +3!
+                                        </p>
+                                    </div>
+                                    <span className="bg-cyan-500 text-black font-black text-xs px-2.5 py-1 rounded-full shrink-0">
+                                        ✨ Scaglie: {character.arcaneShards || 0}
+                                    </span>
+                                </div>
+
+                                {/* 1. SMONTAGGIO EQUIPAGGIAMENTO DALLO ZAINO */}
+                                <div className="bg-black/45 border border-gray-700 rounded-xl p-2.5 space-y-1.5">
+                                    <p className="text-[10px] font-black uppercase text-amber-300">
+                                        🔨 1. Smonta Oggetti dallo Zaino in Scaglie Arcane:
+                                    </p>
+                                    {(!character.inventory || character.inventory.filter(it => it && !it.isTrauma && !it.isDemonicPact).length === 0) ? (
+                                        <p className="text-[10px] text-gray-400 italic">Nessun equipaggiamento smontabile nello zaino.</p>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1">
+                                            {character.inventory.map((invIt, idx) => {
+                                                if (!invIt || invIt.isTrauma || invIt.isDemonicPact) return null;
+                                                const ySh = getDisassembleShardYield(invIt);
+                                                return (
+                                                    <div key={idx} className="bg-gray-900 border border-gray-700 rounded-lg px-2 py-1.5 flex items-center justify-between gap-2">
+                                                        <span className="text-[11px] font-bold text-gray-200 truncate">{invIt.name}</span>
+                                                        <button
+                                                            onClick={() => disassembleInventoryItem(idx)}
+                                                            className="bg-cyan-700 hover:bg-cyan-600 text-white font-black text-[10px] px-2 py-1 rounded shrink-0 active:scale-95"
+                                                        >
+                                                            Smonta (+{ySh}✨)
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 2. SOVRACCARICO MITICO (+4 / +5) SU OGGETTI GIÀ A +3 */}
+                                {EQUIP_SLOTS.some(sl => character.equipped && character.equipped[sl.key] && (character.equipped[sl.key].upgradeLevel || 0) >= 3) && (
+                                    <div className="bg-purple-950/50 border border-purple-500/70 rounded-xl p-2.5 space-y-1.5">
+                                        <p className="text-[10px] font-black uppercase text-purple-200">
+                                            👑 2. Sovraccarico Mitico (+4 e +5 su oggetti già a +3):
+                                        </p>
+                                        <div className="space-y-1.5">
+                                            {EQUIP_SLOTS.map(sl => {
+                                                const eqIt = character.equipped ? character.equipped[sl.key] : null;
+                                                if (!eqIt || (eqIt.upgradeLevel || 0) < 3) return null;
+                                                const curP = eqIt.upgradeLevel || 3;
+                                                return (
+                                                    <div key={sl.key} className="flex items-center justify-between gap-2 bg-black/50 rounded-lg px-2.5 py-1.5 border border-purple-700/60">
+                                                        <span className="text-xs font-black text-amber-200 truncate">{sl.icon} {eqIt.name}</span>
+                                                        {curP >= 5 ? (
+                                                            <span className="text-[10px] font-black text-emerald-300 shrink-0">MAX +5 MITICO</span>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => mythicOverchargeAtForge(sl.key)}
+                                                                className="bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] px-2.5 py-1 rounded-lg shrink-0 active:scale-95"
+                                                            >
+                                                                Forgia +{curP + 1} ({curP === 3 ? "4✨ 150🪙 1💎" : "6✨ 250🪙 2💎"})
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 3. INFUSIONE KEYWORD DI MAGIC SU ARMA O CORAZZA EQUIPAGGIATA */}
+                                <div className="bg-black/45 border border-amber-700/70 rounded-xl p-2.5 space-y-2">
+                                    <p className="text-[10px] font-black uppercase text-amber-300">
+                                        ⚡ 3. Infondi una Keyword di Magic (su Arma o Corpo, max 2 per oggetto):
+                                    </p>
+                                    {(!character.equipped || (!character.equipped.weapon && !character.equipped.body)) ? (
+                                        <p className="text-[10px] text-gray-400 italic">Equipaggia prima un'Arma o un'Armatura per infonderla.</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {["weapon", "body"].map(slotK => {
+                                                const eqIt = character.equipped ? character.equipped[slotK] : null;
+                                                if (!eqIt) return null;
+                                                return (
+                                                    <div key={slotK} className="bg-gray-900/90 border border-gray-700 rounded-lg p-2 space-y-1.5">
+                                                        <p className="text-[11px] font-black text-white">
+                                                            {slotK === "weapon" ? "⚔️" : "🛡️"} {eqIt.name}{" "}
+                                                            <span className="text-[10px] text-cyan-300 font-bold">
+                                                                ({eqIt.infusedCount || 0}/2 infusioni)
+                                                            </span>
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {FORGE_INFUSION_KEYWORDS.map(kwObj => {
+                                                                const already = Array.isArray(eqIt.keywords) && eqIt.keywords.indexOf(kwObj.kw) !== -1;
+                                                                return (
+                                                                    <button
+                                                                        key={kwObj.kw}
+                                                                        disabled={already || (eqIt.infusedCount || 0) >= 2}
+                                                                        onClick={() => infuseKeywordAtForge(slotK, kwObj)}
+                                                                        title={kwObj.desc}
+                                                                        className={`text-[10px] font-black px-2 py-1 rounded border transition-all ${
+                                                                            already
+                                                                                ? "bg-emerald-950 text-emerald-300 border-emerald-700"
+                                                                                : "bg-indigo-950 hover:bg-indigo-800 disabled:opacity-40 text-amber-200 border-indigo-500 active:scale-95"
+                                                                        }`}
+                                                                    >
+                                                                        {already ? ("✓ " + kwObj.kw) : (kwObj.kw + " (" + kwObj.shards + "✨ " + kwObj.gold + "🪙)")}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>, () => setShowBlacksmithModal(false),
+                    true
                 )}
 
                     {/* MODALE BACHECA DELLE TAGLIE (CON TITOLI ONORIFICI STAMPABILI A4) */}
@@ -18725,11 +19185,32 @@
                                 )}
                             </div>
 
-                            {/* SEZIONE 2: ACQUISTA DAL CATALOGO DEL MERCANTE */}
+                            {/* SEZIONE 2: ACQUISTA DAL CATALOGO DINAMICO DEL MERCANTE */}
                             <div className="space-y-1.5">
+                                {(() => {
+                                    const mz = getMerchantZoneInfo(character ? character.currentNode : "start");
+                                    return (
+                                        <div className="bg-amber-950/80 border border-amber-400/70 rounded-xl p-2.5 mb-2 flex flex-wrap items-center justify-between gap-2">
+                                            <div>
+                                                <p className="text-xs font-black text-amber-300">
+                                                    {mz.badge} — {mz.title}
+                                                </p>
+                                                <p className="text-[10px] text-amber-100/85">
+                                                    {mz.subtitle} • Cambia Piano o Atto per trovare nuove armi!
+                                                </p>
+                                            </div>
+                                            {hasFortressMerchantDiscount() && (
+                                                <span className="bg-emerald-500 text-black text-[10px] font-black px-2 py-0.5 rounded-full">
+                                                    🏰 Sconto Fortezza -15%
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+
                                 <p className="text-yellow-300 font-black text-xs uppercase">🛒 Acquista Artefatti, Armi & Rifornimenti (Tocca 👁️ Visualizza per tutte le statistiche):</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1">
-                                    {MERCHANT_SHOP.map((entry, idx) => {
+                                    {getDynamicMerchantCatalog().map((entry, idx) => {
                                         const isToken = entry.type === "token";
                                         const isSpell = entry.type === "spell";
                                         const dbItem = (!isToken && !isSpell) ? RPG_ITEMS_DB[entry.id] : null;
@@ -18737,7 +19218,10 @@
 
                                         const itemName = (isToken || isSpell) ? entry.name : dbItem.name;
                                         const compat = dbItem ? getItemCompatibilityDetails(dbItem, character) : null;
-                                        const lockedByLvl = (character.level || 1) < (entry.minLvl || 1);
+                                        const totalHeroLvl = (character.level || 1) + (character.secondaryLevel || 0);
+                                        const lockedByLvl = totalHeroLvl < (entry.minLvl || 1);
+                                        const displayPrice = typeof entry.finalCost === "number" ? entry.finalCost : getEffectiveShopPrice(entry.cost);
+                                        const isDiscounted = displayPrice < entry.cost;
 
                                         return (
                                             <div key={idx} className={`bg-gray-800 border-2 rounded-xl p-2.5 flex flex-col justify-between gap-2 ${lockedByLvl ? "border-red-900/80 opacity-75" : (compat && !compat.usable ? "border-orange-600/70" : "border-gray-700")}`}>
@@ -18756,11 +19240,18 @@
                                                         </div>
                                                     )}
                                                     <div className="min-w-0 flex-1 space-y-0.5">
-                                                        {compat && (
-                                                            <span className="inline-block bg-gray-950 text-amber-300 border border-amber-600/60 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
-                                                                {compat.slotObj.icon} {compat.slotObj.label}
-                                                            </span>
-                                                        )}
+                                                        <div className="flex flex-wrap items-center gap-1">
+                                                            {compat && (
+                                                                <span className="inline-block bg-gray-950 text-amber-300 border border-amber-600/60 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
+                                                                    {compat.slotObj.icon} {compat.slotObj.label}
+                                                                </span>
+                                                            )}
+                                                            {entry.isRegionalSpecial && (
+                                                                <span className="inline-block bg-amber-500/20 text-amber-200 border border-amber-400/60 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">
+                                                                    📍 Zona
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <p className="text-white font-black text-xs leading-tight">{itemName}</p>
                                                         {isToken || isSpell ? (
                                                             <p className="text-gray-300 text-[10px] leading-snug">{entry.desc}</p>
@@ -18785,7 +19276,7 @@
                                                         onClick={() => buyFromMerchant(entry)}
                                                         className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-black text-[11px] py-1.5 px-2 rounded-lg shadow"
                                                     >
-                                                        🛒 Acquista ({entry.cost} 🪙)
+                                                        🛒 Acquista ({isDiscounted ? `${displayPrice}🪙 ` : `${displayPrice} 🪙`}{isDiscounted ? `(-15%)` : ""})
                                                     </button>
                                                 </div>
                                             </div>
