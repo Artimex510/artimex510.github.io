@@ -103,6 +103,41 @@
     .triad-ring { animation: triadRing 0.55s ease-out forwards; }
     .triad-shake { animation: triadShake 0.42s ease-in-out; }
 
+    /* --- MOTORE VFX 3D ARENA --- */
+    .vfx-arena-3d { perspective: 950px; transform-style: preserve-3d; }
+    @keyframes vfxMonsterRecoil3D {
+      0% { transform: perspective(800px) translateZ(0) rotateX(0deg) rotateY(0deg) scale(1); filter: brightness(1); }
+      25% { transform: perspective(800px) translateZ(-55px) rotateX(-12deg) rotateY(10deg) scale(0.92); filter: brightness(2.1) saturate(1.4); }
+      60% { transform: perspective(800px) translateZ(12px) rotateX(6deg) rotateY(-6deg) scale(1.03); filter: brightness(1.3); }
+      100% { transform: perspective(800px) translateZ(0) rotateX(0deg) rotateY(0deg) scale(1); filter: brightness(1); }
+    }
+    @keyframes vfxMonsterLunge3D {
+      0% { transform: perspective(800px) translateZ(0) translateY(0) scale(1); }
+      35% { transform: perspective(800px) translateZ(95px) translateY(22px) scale(1.16); filter: drop-shadow(0 18px 24px rgba(239, 68, 68, 0.75)); }
+      100% { transform: perspective(800px) translateZ(0) translateY(0) scale(1); }
+    }
+    @keyframes vfxSlashSweep {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45) rotate(-38deg); }
+      35% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(-12deg); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45) rotate(10deg); }
+    }
+    @keyframes vfxClawRips {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6) rotate(12deg); }
+      30% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(18deg); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.35) rotate(24deg); }
+    }
+    @keyframes vfxFloatDamage {
+      0% { opacity: 0; transform: translate(-50%, 6px) scale(0.65); }
+      20% { opacity: 1; transform: translate(-50%, -14px) scale(1.18); }
+      80% { opacity: 1; transform: translate(-50%, -44px) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -62px) scale(0.9); }
+    }
+    .vfx-recoil-3d { animation: vfxMonsterRecoil3D 0.46s cubic-bezier(0.22, 1, 0.36, 1); }
+    .vfx-lunge-3d { animation: vfxMonsterLunge3D 0.48s cubic-bezier(0.22, 1, 0.36, 1); }
+    .vfx-slash-anim { animation: vfxSlashSweep 0.44s ease-out forwards; }
+    .vfx-claw-anim { animation: vfxClawRips 0.48s ease-out forwards; }
+    .vfx-float-num { animation: vfxFloatDamage 1.05s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
     /* Barra superiore trasparente sopra la cornice 3D solo dentro il GDR */
     body.in-rpg-mode .rpg-top-header {
       position: fixed !important;
@@ -13350,8 +13385,163 @@
             try { return parseInt(localStorage.getItem('rpg_cabal_pit_record') || "0", 10) || 0; } catch (e) { return 0; }
         });
 
+        // ============================================================================
+        // --- MOTORE VFX 3D, PROIETTILI DAI PULSANTI, NUMERI FLUTTUANTI & AUDIO ---
+        // ============================================================================
+        const [vfxBeam, setVfxBeam] = useState(null);
+        const [vfxImpact, setVfxImpact] = useState(null);
+        const [vfxMonsterAnim, setVfxMonsterAnim] = useState("");
+        const [vfxFloatingTexts, setVfxFloatingTexts] = useState([]);
+
+        const vfxMonsterBoxRef = useRef(null);
+        const vfxStrBtnRef = useRef(null);
+        const vfxAgiBtnRef = useRef(null);
+        const vfxMagBtnRef = useRef(null);
+
+        const playCombatSynthSfx = (kind) => {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!window.__rpgVfxAudioCtx) window.__rpgVfxAudioCtx = new AudioCtx();
+                const ctx = window.__rpgVfxAudioCtx;
+                if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (kind === "str") {
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(340, now);
+                    osc.frequency.exponentialRampToValueAtTime(75, now + 0.18);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
+                    osc.start(now); osc.stop(now + 0.2);
+                } else if (kind === "agi") {
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.exponentialRampToValueAtTime(260, now + 0.14);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.16);
+                } else if (kind === "mag") {
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(420, now);
+                    osc.frequency.exponentialRampToValueAtTime(1180, now + 0.22);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (kind === "monster") {
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(155, now);
+                    osc.frequency.linearRampToValueAtTime(52, now + 0.28);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.31);
+                } else {
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(1040, now + 0.18);
+                    gain.gain.setValueAtTime(0.14, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.21);
+                }
+            } catch (e) {}
+        };
+
+        const spawnFloatingCombatText = (label, colorClass, offsetX) => {
+            const id = "flt_" + Date.now() + "_" + Math.floor(Math.random() * 9999);
+            const entry = { id: id, label: label, colorClass: colorClass || "text-amber-300", offsetX: offsetX || 0 };
+            setVfxFloatingTexts(prev => prev.concat([entry]).slice(-6));
+            setTimeout(() => {
+                setVfxFloatingTexts(prev => prev.filter(x => x.id !== id));
+            }, 1050);
+        };
+
+        const getManaBeamColor = (heroObj) => {
+            const col = (heroObj && heroObj.manaIdentity && heroObj.manaIdentity[0]) ? heroObj.manaIdentity[0] : "U";
+            if (col === "R") return "#fb923c";
+            if (col === "W") return "#fde047";
+            if (col === "B") return "#c084fc";
+            if (col === "G") return "#4ade80";
+            return "#38bdf8";
+        };
+
+        const triggerHeroAttackVfx = (statKey, heroObj, dmgAmount, isCrit, isHit) => {
+            playCombatSynthSfx(statKey || "str");
+            const btnRef = statKey === "agi" ? vfxAgiBtnRef : (statKey === "mag" ? vfxMagBtnRef : vfxStrBtnRef);
+            const targetRect = (vfxMonsterBoxRef.current && vfxMonsterBoxRef.current.getBoundingClientRect)
+                ? vfxMonsterBoxRef.current.getBoundingClientRect()
+                : { left: window.innerWidth * 0.5, top: 220, width: 220, height: 160 };
+            const startRect = (btnRef && btnRef.current && btnRef.current.getBoundingClientRect)
+                ? btnRef.current.getBoundingClientRect()
+                : { left: window.innerWidth * 0.5, top: window.innerHeight * 0.65, width: 100, height: 44 };
+
+            const endX = targetRect.left + targetRect.width * 0.5;
+            const endY = targetRect.top + targetRect.height * 0.5;
+            const startX = startRect.left + startRect.width * 0.5;
+            const startY = startRect.top + startRect.height * 0.5;
+
+            const beamColor = statKey === "agi" ? "#34d399" : (statKey === "mag" ? getManaBeamColor(heroObj) : "#fbbf24");
+            const beamId = "bm_" + Date.now() + "_" + Math.floor(Math.random() * 999);
+            setVfxBeam({ id: beamId, kind: statKey, x1: startX, y1: startY, x2: endX, y2: endY, color: beamColor });
+            setTimeout(() => {
+                setVfxBeam(prev => (prev && prev.id === beamId) ? null : prev);
+            }, 340);
+
+            if (isHit) {
+                setVfxMonsterAnim("");
+                setTimeout(() => setVfxMonsterAnim("vfx-recoil-3d"), 15);
+                setTimeout(() => setVfxMonsterAnim(""), 500);
+
+                const impId = "imp_" + Date.now() + "_" + Math.floor(Math.random() * 999);
+                setVfxImpact({ id: impId, kind: statKey, isCrit: Boolean(isCrit), color: beamColor });
+                setTimeout(() => {
+                    setVfxImpact(prev => (prev && prev.id === impId) ? null : prev);
+                }, 480);
+
+                const randX = Math.floor(Math.random() * 50) - 25;
+                spawnFloatingCombatText(
+                    (isCrit ? "💥 CRIT -" : "-") + (dmgAmount || 0) + " PV",
+                    isCrit ? "text-yellow-300 text-xl" : "text-orange-400 text-lg",
+                    randX
+                );
+            } else {
+                spawnFloatingCombatText("MANCATO!", "text-gray-300 text-sm", 0);
+            }
+        };
+
+        const triggerMonsterAttackVfx = (hitCount, totalOrLastDmg, isCrit) => {
+            playCombatSynthSfx("monster");
+            setVfxMonsterAnim("");
+            setTimeout(() => setVfxMonsterAnim("vfx-lunge-3d"), 15);
+            setTimeout(() => setVfxMonsterAnim(""), 520);
+
+            const hits = Math.max(1, Math.min(4, hitCount || 1));
+            for (let i = 0; i < hits; i++) {
+                setTimeout(() => {
+                    const clId = "cl_" + Date.now() + "_" + i + "_" + Math.floor(Math.random() * 999);
+                    setVfxImpact({ id: clId, kind: "claw", isCrit: Boolean(isCrit), color: "#ef4444" });
+                    setTimeout(() => {
+                        setVfxImpact(prev => (prev && prev.id === clId) ? null : prev);
+                    }, 460);
+                }, i * 170);
+            }
+
+            if (typeof totalOrLastDmg === "number" && totalOrLastDmg > 0) {
+                spawnFloatingCombatText(
+                    (isCrit ? "👹 CRIT -" : "👹 -") + totalOrLastDmg + " PV",
+                    "text-red-400 text-lg",
+                    Math.floor(Math.random() * 40) - 20
+                );
+            }
+        };
+
         // EFFETTO VISIVO SCREEN SHAKE E SONORO SUI COLPI CRITICI / EVENTI EPICI
         const triggerEpicImpact = (impactType) => {
+            playCombatSynthSfx(impactType === "crit_red" ? "monster" : "crit");
             setScreenShakeEffect(impactType || "crit_gold");
             try {
                 const sfxUrl = impactType === "crit_red"
@@ -14337,6 +14527,9 @@
                 });
 
                 turnLog.unshift(`⚔️ Pedina **${tok.name}** colpisce **${tgt.name}** per **${tDmg} danni**!${tok.lifelinkBoss ? ` (🩸 +${tDmg} PV al Boss)` : ""}${tok.infect ? " (☣️ +1 Veleno)" : ""}${undyingNote} (${tgt.name}: ${nextHP} PV)`);
+                if (typeof triggerMonsterAttackVfx === "function") {
+                    triggerMonsterAttackVfx(1, tDmg, false);
+                }
             };
 
             // FASE 1: LE PEDINE GIÀ PRONTE (SENZA DEBOLEZZA DA EVOCAZIONE) ATTACCANO!
@@ -14510,6 +14703,9 @@
             });
 
             savePartyState(nextParty);
+            if (typeof triggerMonsterAttackVfx === "function") {
+                triggerMonsterAttackVfx(nextTokens.length > 0 ? 2 : 1, finalDmg, isCrit);
+            }
 
             if (!fellUnconscious && newHP >= 1 && newHP <= Math.max(4, Math.round(targetStats.maxHP * 0.15))) {
                 const woundedHero = nextParty.find(h => h.id === chosenTarget.id);
@@ -14902,6 +15098,9 @@
                 }
                 const targetHP = targetTok ? targetTok.currentHP : newMonsterHP;
                 const outcome = calculateSingleStrikeOutcome(newHero, actionStat, rawRoll, targetHP, isSecond, targetTok);
+                if (typeof triggerHeroAttackVfx === "function") {
+                triggerHeroAttackVfx(actionStat, newHero, outcome.dmg, outcome.isCrit, outcome.hit);
+                }
                 turnLog.unshift(outcome.text);
 
                 if (outcome.isCrit) {
@@ -19911,8 +20110,9 @@
                                     {combatState.name}
                                 </h2>
 
-                                {/* FINESTRA ILLUSTRAZIONE NEMICO / BOSS (ART CROP SCRYFALL + FALLBACK rpg_monster_default.png) */}
-                                <div className="w-full h-44 sm:h-56 bg-black/90 border-2 border-red-500/80 rounded-xl overflow-hidden relative shadow-[inset_0_0_25px_rgba(0,0,0,0.9)] flex items-center justify-center my-1">
+                            
+                                {/* FINESTRA ILLUSTRAZIONE NEMICO / BOSS + VFX 3D */}
+                                <div ref={vfxMonsterBoxRef} className={`w-full h-44 sm:h-56 bg-black/90 border-2 border-red-500/80 rounded-xl overflow-hidden relative shadow-[inset_0_0_25px_rgba(0,0,0,0.9)] flex items-center justify-center my-1 ${vfxMonsterAnim}`}>
                                     <img
                                         src={monsterArtUrl || "./rpg_monster_default.png"}
                                         alt={combatState.name}
@@ -19926,12 +20126,62 @@
                                         }}
                                         className="w-full h-full object-cover object-center animate-fade"
                                     />
+                                    {vfxImpact && (
+                                        <div key={vfxImpact.id} className={`absolute left-1/2 top-1/2 pointer-events-none z-20 ${vfxImpact.kind === "claw" ? "vfx-claw-anim" : "vfx-slash-anim"}`}>
+                                            <svg width="160" height="160" viewBox="0 0 160 160" className="overflow-visible">
+                                                {vfxImpact.kind === "claw" ? (
+                                                    <g stroke={vfxImpact.color || "#ef4444"} strokeWidth="5" strokeLinecap="round" fill="none">
+                                                        <path d="M25 35 L135 125" />
+                                                        <path d="M50 22 L145 105" />
+                                                        <path d="M18 55 L115 138" />
+                                                    </g>
+                                                ) : (
+                                                    <g>
+                                                        <path d="M16 136 Q80 65 144 24" stroke={vfxImpact.color || "#fbbf24"} strokeWidth="7" strokeLinecap="round" fill="none" />
+                                                        <path d="M24 144 Q86 76 148 36" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" fill="none" />
+                                                    </g>
+                                                )}
+                                            </svg>
+                                        </div>
+                                    )}
+                                    {vfxFloatingTexts.map(ft => (
+                                        <div
+                                            key={ft.id}
+                                            style={{ marginLeft: (ft.offsetX || 0) + "px" }}
+                                            className={`vfx-float-num absolute left-1/2 top-1/2 font-black drop-shadow-[0_3px_8px_rgba(0,0,0,1)] pointer-events-none z-30 whitespace-nowrap ${ft.colorClass}`}
+                                        >
+                                            {ft.label}
+                                        </div>
+                                    ))}
                                     {loadingMonsterArt && (
                                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                                             <span className="text-xs text-red-300 font-black animate-pulse">🎨 Evocazione illustrazione...</span>
                                         </div>
                                     )}
                                 </div>
+
+                                {vfxBeam && ReactDOM.createPortal(
+                                    <svg key={vfxBeam.id} className="fixed inset-0 w-screen h-screen pointer-events-none z-[10002] overflow-visible">
+                                        <defs>
+                                            <linearGradient id="rpgVfxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+                                                <stop offset="100%" stopColor={vfxBeam.color || "#38bdf8"} stopOpacity="0.95" />
+                                            </linearGradient>
+                                        </defs>
+                                        <line
+                                            x1={vfxBeam.x1}
+                                            y1={vfxBeam.y1}
+                                            x2={vfxBeam.x2}
+                                            y2={vfxBeam.y2}
+                                            stroke={vfxBeam.color || "#38bdf8"}
+                                            strokeWidth={vfxBeam.kind === "agi" ? "5" : "10"}
+                                            strokeLinecap="round"
+                                            strokeDasharray={vfxBeam.kind === "agi" ? "18 8" : "none"}
+                                        />
+                                        <circle cx={vfxBeam.x2} cy={vfxBeam.y2} r="14" fill="url(#rpgVfxGrad)" />
+                                    </svg>,
+                                    document.body
+                                )}
 
                                 <p className="text-xs text-gray-300 italic leading-snug">
                                     {combatState.desc}
@@ -20361,6 +20611,7 @@
                                                                 <React.Fragment>
                                                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                                         <button
+                                                                            ref={vfxStrBtnRef}
                                                                             onClick={() => diceMode === "manual" ? setPendingCombatAction("str") : resolveCombatTurn("str", Math.floor(Math.random()*20)+1)}
                                                                             className="bg-red-900/80 hover:bg-red-800 border-2 border-red-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
                                                                         >
@@ -20368,6 +20619,7 @@
                                                                             <span className="text-gray-300 text-[11px]">Stat FOR: {stats.str}</span>
                                                                         </button>
                                                                         <button
+                                                                            ref={vfxAgiBtnRef}
                                                                             onClick={() => diceMode === "manual" ? setPendingCombatAction("agi") : resolveCombatTurn("agi", Math.floor(Math.random()*20)+1)}
                                                                             className="bg-emerald-900/80 hover:bg-emerald-800 border-2 border-emerald-500 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
                                                                         >
@@ -20375,6 +20627,7 @@
                                                                             <span className="text-gray-300 text-[11px]">Stat AGI: {stats.agi}</span>
                                                                         </button>
                                                                         <button
+                                                                            ref={vfxMagBtnRef}
                                                                             onClick={() => diceMode === "manual" ? setPendingCombatAction("mag") : resolveCombatTurn("mag", Math.floor(Math.random()*20)+1)}
                                                                             className="bg-indigo-900/80 hover:bg-indigo-800 border-2 border-indigo-400 p-3 rounded-xl text-left text-white font-bold text-xs shadow transition-all active:scale-95"
                                                                         >
